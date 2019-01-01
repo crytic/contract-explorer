@@ -2,7 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { checkSlitherVersion, sortError } from "./helper";
+import { checkSlitherVersion, sortError, logInfo } from "./helper";
 import chalk from "chalk";
 import * as shell from "shelljs";
 import * as fs from "fs"
@@ -32,6 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage('Please run command in a valid project');
             return;
         }
+
         const workspacePath = workspaceFolders[0].uri.fsPath;
 
         console.log({workspaceFolders});
@@ -54,15 +55,14 @@ export function activate(context: vscode.ExtensionContext) {
         let err = null;
         const result = await exec(cmd).catch((e: Error) => err = e);
         console.log({ result });
-
-        outputChannel.appendLine("Results")
+        console.log(chalk.supportsColor)
 
         if(err) {
             let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
             data = sortError(data);
-            
+
             data.forEach((item: any) => {
-                outputChannel.appendLine(chalk.greenBright(`\t ${item['description'].replace(/#/g, ":")}`));
+                outputChannel.appendLine(chalk.greenBright(`${item['description'].replace(/#/g, ":")}`));
             });            
         }
 
