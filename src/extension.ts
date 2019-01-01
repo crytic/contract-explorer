@@ -2,7 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { checkSlitherVersion } from "./helper";
+import { checkSlitherVersion, sortError } from "./helper";
 import chalk from "chalk";
 import * as shell from "shelljs";
 import * as fs from "fs"
@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.slither', async () => {
+    let slither = vscode.commands.registerCommand('extension.slither', async () => {
 
         // The code you place here will be executed every time your command is executed
         const { workspace : { workspaceFolders, getConfiguration}, window, DocumentHighlight, Range } = vscode;
@@ -58,8 +58,9 @@ export function activate(context: vscode.ExtensionContext) {
         outputChannel.appendLine("Results")
 
         if(err) {
-            const data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
-
+            let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
+            data = sortError(data);
+            
             data.forEach((item: any) => {
                 outputChannel.appendLine(chalk.greenBright(`\t ${item['description'].replace(/#/g, ":")}`));
             });            
@@ -71,22 +72,9 @@ export function activate(context: vscode.ExtensionContext) {
         // Display a message box to the user
     });
 
-    context.subscriptions.push(disposable);
+    context.subscriptions.push(slither);
 }
 
-// function getDecorationTypeFromConfig() {
-//     const config = workspace.getConfiguration("highlightLine")
-//     const borderColor = config.get("borderColor");
-//     const borderWidth = config.get("borderWidth");
-//     const borderStyle = config.get("borderStyle");
-//     const decorationType = window.createTextEditorDecorationType({
-//         isWholeLine: true,
-//         borderWidth: `0 0 ${borderWidth} 0`,
-//         borderStyle: `${borderStyle}`, //TODO: file bug, this shouldn't throw a lint error.
-//         borderColor
-//     })
-//     return decorationType;
-// }
 
 // this method is called when your extension is deactivated
 export function deactivate() {

@@ -77,4 +77,23 @@ const getDetectors = async() => {
     return JSON.parse(stdout);
 }
 
-export { exec, checkSlitherVersion, logInfo, logError, validateDetectors, getDetectors }
+
+const sortError = (error: []) => {
+    const order: any = {
+      "Informational": 0,
+      "Low": 1,
+      "Medium": 2,
+      "High": 3,
+    }
+  
+    return error.sort(function(x: any, y: any) {
+      if(order[x.impact] < order[y.impact]){
+        return -1
+      } else if (order[x.impact] > order[y.impact]) {
+        return 1
+      }
+      return 0
+    })
+  }
+
+export { exec, checkSlitherVersion, logInfo, logError, validateDetectors, getDetectors, sortError }
