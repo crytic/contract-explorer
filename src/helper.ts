@@ -9,7 +9,7 @@ const exec = util.promisify(require("child_process").exec);
 const logInfo = (message: string) => console.log(chalk.greenBright(message));
 const logError = (message: string) => console.log(chalk.redBright(message));
 
-const compareSlitherVersion = ({majorVesion, minorVersion, patch }: any) => (
+const compareSlitherVersion = ([majorVesion, minorVersion, patch]: any) => (
                                             (majorVesion > slitherVersion.majorVersion)
                                             ||
                                             (majorVesion === slitherVersion.majorVersion &&
