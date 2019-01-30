@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "vscode-slither" is now active!');
+    console.log('Congratulations, your extension "vscode slither plugin" is now active!');
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
         const { workspace : { workspaceFolders, getConfiguration}, window, DocumentHighlight, Range } = vscode;
         const { activeTextEditor } = window;
         const outputChannel = window.createOutputChannel("Slither");
-        outputChannel.appendLine("Running Slither ...")
+        outputChannel.appendLine("Running Slither...")
 
 
         if(!workspaceFolders){
@@ -35,13 +35,10 @@ export function activate(context: vscode.ExtensionContext) {
 
         const workspacePath = workspaceFolders[0].uri.fsPath;
 
-        console.log({workspaceFolders});
-        console.log({workspacePath});
-
         const config = getConfiguration('slither');
 
-        console.log(config);
-        console.log(JSON.stringify(config));
+        // console.log(config);
+        // console.log(JSON.stringify(config));
 
         await checkSlitherVersion();
 
@@ -53,16 +50,15 @@ export function activate(context: vscode.ExtensionContext) {
         let cmd = `slither ${workspacePath} --disable-solc-warnings --json ${outputFile}`;
 
         let err = null;
-        const result = await exec(cmd).catch((e: Error) => err = e);
-        console.log({ result });
-        console.log(chalk.supportsColor)
+        await exec(cmd).catch((e: Error) => err = e);
 
         if(err) {
             let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
             data = sortError(data);
 
+            outputChannel.appendLine("Result...");
             data.forEach((item: any) => {
-                outputChannel.appendLine(chalk.greenBright(`${item['description'].replace(/#/g, ":")}`));
+                outputChannel.appendLine(`\t${item['description'].replace(/#/g, ":")}`);
             });            
         }
 
