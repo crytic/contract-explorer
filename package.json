@@ -17,6 +17,13 @@
         "url": "https://github.com/samparsky/slither-vscode"
     },
     "main": "./out/extension",
+    "keywords": [
+        "Slither",
+        "slither analyzer",
+        "Smart contract audit extension",
+        "Solidity",
+        "Smart Contract"
+    ],
     "contributes": {
         "commands": [
             {
