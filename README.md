@@ -22,7 +22,7 @@ of detectors in your `.vscode/settings.json` as specified below
 }
 ```
 
-An exmaple configuration can be found in `example/settings.json`
+An example configuration can be found in `example/settings.json`
 
 ### Run Extension
 Run the extension from the command palette by pressing (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) 

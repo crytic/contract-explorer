@@ -46,8 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
             cmd = `${cmd} --exclude ${exclude.join(',')}`;
         }
 
-        console.log({ cmd })
-
         shell.mkdir("-p", outputDir);
 
         let err = null;

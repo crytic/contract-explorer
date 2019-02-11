@@ -12,6 +12,10 @@
     "activationEvents": [
         "onCommand:extension.slither"
     ],
+    "publisher": "samparsky",
+    "repository": {
+        "url": "https://github.com/samparsky/slither-vscode"
+    },
     "main": "./out/extension",
     "contributes": {
         "commands": [
