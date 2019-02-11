@@ -2,7 +2,7 @@
     "name": "vscode-slither",
     "displayName": "vscode-slither",
     "description": "Slither VS code extension",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.30.0"
     },
@@ -89,7 +89,6 @@
         "vscode": "^1.1.25"
     },
     "dependencies": {
-        "chalk": "^2.4.1",
         "shelljs": "^0.8.3"
     }
 }
