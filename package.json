@@ -20,6 +20,21 @@
                 "title": "Run Slither"
             }
         ],
+        "configuration": [
+            {
+                "title": "slither",
+                "properties": {
+                    "slither.exclude": {
+                        "type": "array",
+                        "description": "List of detectors to exclude"
+                    },
+                    "slither.include": {
+                        "type": "array",
+                        "description": "List of dectectors to include only"
+                    }
+                }
+            }
+        ],
         "languages": [
             {
                 "id": "Log",

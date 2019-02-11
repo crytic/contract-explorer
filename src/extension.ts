@@ -1,32 +1,19 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { checkSlitherVersion, sortError, logInfo } from "./helper";
-import chalk from "chalk";
+import { checkSlitherVersion, sortError, validateDetectors } from "./helper";
 import * as shell from "shelljs";
-import * as fs from "fs"
+import * as fs from "fs";
 import { exec } from './helper';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
 
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
+export function activate(context: vscode.ExtensionContext) {
     console.log('Congratulations, your extension "vscode slither plugin" is now active!');
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
     let slither = vscode.commands.registerCommand('extension.slither', async () => {
 
-        // The code you place here will be executed every time your command is executed
-        const { workspace : { workspaceFolders, getConfiguration}, window, DocumentHighlight, Range } = vscode;
-        const { activeTextEditor } = window;
+        const { workspace : { workspaceFolders, getConfiguration}, window, } = vscode;
         const outputChannel = window.createOutputChannel("Slither");
-        outputChannel.appendLine("Running Slither...")
-
+        outputChannel.appendLine("Slither...")
 
         if(!workspaceFolders){
             vscode.window.showErrorMessage('Please run command in a valid project');
@@ -35,19 +22,33 @@ export function activate(context: vscode.ExtensionContext) {
 
         const workspacePath = workspaceFolders[0].uri.fsPath;
 
-        const config = getConfiguration('slither');
-
-        // console.log(config);
-        // console.log(JSON.stringify(config));
-
         await checkSlitherVersion();
 
+        const { include, exclude } = getConfiguration('slither');
         const outputDir  = `${workspacePath}/.slither`;
         const outputFile = `${outputDir}/output.json`;
 
-        shell.mkdir("-p", outputDir);
-
         let cmd = `slither ${workspacePath} --disable-solc-warnings --json ${outputFile}`;
+        
+        if(include){
+            const result = await checkDetectors(include, outputChannel);
+            if(!result) {
+                return;
+            }
+            cmd = `${cmd} --detect ${include.join(',')}`;
+        }
+
+        if(exclude){
+            const result = await checkDetectors(exclude, outputChannel);
+            if(!result) {
+                return;
+            }
+            cmd = `${cmd} --exclude ${exclude.join(',')}`;
+        }
+
+        console.log({ cmd })
+
+        shell.mkdir("-p", outputDir);
 
         let err = null;
         await exec(cmd).catch((e: Error) => err = e);
@@ -56,22 +57,46 @@ export function activate(context: vscode.ExtensionContext) {
             let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
             data = sortError(data);
 
-            outputChannel.appendLine("Result...");
             data.forEach((item: any) => {
-                outputChannel.appendLine(`\t${item['description'].replace(/#/g, ":")}`);
+                const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
+
+                descriptions.forEach( (description: any) => {
+                    if(description === "") {
+                        return;
+                    }
+                    if(!description.startsWith("-")){
+                        outputChannel.appendLine("")
+                    }
+                    if(description.startsWith("-")){
+                        outputChannel.appendLine(`\t${description}`);
+                    } else {
+                        outputChannel.appendLine(`${description}`);
+                    }
+                });
             });            
         }
 
-        outputChannel.show()
+        outputChannel.show();
 
-        shell.rm(`${outputDir}/*`)
+        shell.rm(`${outputDir}/*`);
         // Display a message box to the user
     });
 
     context.subscriptions.push(slither);
 }
 
+async function checkDetectors(detectors: any, outputChannel: vscode.OutputChannel){
+    detectors= detectors.filter( (item: string)=> item !== "" );
+    const isValid = await validateDetectors(detectors);
+    if(!isValid){
+        outputChannel.appendLine(`Error: Invalid detectors present Detectors: ${detectors}`);
+        outputChannel.show();
+        return false;
+    }
+    return true;
+}
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+    console.log('"vscode slither plugin" is now deactivated');
 }

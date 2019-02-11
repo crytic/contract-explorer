@@ -147,8 +147,20 @@
                 <key>name</key>
                 <string>comment.line</string>
             </dict>
+            <dict>
+                <!-- output from (npm install) log -->
+                <key>match</key>
+                <string>\b be \b</string>
+                <key>name</key>
+                <string></string>
+            </dict>
+            <dict>
+                <!-- output from (npm install) log -->
+                <key>match</key>
+                <string>(Slither)|(Error)</string>
+                <key>name</key>
+                <string>keyword</string>
+            </dict>
         </array>
-        <key>uuid</key>
-        <string>"Running Slither..."</string>
     </dict>
 </plist>

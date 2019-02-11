@@ -1,0 +1,4 @@
+{
+    "slither.exclude": ["unused-state"],
+    "slither.include": ["external-function"]
+}
