@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let slither = vscode.commands.registerCommand('extension.slither', async () => {
 
-        const { workspace : { workspaceFolders, getConfiguration}, window, } = vscode;
+        const { workspace : { workspaceFolders, getConfiguration }, window, } = vscode;
         const outputChannel = window.createOutputChannel("Slither");
         outputChannel.appendLine("Slither...")
 
@@ -28,9 +28,11 @@ export function activate(context: vscode.ExtensionContext) {
         const outputDir  = `${workspacePath}/.slither`;
         const outputFile = `${outputDir}/output.json`;
 
+        shell.mkdir("-p", outputDir);
+
         let cmd = `slither ${workspacePath} --disable-solc-warnings --json ${outputFile}`;
         
-        if(include){
+        if(include.length > 0){
             const result = await checkDetectors(include, outputChannel);
             if(!result) {
                 return;
@@ -38,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
             cmd = `${cmd} --detect ${include.join(',')}`;
         }
 
-        if(exclude){
+        if(exclude.length > 0){
             const result = await checkDetectors(exclude, outputChannel);
             if(!result) {
                 return;
@@ -46,7 +48,6 @@ export function activate(context: vscode.ExtensionContext) {
             cmd = `${cmd} --exclude ${exclude.join(',')}`;
         }
 
-        shell.mkdir("-p", outputDir);
 
         let err = null;
         await exec(cmd).catch((e: Error) => err = e);
