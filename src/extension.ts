@@ -25,10 +25,9 @@ export function activate(context: vscode.ExtensionContext) {
         await checkSlitherVersion();
 
         const { include, exclude } = getConfiguration('slither');
-        const result = isValidDetectors({ include, exclude }, outputChannel);
+        const result = await isValidDetectors({ include, exclude }, outputChannel);
 
         if(!result) {
-            console.log("processing")
             outputChannel.show();
             return;
         }
@@ -93,20 +92,18 @@ async function parseResponse(data: [], outputChannel: vscode.OutputChannel){
 }
 
 async function isValidDetectors(options: {'exclude':[], 'include': []}, outputChannel: vscode.OutputChannel){
-    let isValid = false;
+    let isValid = true;
 
     if(options.include.length > 0){
         isValid = await checkDetectors(options.include, outputChannel);
-        if(!isValid) {
-            return isValid;
-        }
     }
+
+    if(!isValid) {
+        return isValid;
+    }  
 
     if(options.exclude.length > 0){
         isValid = await checkDetectors(options.exclude, outputChannel);
-        if(!isValid) {
-            return isValid;
-        }
     }
 
     return isValid;
@@ -116,7 +113,7 @@ async function checkDetectors(detectors: any, outputChannel: vscode.OutputChanne
     detectors = detectors.filter( (item: string)=> item !== "" );
     const isValid = await validateDetectors(detectors);
     if(!isValid){
-        outputChannel.appendLine(`Error: Invalid detectors present Detectors: ${detectors}`);
+        outputChannel.appendLine(`Error: Invalid detectors present in configuration Detectors: ${detectors}`);
         return false;
     }
     return true;
