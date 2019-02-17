@@ -48,16 +48,17 @@
         ],
         "languages": [
             {
-                "id": "Log",
+                "id": "Slither",
                 "aliases": [
-                    "log"
+                    "Slither"
                 ],
                 "extensions": [
-                    ".log"
+                    ".slither"
                 ],
                 "configuration": "./log.configuration.json",
                 "mimetypes": [
                     "log",
+                    "slither",
                     "text/log",
                     "text/x-log",
                     "text/x-code-output",
@@ -67,7 +68,7 @@
         ],
         "grammars": [
             {
-                "language": "Log",
+                "language": "slither",
                 "scopeName": "code.log",
                 "path": "./log.tmLanguage"
             }

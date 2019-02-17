@@ -3,13 +3,13 @@
 <plist version="1.0">
     <dict>
         <key>scopeName</key>
-        <string>code.log</string>
+        <string>slither</string>
         <key>fileTypes</key>
         <array>
-            <string>log</string>
+            <string>slither</string>
         </array>
         <key>name</key>
-        <string>Log file</string>
+        <string>slither</string>
         <key>patterns</key>
         <array>
             <dict>
