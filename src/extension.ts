@@ -99,7 +99,6 @@ function formatDescription(description: string){
     const index = description.indexOf("/");
     description = description.replace(":","#");
     if(index > 0){
-        
         description = description.slice(0, index-1) + "(file://" +  description.slice(index)
     }
     return description
