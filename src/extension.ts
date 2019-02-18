@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         const { workspace: { workspaceFolders, getConfiguration }, window, } = vscode;
         const outputChannel = window.createOutputChannel("Slither");
-        outputChannel.appendLine("\u2705 ... Running Slither ... \u2705")
+        outputChannel.appendLine("\u2705 ... Slither ... \u2705")
 
         if (!workspaceFolders) {
             vscode.window.showErrorMessage('Please run command in a valid project');
@@ -74,11 +74,14 @@ async function addFlag(option: [], cmd: string, flag: string): Promise<string> {
 async function parseResponse(data: [], outputChannel: vscode.OutputChannel) {
     data.forEach((item: any) => {
         const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
-
         descriptions.forEach((description: any) => {
+
             if (description === "") {
                 return;
             }
+
+            description = formatDescription(description)
+            
             if (!description.startsWith("-")) {
                 outputChannel.appendLine("");
             }
@@ -87,8 +90,19 @@ async function parseResponse(data: [], outputChannel: vscode.OutputChannel) {
             } else {
                 outputChannel.appendLine(`\u274C ${description}`);
             }
+
         });
     });
+}
+
+function formatDescription(description: string){
+    const index = description.indexOf("/");
+    description = description.replace(":","#");
+    if(index > 0){
+        
+        description = description.slice(0, index-1) + "(file://" +  description.slice(index)
+    }
+    return description
 }
 
 async function isValidDetectors(options: { 'exclude': [], 'include': [] }, outputChannel: vscode.OutputChannel) {
