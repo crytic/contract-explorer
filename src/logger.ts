@@ -1,10 +1,12 @@
 import * as vscode from "vscode";
+import chalk from "chalk";
 
 export class Logger {
     private static outputChannel : vscode.OutputChannel = vscode.window.createOutputChannel("Slither Extension");
 
     public static initialize() : void {
         // TODO: Initialization code.
+   
     }
 
     public static show() : void {
@@ -15,6 +17,16 @@ export class Logger {
     public static log(msg : string): void {
         // Output the base message.
         this.outputChannel.appendLine(msg);
+    }
+
+    public static info(msg : string): void {
+        // Output the info in bright green.
+        this.outputChannel.appendLine(chalk.greenBright(msg));
+    }
+
+    public static error(msg : string): void {
+        // Output the error in bright red.
+        this.outputChannel.appendLine(chalk.redBright(msg));
     }
 }
 

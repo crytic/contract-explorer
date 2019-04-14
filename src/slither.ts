@@ -1,58 +1,30 @@
-import config from "./config";
-import chalk from "chalk";
+import * as config from "./config";
 import * as vscode from 'vscode';
 import * as util from "util";
-import * as shell from "shelljs";
 import * as fs from "fs";
+import * as semver from 'semver';
 import { Logger } from "./logger";
 
-export const { slitherVersion } = config;
-export const exec = util.promisify(require("child_process").exec);
-
-// const isValid = (obj) => !isEmpty(obj) && !isUndefined(obj) && !isNull(obj)
-export const logInfo = (message: string) => console.log(chalk.greenBright(message));
-export const logError = (message: string) => console.log(chalk.redBright(message));
-
-export const compareSlitherVersion = ([majorVesion, minorVersion, patch]: any) => (
-                                            (majorVesion > slitherVersion.majorVersion)
-                                            ||
-                                            (majorVesion === slitherVersion.majorVersion &&
-                                                minorVersion > slitherVersion.minorVersion
-                                            ) 
-                                            || 
-                                            (
-                                                majorVesion === slitherVersion.majorVersion &&
-                                                minorVersion === slitherVersion.minorVersion &&
-                                                patch >= slitherVersion.patch
-                                            )
-);
-
-
-export const checkSlitherVersion = async () => {
+const checkVersion = async () => {
     try {
-        let { stdout } = await exec(`slither --version`);
-        let version:[] = (stdout.replace(/\r?\n|\r/g, "")
-                        .split('.'))
-                        .map( 
-                            (item: string) => parseInt(item) 
-                        );
-        let checkVersion = compareSlitherVersion(version);
-        if(!checkVersion){
-            logError(
-                `
-                    Slither Version required >= ${slitherVersion.majorVersion}.${slitherVersion.minorVersion}.${slitherVersion.patch}\n
-                    Version Present: ${version.join(".")} \n
-                    Please upgrade your slither "pip install slither-analyzer --upgrade"
-                `
+        // Invoke slither to obtain the current version.
+        let version = (await exec('--version')).output.replace(/\r?\n|\r/g, "");
+
+        // Verify we meet the minimum requirement.
+        if(!semver.gt(version, config.minimumSlitherVersion)){
+            Logger.error(
+`Incompatible version of slither. 
+Minimum Requirement: ${config.minimumSlitherVersion}
+Current version ${version}
+Please upgrade slither: "pip install slither-analyzer --upgrade"`
             );
             return false;
         }
     } catch(e){
-        logError(
-            `
-                Slither Installation Required
-                Please install slither ${chalk.greenBright("pip install slither-analyzer")}
-            `
+        // An error occurred checking version, assume slither is not installed.
+        Logger.error(
+`Slither Installation Required
+Please install slither: "pip install slither-analyzer"`
         );
         
         return false;
@@ -60,26 +32,22 @@ export const checkSlitherVersion = async () => {
     return true;
 }
 
+export async function getDetectors() : Promise<any> {
+    // Obtain our detectors in json format.
+    let output = (await exec("--list-detectors-json")).output;
+
+    // Return our parsed detectors.
+    return JSON.parse(output);
+}
 
 export const validateDetectors = async(input: []) => {
-    let err;
-    const cmd       = `slither --list-detectors-json`;
-    let { stdout }  = await exec(cmd).catch((e: any)=>err=e);
-    if(err) console.log({err})
-    let detectors   = (JSON.parse(stdout)).map((item: any) => item['check']);
-    let difference  = input.filter(x => !detectors.includes(x));
-    
-    return difference.length === 0;
-}
+    // Parse supported detectors
+    let detectors = (await getDetectors()).map((item: any) => item['check']);
 
-export const getDetectors = async() => {
-    let err;
-    const cmd       = `slither --list-detectors-json`;
-    let { stdout }  = await exec(cmd).catch((e: any) => err = e);
-    if(err) console.log({err})
-    return JSON.parse(stdout);
+    // Verify no detectors were provided which are unsupported.
+    let unsupported  = input.filter(x => !detectors.includes(x));
+    return unsupported.length === 0;
 }
-
 
 export const sortError = (error: []) => {
     const order: any = {
@@ -101,53 +69,48 @@ export const sortError = (error: []) => {
 
 export async function analyze() {
 
-    const { workspace: { workspaceFolders, getConfiguration }, window, } = vscode;
-    Logger.log("\u2705 ... Slither ... \u2705")
-
-    if (!workspaceFolders) {
-        vscode.window.showErrorMessage('Please run command in a valid project');
+    // Verify there is a workspace folder open to run analysis on.
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+        vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
         return;
     }
 
-    const workspacePath = workspaceFolders[0].uri.fsPath;
+    // Print our starting analysis message.
+    Logger.log("Starting slither analysis... \u2705");
 
-    await checkSlitherVersion();
+    // Verify the provided slither version is supported.
+    await checkVersion();
 
-    const { include, exclude } = getConfiguration('slither');
-    const result = await isValidDetectors({ include, exclude });
+    // Loop for every workspace to run analysis on.
+    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
-    if (!result) {
-        Logger.show();
-        return;
-    }
+        // TODO: Add ability to filter workspace folders out here.
 
-    const outputDir = `${workspacePath}/.slither`;
-    const outputFile = `${outputDir}/output.json`;
+        // Obtain our workspace path.
+        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
 
-    shell.mkdir("-p", outputDir);
+        // Create the storage directory if it does not exist.
+        config.createStorageDirectory(workspacePath);
 
-    let cmd: string = `slither ${workspacePath} --disable-solc-warnings --json ${outputFile}`;
-    cmd = await addFlag(include, cmd, `detect`);
-    cmd = await addFlag(exclude, cmd, `exclude`);
+        // Determine the path where results will be stored.
+        const outputFile  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
 
-    let err: Error | null = null;
-    await exec(cmd).catch((e: Error) => err = e);
+        // Execute slither on this workspace.
+        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${outputFile}`);
 
-    if (err) {
-        if (fs.existsSync(outputFile)) {
-            let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
-            data = sortError(data);
-            parseResponse(data);
+        // If an error occurred, it likely signifies slither ran scans.
+        if (error) {
+            if (fs.existsSync(outputFile)) {
+                let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
+                data = sortError(data);
+                parseResponse(data);
+            } else {
+                Logger.log(error!.toString());
+            }
         } else {
-            Logger.log(err!.toString());
+            Logger.log("No issues detected :D");
         }
-    } else {
-        Logger.log("No issues detected :D");
     }
-
-    Logger.show();
-
-    shell.rm(`${outputDir}/*`);
 }
 
 async function parseResponse(data: []) {
@@ -174,39 +137,14 @@ async function parseResponse(data: []) {
     });
 }
 
-
-async function addFlag(option: [], cmd: string, flag: string): Promise<string> {
-    if (option.length > 0) {
-        cmd = `${cmd} --${flag} ${option.join(',')}`;
-    }
-    return cmd;
-}
-
 function formatDescription(description: string){
+    // Formats a description such that any file references can be clicked in the output.
     const index = description.indexOf("/");
     description = description.replace(":","#");
     if(index > 0){
         description = description.slice(0, index-1) + "(file://" +  description.slice(index)
     }
     return description
-}
-
-async function isValidDetectors(options: { 'exclude': [], 'include': [] }) {
-    let isValid = true;
-
-    if (options.include.length > 0) {
-        isValid = await checkDetectors(options.include);
-    }
-
-    if (!isValid) {
-        return isValid;
-    }
-
-    if (options.exclude.length > 0) {
-        isValid = await checkDetectors(options.exclude);
-    }
-
-    return isValid;
 }
 
 async function checkDetectors(detectors: any) {
@@ -217,4 +155,24 @@ async function checkDetectors(detectors: any) {
         return false;
     }
     return true;
+}
+
+async function exec(args : string[] | string, logError : boolean = true) : Promise<{output : string, error : string}> { 
+    // If this is an array, make it into a single string.
+    if (args instanceof Array) {
+        args = args.join(' ');
+    }
+
+    // Now we can invoke slither.
+    let stderr;
+    let cmd = util.promisify(require("child_process").exec);
+    let { stdout } = await cmd(`${config.slitherPath} ${args}`).catch((e: any) => stderr = e);
+
+    // If we encountered an error, log it
+    if (stderr && logError) { 
+        Logger.error(String(stderr));
+    }
+
+    // Return stdout/stderr.
+    return { output : String(stdout), error : String(stderr)};
 }

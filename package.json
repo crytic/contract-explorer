@@ -1,5 +1,5 @@
 {
-    "name": "slither-analyzer",
+    "name": "vscode-slither",
     "displayName": "Slither",
     "description": "Slither: Solidity static analysis framework integration for Visual Studio",
     "version": "0.0.4",
@@ -43,6 +43,7 @@
         "vscode": "^1.30.0"
     },
     "dependencies": {
+        "@types/semver": "^6.0.0",
         "shelljs": "^0.8.3"
     },
     "devDependencies": {
