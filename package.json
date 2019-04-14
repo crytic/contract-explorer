@@ -2,10 +2,10 @@
     "name": "vscode-slither",
     "displayName": "Slither",
     "description": "Slither: Solidity static analysis framework integration for Visual Studio",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "Trail of Bits",
     "author": "Trail of Bits",
-    "license": "AGLP-3.0",
+    "license": "AGPL-3.0",
     "homepage": "https://www.trailofbits.com/",
     "repository": {
         "type": "git",
