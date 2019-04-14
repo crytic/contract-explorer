@@ -3,3 +3,4 @@ node_modules
 .vscode-test/
 *.vsix
 README.1.md
+package-lock.json
