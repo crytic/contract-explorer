@@ -26,7 +26,8 @@
     ],
     "activationEvents": [
         "onCommand:extension.slither",
-        "onLanguage:slither-output"
+        "onLanguage:slither-output",
+        "onView:slither-explorer"
     ],
     "main": "./out/extension",
     "icon": "./resources/extension-icon.png",
@@ -59,23 +60,43 @@
             {
                 "command": "slither.analyze",
                 "title": "Run Slither"
-            }
-        ],
-        "configuration": [
+            },
             {
-                "title": "slither",
-                "properties": {
-                    "slither.exclude": {
-                        "type": "array",
-                        "description": "List of detectors to exclude"
-                    },
-                    "slither.include": {
-                        "type": "array",
-                        "description": "List of dectectors to include only"
-                    }
-                }
+                "command": "slither.refreshExplorer",
+                "title": "Refresh Explorer"
             }
         ],
+        "viewsContainers": {
+            "activitybar": [
+              {
+                "id": "slither-container",
+                "title": "Slither Analysis",
+                "icon": "resources/viewsContainer-icon.png"
+              }
+            ]
+          },
+          "views": {
+            "slither-container": [
+              {
+                "id": "slither-explorer",
+                "name": "Analysis"
+              }
+            ]
+          },
+          "menus": {
+            "view/title": [
+              {
+                "command": "slither.analyze",
+                "when": "view == slither-explorer",
+                "group": "navigation@0"
+              },
+              {
+                "command": "slither.refreshExplorer",
+                "when": "view == slither-explorer",
+                "group": "navigation@1"
+              }
+            ]
+          },
         "languages": [
             {
                 "id": "slither-output",
