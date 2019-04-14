@@ -56,7 +56,7 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.slither",
+                "command": "slither.analyze",
                 "title": "Run Slither"
             }
         ],
