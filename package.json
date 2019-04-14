@@ -1,30 +1,63 @@
 {
-    "name": "vscode-slither",
-    "displayName": "vscode-slither",
-    "description": "Slither VS code extension",
+    "name": "slither-analyzer",
+    "displayName": "Slither",
+    "description": "Slither: Solidity static analysis framework integration for Visual Studio",
     "version": "0.0.4",
-    "engines": {
-        "vscode": "^1.30.0"
+    "publisher": "Trail of Bits",
+    "author": "Trail of Bits",
+    "license": "AGLP-3.0",
+    "homepage": "https://www.trailofbits.com/",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/trailofbits/slither-vscode.git"
+    },
+    "bugs": {
+      "url": "https://github.com/trailofbits/slither-vscode/issues"
     },
     "categories": [
-        "Other"
+      "Other"
     ],
+    "keywords": [
+      "slither",
+      "solidity",
+      "solc",
+      "analysis",
+      "auditing"
+    ],
+
+
     "activationEvents": [
         "onCommand:extension.slither",
         "onLanguage:slither-output"
     ],
-    "publisher": "samparsky",
-    "repository": {
-        "url": "https://github.com/samparsky/slither-vscode"
-    },
+
+
     "main": "./out/extension",
-    "keywords": [
-        "Slither",
-        "slither analyzer",
-        "Smart contract audit extension",
-        "Solidity",
-        "Smart Contract"
-    ],
+    "icon": "extension-icon.png",
+    "preview": true,
+    "private": true,
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "dependencies": {
+        "shelljs": "^0.8.3"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^8.10.25",
+        "@types/shelljs": "^0.8.1",
+        "tslint": "^5.8.0",
+        "typescript": "^3.1.4",
+        "vscode": "^1.1.25"
+    },
+    
     "contributes": {
         "commands": [
             {
@@ -52,11 +85,11 @@
                 "id": "slither-output",
                 "configuration": "./log.configuration.json",
                 "mimetypes": [
-                  "text/x-code-output",
-                  "x-code-output",
-                  "text/log",
-                  "text/x-log",
-                  "log"
+                    "text/x-code-output",
+                    "x-code-output",
+                    "text/log",
+                    "text/x-log",
+                    "log"
                 ]
             }
         ],
@@ -67,23 +100,5 @@
                 "path": "./slither-output.tmLanguage"
             }
         ]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.25",
-        "@types/shelljs": "^0.8.1",
-        "tslint": "^5.8.0",
-        "typescript": "^3.1.4",
-        "vscode": "^1.1.25"
-    },
-    "dependencies": {
-        "shelljs": "^0.8.3"
     }
 }
