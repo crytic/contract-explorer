@@ -29,7 +29,7 @@
         "onLanguage:slither-output"
     ],
     "main": "./out/extension",
-    "icon": "extension-icon.png",
+    "icon": "./resources/extension-icon.png",
     "preview": true,
     "private": true,
     "scripts": {
@@ -78,7 +78,7 @@
         "languages": [
             {
                 "id": "slither-output",
-                "configuration": "./log.configuration.json",
+                "configuration": "./resources/log.configuration.json",
                 "mimetypes": [
                     "text/x-code-output",
                     "x-code-output",
@@ -92,7 +92,7 @@
             {
                 "language": "slither-output",
                 "scopeName": "slither.output",
-                "path": "./slither-output.tmLanguage"
+                "path": "./resources/slither-output.tmLanguage"
             }
         ]
     }
