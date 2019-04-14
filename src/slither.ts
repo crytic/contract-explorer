@@ -13,7 +13,7 @@ const checkVersion = async () => {
         // Verify we meet the minimum requirement.
         if(!semver.gt(version, config.minimumSlitherVersion)){
             Logger.error(
-`Incompatible version of slither. 
+`Error: Incompatible version of slither. 
 Minimum Requirement: ${config.minimumSlitherVersion}
 Current version ${version}
 Please upgrade slither: "pip install slither-analyzer --upgrade"`
@@ -23,7 +23,7 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
     } catch(e){
         // An error occurred checking version, assume slither is not installed.
         Logger.error(
-`Slither Installation Required
+`Error: Slither Installation Required
 Please install slither: "pip install slither-analyzer"`
         );
         
@@ -49,24 +49,6 @@ export const validateDetectors = async(input: []) => {
     return unsupported.length === 0;
 }
 
-export const sortError = (error: []) => {
-    const order: any = {
-      "Informational": 0,
-      "Low": 1,
-      "Medium": 2,
-      "High": 3,
-    }
-  
-    return error.sort(function(x: any, y: any) {
-      if(order[x.impact] < order[y.impact]){
-        return -1
-      } else if (order[x.impact] > order[y.impact]) {
-        return 1
-      }
-      return 0
-    })
-  }
-
 export async function analyze() {
 
     // Verify there is a workspace folder open to run analysis on.
@@ -74,12 +56,14 @@ export async function analyze() {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
         return;
     }
+    
+    // Verify the provided slither version is supported.
+    if(!(await checkVersion())) {
+        return;
+    }
 
     // Print our starting analysis message.
     Logger.log("Starting slither analysis... \u2705");
-
-    // Verify the provided slither version is supported.
-    await checkVersion();
 
     // Loop for every workspace to run analysis on.
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
@@ -92,41 +76,63 @@ export async function analyze() {
         // Create the storage directory if it does not exist.
         config.createStorageDirectory(workspacePath);
 
-        // Determine the path where results will be stored.
-        const outputFile  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+        // At first we will output to a temporary directory, then we will move the file.
+        // This lets us keep our results in the same location but know if new results have been generated reliably.
+        const tempResultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsTempFileName);
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+
+        // Delete the temp results file if it exists.
+        if(fs.existsSync(tempResultsPath)) {
+            fs.unlinkSync(tempResultsPath);
+        }
 
         // Execute slither on this workspace.
-        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${outputFile}`);
+        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${tempResultsPath}`);
 
-        // If an error occurred, it likely signifies slither ran scans.
+        // Errors are thrown when slither succeeds.
         if (error) {
-            if (fs.existsSync(outputFile)) {
-                let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
-                data = sortError(data);
-                parseResponse(data);
+            // If we can find a generated results file, we assume we succeeded
+            if (fs.existsSync(tempResultsPath)) {
+
+                // Delete the old final results file if it exists.
+                if(fs.existsSync(resultsPath)) {
+                    fs.unlinkSync(resultsPath);
+                }
+
+                // Move the newly generated results to the final path.
+                fs.renameSync(tempResultsPath, resultsPath);
+
+                // Parse the underlying data.
+                let data = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+                parseResults(data);
             } else {
-                Logger.log(error!.toString());
+                // We couldn't find a results file, this is probably a real error.
+                Logger.error(error!.toString());
             }
         } else {
-            Logger.log("No issues detected :D");
+            // No error occurred, likely no issues were detected.
+            Logger.log("No issues detected.");
         }
     }
 }
 
-async function parseResponse(data: []) {
+async function parseResults(data: []) {
     data.forEach((item: any) => {
         const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
         descriptions.forEach((description: any) => {
 
+            // If any issue doesn't have a description, it is not output.
             if (description === "") {
                 return;
             }
-
-            description = formatDescription(description)
             
+            // Seperate issues (following lines with a dash are usually connected to the issue above)
             if (!description.startsWith("-")) {
                 Logger.log("");
             }
+
+            // If the line starts with a dash, it's part of a list so we indent it. 
+            // If it doesn't, it starts a new issue, and we add a special icon to it.
             if (description.startsWith("-")) {
                 Logger.log(`\t${description}`);
             } else {
@@ -135,16 +141,6 @@ async function parseResponse(data: []) {
 
         });
     });
-}
-
-function formatDescription(description: string){
-    // Formats a description such that any file references can be clicked in the output.
-    const index = description.indexOf("/");
-    description = description.replace(":","#");
-    if(index > 0){
-        description = description.slice(0, index-1) + "(file://" +  description.slice(index)
-    }
-    return description
 }
 
 async function checkDetectors(detectors: any) {
