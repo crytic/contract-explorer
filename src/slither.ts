@@ -2,14 +2,14 @@ import config from "./config";
 import chalk from "chalk";
 import * as util from "util";
 
-const { slitherVersion } = config;
-const exec = util.promisify(require("child_process").exec);
+export const { slitherVersion } = config;
+export const exec = util.promisify(require("child_process").exec);
 
 // const isValid = (obj) => !isEmpty(obj) && !isUndefined(obj) && !isNull(obj)
-const logInfo = (message: string) => console.log(chalk.greenBright(message));
-const logError = (message: string) => console.log(chalk.redBright(message));
+export const logInfo = (message: string) => console.log(chalk.greenBright(message));
+export const logError = (message: string) => console.log(chalk.redBright(message));
 
-const compareSlitherVersion = ([majorVesion, minorVersion, patch]: any) => (
+export const compareSlitherVersion = ([majorVesion, minorVersion, patch]: any) => (
                                             (majorVesion > slitherVersion.majorVersion)
                                             ||
                                             (majorVesion === slitherVersion.majorVersion &&
@@ -24,7 +24,7 @@ const compareSlitherVersion = ([majorVesion, minorVersion, patch]: any) => (
 );
 
 
-const checkSlitherVersion = async () => {
+export const checkSlitherVersion = async () => {
     try {
         let { stdout } = await exec(`slither --version`);
         let version:[] = (stdout.replace(/\r?\n|\r/g, "")
@@ -57,7 +57,7 @@ const checkSlitherVersion = async () => {
 }
 
 
-const validateDetectors = async(input: []) => {
+export const validateDetectors = async(input: []) => {
     let err;
     const cmd       = `slither --list-detectors-json`;
     let { stdout }  = await exec(cmd).catch((e: any)=>err=e);
@@ -68,7 +68,7 @@ const validateDetectors = async(input: []) => {
     return difference.length === 0;
 }
 
-const getDetectors = async() => {
+export const getDetectors = async() => {
     let err;
     const cmd       = `slither --list-detectors-json`;
     let { stdout }  = await exec(cmd).catch((e: any) => err = e);
@@ -77,7 +77,7 @@ const getDetectors = async() => {
 }
 
 
-const sortError = (error: []) => {
+export const sortError = (error: []) => {
     const order: any = {
       "Informational": 0,
       "Low": 1,
@@ -94,5 +94,3 @@ const sortError = (error: []) => {
       return 0
     })
   }
-
-export { exec, checkSlitherVersion, logInfo, logError, validateDetectors, getDetectors, sortError }

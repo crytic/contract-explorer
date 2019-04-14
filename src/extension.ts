@@ -1,9 +1,9 @@
 'use strict';
 import * as vscode from 'vscode';
-import { checkSlitherVersion, sortError, validateDetectors } from "./helper";
+import { checkSlitherVersion, sortError, validateDetectors } from "./slither";
 import * as shell from "shelljs";
 import * as fs from "fs";
-import { exec } from './helper';
+import { exec } from './slither';
 import { Logger } from "./logger";
 import * as common from "./common";
 
@@ -12,8 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
     let slither = vscode.commands.registerCommand('extension.slither', async () => {
 
         const { workspace: { workspaceFolders, getConfiguration }, window, } = vscode;
-        const outputChannel = window.createOutputChannel("Slither");
-        outputChannel.appendLine("\u2705 ... Slither ... \u2705")
+        Logger.log("\u2705 ... Slither ... \u2705")
 
         if (!workspaceFolders) {
             vscode.window.showErrorMessage('Please run command in a valid project');
@@ -25,10 +24,10 @@ export function activate(context: vscode.ExtensionContext) {
         await checkSlitherVersion();
 
         const { include, exclude } = getConfiguration('slither');
-        const result = await isValidDetectors({ include, exclude }, outputChannel);
+        const result = await isValidDetectors({ include, exclude });
 
         if (!result) {
-            outputChannel.show();
+            Logger.show();
             return;
         }
 
@@ -48,24 +47,25 @@ export function activate(context: vscode.ExtensionContext) {
             if (fs.existsSync(outputFile)) {
                 let data = JSON.parse(fs.readFileSync(outputFile, 'utf8'));
                 data = sortError(data);
-                parseResponse(data, outputChannel);
+                parseResponse(data);
             } else {
-                outputChannel.appendLine(err!.toString());
+                Logger.log(err!.toString());
             }
         } else {
-            outputChannel.appendLine("No issues detected :D");
+            Logger.log("No issues detected :D");
         }
 
-        outputChannel.show();
+        Logger.show();
 
         shell.rm(`${outputDir}/*`);
     });
 
     context.subscriptions.push(slither);
 
-    // Log our activation message if we are in debug mode.
+    // If we are in debug mode, log our activation message and focus on the output channel
 	if(common.isDebuggingExtension()) {
-		Logger.log("Activated Slither extension in debug mode.");
+        Logger.log("Activated Slither extension in debug mode.");
+	    Logger.show();
 	}
 }
 
@@ -76,7 +76,7 @@ async function addFlag(option: [], cmd: string, flag: string): Promise<string> {
     return cmd;
 }
 
-async function parseResponse(data: [], outputChannel: vscode.OutputChannel) {
+async function parseResponse(data: []) {
     data.forEach((item: any) => {
         const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
         descriptions.forEach((description: any) => {
@@ -88,12 +88,12 @@ async function parseResponse(data: [], outputChannel: vscode.OutputChannel) {
             description = formatDescription(description)
             
             if (!description.startsWith("-")) {
-                outputChannel.appendLine("");
+                Logger.log("");
             }
             if (description.startsWith("-")) {
-                outputChannel.appendLine(`\t${description}`);
+                Logger.log(`\t${description}`);
             } else {
-                outputChannel.appendLine(`\u274C ${description}`);
+                Logger.log(`\u274C ${description}`);
             }
 
         });
@@ -109,11 +109,11 @@ function formatDescription(description: string){
     return description
 }
 
-async function isValidDetectors(options: { 'exclude': [], 'include': [] }, outputChannel: vscode.OutputChannel) {
+async function isValidDetectors(options: { 'exclude': [], 'include': [] }) {
     let isValid = true;
 
     if (options.include.length > 0) {
-        isValid = await checkDetectors(options.include, outputChannel);
+        isValid = await checkDetectors(options.include);
     }
 
     if (!isValid) {
@@ -121,17 +121,17 @@ async function isValidDetectors(options: { 'exclude': [], 'include': [] }, outpu
     }
 
     if (options.exclude.length > 0) {
-        isValid = await checkDetectors(options.exclude, outputChannel);
+        isValid = await checkDetectors(options.exclude);
     }
 
     return isValid;
 }
 
-async function checkDetectors(detectors: any, outputChannel: vscode.OutputChannel) {
+async function checkDetectors(detectors: any) {
     detectors = detectors.filter((item: string) => item !== "");
     const isValid = await validateDetectors(detectors);
     if (!isValid) {
-        outputChannel.appendLine(`Error: Invalid detectors present in configuration Detectors: ${detectors}`);
+        Logger.log(`Error: Invalid detectors present in configuration Detectors: ${detectors}`);
         return false;
     }
     return true;
