@@ -3,7 +3,10 @@ import * as vscode from 'vscode';
 import * as util from "util";
 import * as fs from "fs";
 import * as semver from 'semver';
+import * as child_process from 'child_process';
 import { Logger } from "./logger";
+
+export const results : Map<string, []> = new Map<string, []>();
 
 const checkVersion = async () => {
     try {
@@ -50,7 +53,6 @@ export const validateDetectors = async(input: []) => {
 }
 
 export async function analyze() {
-
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
@@ -64,6 +66,9 @@ export async function analyze() {
 
     // Print our starting analysis message.
     Logger.log("Starting slither analysis... \u2705");
+
+    // Setup our state
+    results.clear();
 
     // Loop for every workspace to run analysis on.
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
@@ -102,9 +107,11 @@ export async function analyze() {
                 // Move the newly generated results to the final path.
                 fs.renameSync(tempResultsPath, resultsPath);
 
-                // Parse the underlying data.
-                let data = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
-                parseResults(data);
+                // Parse the underlying for the console.
+                let workspaceResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+                results.set(workspacePath, workspaceResults);
+                printResults(workspaceResults);
+
             } else {
                 // We couldn't find a results file, this is probably a real error.
                 Logger.error(error!.toString());
@@ -116,7 +123,7 @@ export async function analyze() {
     }
 }
 
-async function parseResults(data: []) {
+async function printResults(data: []) {
     data.forEach((item: any) => {
         const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
         descriptions.forEach((description: any) => {
@@ -143,16 +150,6 @@ async function parseResults(data: []) {
     });
 }
 
-async function checkDetectors(detectors: any) {
-    detectors = detectors.filter((item: string) => item !== "");
-    const isValid = await validateDetectors(detectors);
-    if (!isValid) {
-        Logger.log(`Error: Invalid detectors present in configuration Detectors: ${detectors}`);
-        return false;
-    }
-    return true;
-}
-
 async function exec(args : string[] | string, logError : boolean = true) : Promise<{output : string, error : string}> { 
     // If this is an array, make it into a single string.
     if (args instanceof Array) {
@@ -161,7 +158,7 @@ async function exec(args : string[] | string, logError : boolean = true) : Promi
 
     // Now we can invoke slither.
     let stderr;
-    let cmd = util.promisify(require("child_process").exec);
+    let cmd = util.promisify(child_process.exec);
     let { stdout } = await cmd(`${config.slitherPath} ${args}`).catch((e: any) => stderr = e);
 
     // If we encountered an error, log it
