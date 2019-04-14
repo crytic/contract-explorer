@@ -5,7 +5,6 @@ export const minimumSlitherVersion : string = '0.4.0'; // minimum supported slit
 export const solcPath : string = "solc"; // solc command path
 export const slitherPath : string = "slither"; // slither command path
 export const slitherStoragePath : string = "./.slither"; // Directory relative to workspace to store files.
-export const storageResultsTempFileName : string = "temp-analysis-results.json";
 export const storageResultsFileName : string = "analysis-results.json";
 
 export function isDebuggingExtension() : boolean {

@@ -20,6 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
 	    Logger.show();
     }
     Logger.log("");
+
+    // Initialize all components.
+    explorer.initialize();
 }
 
 export function deactivate() {

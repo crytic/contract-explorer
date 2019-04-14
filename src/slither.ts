@@ -52,16 +52,16 @@ export const validateDetectors = async(input: []) => {
     return unsupported.length === 0;
 }
 
-export async function analyze() {
+export async function analyze() : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
-        return;
+        return false;
     }
     
     // Verify the provided slither version is supported.
     if(!(await checkVersion())) {
-        return;
+        return false;
     }
 
     // Print our starting analysis message.
@@ -71,6 +71,8 @@ export async function analyze() {
     results.clear();
 
     // Loop for every workspace to run analysis on.
+    let successCount = 0;
+    let failCount = 0;
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
         // TODO: Add ability to filter workspace folders out here.
@@ -81,46 +83,77 @@ export async function analyze() {
         // Create the storage directory if it does not exist.
         config.createStorageDirectory(workspacePath);
 
-        // At first we will output to a temporary directory, then we will move the file.
-        // This lets us keep our results in the same location but know if new results have been generated reliably.
-        const tempResultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsTempFileName);
+        // Obtain our results storage path.
         const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
 
-        // Delete the temp results file if it exists.
-        if(fs.existsSync(tempResultsPath)) {
-            fs.unlinkSync(tempResultsPath);
+        // Clear the results file if it exists.
+        if(fs.existsSync(resultsPath)) {
+            fs.unlinkSync(resultsPath);
         }
 
         // Execute slither on this workspace.
-        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${tempResultsPath}`);
+        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${resultsPath}`);
 
-        // Errors are thrown when slither succeeds.
-        if (error) {
-            // If we can find a generated results file, we assume we succeeded
-            if (fs.existsSync(tempResultsPath)) {
+        // Errors are thrown when slither succeeds. We should also have a results file.
+        if (error && !fs.existsSync(resultsPath)) {
+            // We couldn't find a results file, this is probably a real error.
+            Logger.error(`Error in workspace "${workspacePath}":`);
+            Logger.error(error!.toString());
+            failCount++;
+            continue;
+        }
 
-                // Delete the old final results file if it exists.
-                if(fs.existsSync(resultsPath)) {
-                    fs.unlinkSync(resultsPath);
-                }
+        // Add to the success count
+        successCount++;
+    }
 
-                // Move the newly generated results to the final path.
-                fs.renameSync(tempResultsPath, resultsPath);
+    // Print our results.
+    readResults(true);
 
-                // Parse the underlying for the console.
-                let workspaceResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
-                results.set(workspacePath, workspaceResults);
+    // Print our analysis results.
+    Logger.log("");
+    Logger.log(`\u2E3B Analysis: ${successCount} succeeded, ${failCount} failed, ${vscode.workspace.workspaceFolders.length - (successCount + failCount)} skipped \u2E3B`);
+
+
+    // We completed analysis without error.
+    return true;
+}
+
+export async function readResults(print : boolean = false) : Promise<boolean> {
+    // Verify there is a workspace folder open to run analysis on.
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+        vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
+        return false;
+    }
+
+    // Setup our state
+    results.clear();
+
+    // Loop for every workspace to run analysis on.
+    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
+
+        // TODO: Add ability to filter workspace folders out here.
+
+        // Obtain our workspace results path.
+        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+
+        // If the file exists, we read its contents into memory.
+        if(fs.existsSync(resultsPath)) {
+            let workspaceResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            results.set(workspacePath, workspaceResults);
+            if (print) {
                 printResults(workspaceResults);
-
-            } else {
-                // We couldn't find a results file, this is probably a real error.
-                Logger.error(error!.toString());
             }
-        } else {
-            // No error occurred, likely no issues were detected.
-            Logger.log("No issues detected.");
+        }
+        else {
+            // The file did not exist, so we simply use an empty array of results.
+            results.set(workspacePath, []);
         }
     }
+
+    // We succeeded without error.
+    return true;
 }
 
 async function printResults(data: []) {
