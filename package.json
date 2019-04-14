@@ -8,30 +8,26 @@
     "license": "AGLP-3.0",
     "homepage": "https://www.trailofbits.com/",
     "repository": {
-      "type": "git",
-      "url": "https://github.com/trailofbits/slither-vscode.git"
+        "type": "git",
+        "url": "https://github.com/trailofbits/slither-vscode.git"
     },
     "bugs": {
-      "url": "https://github.com/trailofbits/slither-vscode/issues"
+        "url": "https://github.com/trailofbits/slither-vscode/issues"
     },
     "categories": [
-      "Other"
+        "Other"
     ],
     "keywords": [
-      "slither",
-      "solidity",
-      "solc",
-      "analysis",
-      "auditing"
+        "slither",
+        "solidity",
+        "solc",
+        "analysis",
+        "auditing"
     ],
-
-
     "activationEvents": [
         "onCommand:extension.slither",
         "onLanguage:slither-output"
     ],
-
-
     "main": "./out/extension",
     "icon": "extension-icon.png",
     "preview": true,
@@ -57,7 +53,6 @@
         "typescript": "^3.1.4",
         "vscode": "^1.1.25"
     },
-    
     "contributes": {
         "commands": [
             {

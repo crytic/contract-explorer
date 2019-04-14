@@ -4,11 +4,11 @@ import { checkSlitherVersion, sortError, validateDetectors } from "./helper";
 import * as shell from "shelljs";
 import * as fs from "fs";
 import { exec } from './helper';
+import { Logger } from "./logger";
+import * as common from "./common";
 
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Congratulations, your extension "vscode slither plugin" is now active!');
-
     let slither = vscode.commands.registerCommand('extension.slither', async () => {
 
         const { workspace: { workspaceFolders, getConfiguration }, window, } = vscode;
@@ -62,6 +62,11 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(slither);
+
+    // Log our activation message if we are in debug mode.
+	if(common.isDebuggingExtension()) {
+		Logger.log("Activated Slither extension in debug mode.");
+	}
 }
 
 async function addFlag(option: [], cmd: string, flag: string): Promise<string> {
