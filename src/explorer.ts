@@ -20,14 +20,30 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     private rootNode : ExplorerNode = this.bySeverityNode;
 
     constructor(private context: vscode.ExtensionContext) {
-        // Set up the severity nodes and map.
+        // Set up the severity nodes with their respective icons.
         let highSeverityNode = new ExplorerNode("High", vscode.TreeItemCollapsibleState.Expanded);
+        highSeverityNode.iconPath = { 
+            light: this.context.asAbsolutePath("resources/severity-high-light.svg"),
+            dark: this.context.asAbsolutePath("resources/severity-high-dark.svg"),
+        };
         let mediumSeverityNode = new ExplorerNode("Medium", vscode.TreeItemCollapsibleState.Expanded);
+        mediumSeverityNode.iconPath = { 
+            light: this.context.asAbsolutePath("resources/severity-medium-light.svg"),
+            dark: this.context.asAbsolutePath("resources/severity-medium-dark.svg"),
+        };
         let lowSeverityNode = new ExplorerNode("Low", vscode.TreeItemCollapsibleState.Expanded);
+        lowSeverityNode.iconPath = { 
+            light: this.context.asAbsolutePath("resources/severity-low-light.svg"),
+            dark: this.context.asAbsolutePath("resources/severity-low-dark.svg"),
+        };
         let informationalSeverityNode = new ExplorerNode("Informational", vscode.TreeItemCollapsibleState.Expanded);
-        let severityNodes = [highSeverityNode,mediumSeverityNode, lowSeverityNode, informationalSeverityNode];
+        informationalSeverityNode.iconPath = { 
+            light: this.context.asAbsolutePath("resources/severity-info-light.svg"),
+            dark: this.context.asAbsolutePath("resources/severity-info-dark.svg"),
+        };
+        let severityNodes = [highSeverityNode, mediumSeverityNode, lowSeverityNode, informationalSeverityNode];
             
-
+        // Set up the severity node map.
         for (let severityNode of severityNodes) {
             if(severityNode.label) { 
                 this.bySeverityNode.nodes.push(severityNode);
