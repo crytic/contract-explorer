@@ -140,7 +140,7 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
         // If the file exists, we read its contents into memory.
         if(fs.existsSync(resultsPath)) {
-            let workspaceResults = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            let workspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
             results.set(workspacePath, workspaceResults);
             if (print) {
                 printResults(workspaceResults);
@@ -156,9 +156,9 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
     return true;
 }
 
-async function printResults(data: []) {
-    data.forEach((item: any) => {
-        const descriptions = item['description'].replace("#", ":").replace("\t", "").split("\n");
+async function printResults(data: SlitherResult[]) {
+    data.forEach((item: SlitherResult) => {
+        const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
         descriptions.forEach((description: any) => {
 
             // Trim the description

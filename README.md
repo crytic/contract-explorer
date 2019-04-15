@@ -1,5 +1,5 @@
 # Slither VSCode Extension
-Visual Studio Code integration for Slither, a robust Solidity static analysis framework.
+Visual Studio Code integration for Slither, a Solidity static analysis framework.
 
 ## Features
 * TODO

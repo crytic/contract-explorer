@@ -20,12 +20,13 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
     constructor(private context: vscode.ExtensionContext) {
         // Set up the severity nodes and map.
-        let severityNodes = [
-            new ExplorerNode("High", vscode.TreeItemCollapsibleState.Collapsed), 
-            new ExplorerNode("Medium", vscode.TreeItemCollapsibleState.Collapsed), 
-            new ExplorerNode("Low", vscode.TreeItemCollapsibleState.Collapsed), 
-            new ExplorerNode("Informational", vscode.TreeItemCollapsibleState.Collapsed)
-        ];
+        let highSeverityNode = new ExplorerNode("High", vscode.TreeItemCollapsibleState.Expanded);
+        let mediumSeverityNode = new ExplorerNode("Medium", vscode.TreeItemCollapsibleState.Expanded);
+        let lowSeverityNode = new ExplorerNode("Low", vscode.TreeItemCollapsibleState.Expanded);
+        let informationalSeverityNode = new ExplorerNode("Informational", vscode.TreeItemCollapsibleState.Expanded);
+        let severityNodes = [highSeverityNode,mediumSeverityNode, lowSeverityNode, informationalSeverityNode];
+            
+
         for (let severityNode of severityNodes) {
             if(severityNode.label) { 
                 this.bySeverityNode.nodes.push(severityNode);

@@ -59,44 +59,52 @@
         "commands": [
             {
                 "command": "slither.analyze",
+                "icon": {
+                    "dark": "resources/analyze-dark.svg",
+                    "light": "resources/analyze-light.svg"
+                },
                 "title": "Run Slither"
             },
             {
                 "command": "slither.refreshExplorer",
+                "icon": {
+                    "dark": "resources/refresh-dark.svg",
+                    "light": "resources/refresh-light.svg"
+                },
                 "title": "Refresh Explorer"
             }
         ],
         "viewsContainers": {
             "activitybar": [
-              {
-                "id": "slither-container",
-                "title": "Slither Analysis",
-                "icon": "resources/viewsContainer-icon.png"
-              }
+                {
+                    "id": "slither-container",
+                    "title": "Slither Analysis",
+                    "icon": "resources/viewsContainer-icon.png"
+                }
             ]
-          },
-          "views": {
+        },
+        "views": {
             "slither-container": [
-              {
-                "id": "slither-explorer",
-                "name": "Analysis"
-              }
+                {
+                    "id": "slither-explorer",
+                    "name": "Analysis"
+                }
             ]
-          },
-          "menus": {
+        },
+        "menus": {
             "view/title": [
-              {
-                "command": "slither.analyze",
-                "when": "view == slither-explorer",
-                "group": "navigation@0"
-              },
-              {
-                "command": "slither.refreshExplorer",
-                "when": "view == slither-explorer",
-                "group": "navigation@1"
-              }
+                {
+                    "command": "slither.analyze",
+                    "when": "view == slither-explorer",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "slither.refreshExplorer",
+                    "when": "view == slither-explorer",
+                    "group": "navigation@1"
+                }
             ]
-          },
+        },
         "languages": [
             {
                 "id": "slither-output",
