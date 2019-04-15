@@ -23,7 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', async () => { 
         await slitherExplorer.refreshExplorer(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.clear', async () => { 
+    context.subscriptions.push(vscode.commands.registerCommand('slither.clear', async () => {
+        Logger.log("Clearing results...");
         await slither.clear();
         await slitherExplorer.refreshExplorer(); 
     }));

@@ -1,6 +1,6 @@
 
 import * as vscode from 'vscode'
-import { SlitherResult } from './slitherResult';
+import { SlitherResult } from './slitherResults';
 
 export class ExplorerNode extends vscode.TreeItem {
     public nodes : ExplorerNode[];

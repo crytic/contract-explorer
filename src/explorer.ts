@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as slither from "./slither";
+import * as slitherResults from "./slitherResults";
 import { Logger } from "./logger";
 import * as config from "./config";
 import { ExplorerNode, CheckResultNode } from "./explorerNode"
@@ -99,6 +100,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
+            slitherResults.gotoResult(checkResultNode.result);
         }
     }
 

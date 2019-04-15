@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as semver from 'semver';
 import * as child_process from 'child_process';
 import { Logger } from "./logger";
-import { SlitherResult } from "./slitherResult";
+import { SlitherResult } from "./slitherResults";
 
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
