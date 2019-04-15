@@ -5,13 +5,14 @@ import * as fs from "fs";
 import * as semver from 'semver';
 import * as child_process from 'child_process';
 import { Logger } from "./logger";
+import { SlitherResult } from "./slitherResult";
 
-export const results : Map<string, []> = new Map<string, []>();
+export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
-const checkVersion = async () => {
+async function checkVersion() : Promise<boolean> {
     try {
         // Invoke slither to obtain the current version.
-        let version = (await exec('--version')).output.replace(/\r?\n|\r/g, "");
+        let version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
 
         // Verify we meet the minimum requirement.
         if(!semver.gt(version, config.minimumSlitherVersion)){
@@ -37,7 +38,7 @@ Please install slither: "pip install slither-analyzer"`
 
 export async function getDetectors() : Promise<any> {
     // Obtain our detectors in json format.
-    let output = (await exec("--list-detectors-json")).output;
+    let output = (await exec_slither("--list-detectors-json")).output;
 
     // Return our parsed detectors.
     return JSON.parse(output);
@@ -65,7 +66,7 @@ export async function analyze() : Promise<boolean> {
     }
 
     // Print our starting analysis message.
-    Logger.log("Starting slither analysis... \u2705");
+    Logger.log("\u2E3B Starting analysis \u2E3B");
 
     // Setup our state
     results.clear();
@@ -92,7 +93,7 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let {output, error} = await exec(`${workspacePath} --disable-solc-warnings --json ${resultsPath}`);
+        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --json ${resultsPath}`, false);
 
         // Errors are thrown when slither succeeds. We should also have a results file.
         if (error && !fs.existsSync(resultsPath)) {
@@ -113,7 +114,6 @@ export async function analyze() : Promise<boolean> {
     // Print our analysis results.
     Logger.log("");
     Logger.log(`\u2E3B Analysis: ${successCount} succeeded, ${failCount} failed, ${vscode.workspace.workspaceFolders.length - (successCount + failCount)} skipped \u2E3B`);
-
 
     // We completed analysis without error.
     return true;
@@ -158,9 +158,12 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
 async function printResults(data: []) {
     data.forEach((item: any) => {
-        const descriptions = item['description'].replace(/#/g, ":").replace(/\t/g, "").split("\n");
+        const descriptions = item['description'].replace("#", ":").replace("\t", "").split("\n");
         descriptions.forEach((description: any) => {
 
+            // Trim the description
+            description = description.trim();
+            
             // If any issue doesn't have a description, it is not output.
             if (description === "") {
                 return;
@@ -171,19 +174,18 @@ async function printResults(data: []) {
                 Logger.log("");
             }
 
-            // If the line starts with a dash, it's part of a list so we indent it. 
-            // If it doesn't, it starts a new issue, and we add a special icon to it.
+            // If it looks like a list item (starts with "-"), we standardize indenting and prefix with a bullet.
+            // If it doesn't, it probably starts a new issue, and we prefix it with a red X.
             if (description.startsWith("-")) {
-                Logger.log(`\t${description}`);
+                Logger.log(`\t\u2022${description.substring(1)}`);
             } else {
                 Logger.log(`\u274C ${description}`);
             }
-
         });
     });
 }
 
-async function exec(args : string[] | string, logError : boolean = true) : Promise<{output : string, error : string}> { 
+async function exec_slither(args : string[] | string, logError : boolean = true) : Promise<{output : string, error : string}> { 
     // If this is an array, make it into a single string.
     if (args instanceof Array) {
         args = args.join(' ');
