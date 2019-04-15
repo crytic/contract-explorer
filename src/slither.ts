@@ -119,6 +119,28 @@ export async function analyze() : Promise<boolean> {
     return true;
 }
 
+export async function clear() {
+    // Verify there is a workspace folder open to clear results for.
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+        return;
+    }
+
+    // Loop for every workspace to remove
+    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
+        
+        // Obtain our workspace path.
+        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
+
+        // Obtain our results storage path.
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+
+        // Clear the results file if it exists.
+        if(fs.existsSync(resultsPath)) {
+            fs.unlinkSync(resultsPath);
+        }
+    }
+}
+
 export async function readResults(print : boolean = false) : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
@@ -129,7 +151,7 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
     // Setup our state
     results.clear();
 
-    // Loop for every workspace to run analysis on.
+    // Loop for every workspace to read results from.
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
         // TODO: Add ability to filter workspace folders out here.

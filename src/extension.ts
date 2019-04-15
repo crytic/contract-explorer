@@ -20,11 +20,15 @@ export function activate(context: vscode.ExtensionContext) {
         await slither.analyze();
         await slitherExplorer.refreshExplorer();
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', () => { 
-        slitherExplorer.refreshExplorer(); 
+    context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', async () => { 
+        await slitherExplorer.refreshExplorer(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', (node : ExplorerNode) => { 
-        slitherExplorer.clickedNode(node); 
+    context.subscriptions.push(vscode.commands.registerCommand('slither.clear', async () => { 
+        await slither.clear();
+        await slitherExplorer.refreshExplorer(); 
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', async (node : ExplorerNode) => { 
+        await slitherExplorer.clickedNode(node); 
     }));
 
     // If we are in debug mode, log our activation message and focus on the output channel

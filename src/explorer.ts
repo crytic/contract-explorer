@@ -35,7 +35,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
     }
 
-    public async refreshExplorer() {
+    public async refreshExplorer(logging : boolean = true) {
         // Read our last slither results 
         let success : boolean = await slither.readResults(false);
         if (!success) {
@@ -43,7 +43,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
 
         // Print our refreshing explorer message.
-        Logger.log("Refreshing explorer...");
+        if (logging) {
+            Logger.log("Refreshing explorer...");
+        }
 
         // Clear our results by severity
         for (let severityNode of this.bySeverityNode.nodes) {
@@ -87,7 +89,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
 
         // Print our message and fire our changed event.
-        Logger.log(`Refreshed explorer with ${issueCount} results`);
+        if (logging) {
+            Logger.log(`Refreshed explorer with ${issueCount} results`);
+        }
         this.changeTreeEmitter.fire();
     }
 
