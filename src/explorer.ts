@@ -47,9 +47,23 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         for (let severityNode of severityNodes) {
             if(severityNode.label) { 
                 this.bySeverityNode.nodes.push(severityNode);
-                this.bySeverityMap.set(severityNode.label, severityNode);
+                this.bySeverityMap.set(severityNode.label,  severityNode);
             }
         }
+    }
+
+    public async toggleTreeMode() {
+
+        // Switch our root node
+        if (this.rootNode == this.bySeverityNode) {
+            this.rootNode = this.byTypeNode;
+        }
+        else {
+            this.rootNode = this.bySeverityNode;
+        }
+        
+        // Fire the event to refresh our tree
+        this.changeTreeEmitter.fire();
     }
 
     public async refreshExplorer(logging : boolean = true) {

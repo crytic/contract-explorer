@@ -10,7 +10,7 @@
 			"always"
 		],
 		"triple-equals": true,
-		"strictNullChecks": false,
+		"strictNullChecks": false
 	},
 	"defaultSeverity": "warning"
 }
