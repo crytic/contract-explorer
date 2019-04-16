@@ -7,6 +7,15 @@ import * as child_process from 'child_process';
 import { Logger } from "./logger";
 import { SlitherDetector, SlitherResult } from "./slitherResults";
 
+const errorSlitherNotFound : string = 
+`Error: Slither execution failed 
+Please verify slither is installed: "pip install slither-analyzer"
+`;
+
+let printableDetectors : Set<string> | null = null;
+export function setPrintableDetectors(printableDetectorSet : Set<string>) {
+    printableDetectors = printableDetectorSet;
+}
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
 async function checkVersion() : Promise<boolean> {
@@ -15,9 +24,9 @@ async function checkVersion() : Promise<boolean> {
         let version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
 
         // Verify we meet the minimum requirement.
-        if(!semver.gt(version, config.minimumSlitherVersion)){
+        if(!semver.gte(version, config.minimumSlitherVersion)){
             Logger.error(
-`Error: Incompatible version of slither. 
+`Error: Incompatible version of slither
 Minimum Requirement: ${config.minimumSlitherVersion}
 Current version ${version}
 Please upgrade slither: "pip install slither-analyzer --upgrade"`
@@ -26,10 +35,7 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
         }
     } catch(e){
         // An error occurred checking version, assume slither is not installed.
-        Logger.error(
-`Error: Slither Installation Required
-Please install slither: "pip install slither-analyzer"`
-        );
+        Logger.error(errorSlitherNotFound);
         
         return false;
     }
@@ -37,11 +43,17 @@ Please install slither: "pip install slither-analyzer"`
 }
 
 export async function getDetectors() : Promise<SlitherDetector[]> {
-    // Obtain our detectors in json format.
-    let output = (await exec_slither("--list-detectors-json")).output;
+    try {
+        // Obtain our detectors in json format.
+        let output = (await exec_slither("--list-detectors-json")).output;
 
-    // Return our parsed detectors.
-    return JSON.parse(output);
+        // Return our parsed detectors.
+        return JSON.parse(output);
+    } catch (e) {
+        // Print our error and return a null array.
+        Logger.error(errorSlitherNotFound);
+        return [];
+    }
 }
 
 export async function analyze() : Promise<boolean> {
@@ -171,6 +183,15 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
 async function printResults(data: SlitherResult[]) {
     data.forEach((item: SlitherResult) => {
+
+        // If this isn't an allowed detector to print, we skip it.
+        if(printableDetectors) {
+            if (!printableDetectors.has(item.check)) {
+                return;
+            }
+        }
+
+        // Obtain the description and reformat it line-by-line.
         const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
         descriptions.forEach((description: any) => {
 

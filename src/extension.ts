@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider("slither-detector-filters", detectorFilterTree);
 
     // Initialize the analysis explorer.
-    let slitherExplorer = new explorer.SlitherExplorer(context);
+    let slitherExplorer = new explorer.SlitherExplorer(context, detectorFilterTree);
     vscode.window.registerTreeDataProvider("slither-explorer", slitherExplorer);
 
     // Register our explorer button commands.
@@ -35,6 +35,9 @@ export async function activate(context: vscode.ExtensionContext) {
         await slither.clear();
         await slitherExplorer.refreshExplorer(); 
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('slither.toggleAllDetectors', async () => {
+        await detectorFilterTree.toggleAll();
+    }));
 
     // Register our tree click commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.clickedDetectorFilterNode', async (node : detectorFilters.DetectorFilterNode) => { 
@@ -43,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', async (node : explorer.ExplorerNode) => { 
         await slitherExplorer.clickedNode(node); 
     }));
-
+    
     // If we are in debug mode, log our activation message and focus on the output channel
 	if(config.isDebuggingExtension()) {
         Logger.log("Activated in debug mode");
@@ -52,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Refresh the detector filters and slither analysis explorer tree (loads last results).
     await detectorFilterTree.populateTree();
-    slitherExplorer.refreshExplorer();
+    await slitherExplorer.refreshExplorer();
 }
 
 export function deactivate() {

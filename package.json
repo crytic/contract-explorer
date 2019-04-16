@@ -88,6 +88,14 @@
                     "light": "resources/clear-light.svg"
                 },
                 "title": "Clear Results"
+            },
+            {
+                "command": "slither.toggleAllDetectors",
+                "icon": {
+                    "dark": "resources/detectors-toggle-dark.svg",
+                    "light": "resources/detectors-toggle-light.svg"
+                },
+                "title": "Toggle All Detectors"
             }
         ],
         "viewsContainers": {
@@ -132,6 +140,11 @@
                     "command": "slither.clear",
                     "when": "view == slither-explorer",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "slither.toggleAllDetectors",
+                    "when": "view == slither-detector-filters",
+                    "group": "navigation@0"
                 }
             ]
         },

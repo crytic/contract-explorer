@@ -4,6 +4,7 @@ import * as slitherResults from "./slitherResults";
 import { Logger } from "./logger";
 import * as config from "./config";
 import { SlitherResult } from './slitherResults';
+import { DetectorFilterTree } from './detectorFilterTree';
 
 // Generic tree node implementation.
 export class ExplorerNode extends vscode.TreeItem {
@@ -36,6 +37,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     public changeTreeEmitter: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
     public readonly onDidChangeTreeData: vscode.Event<any> = this.changeTreeEmitter.event;
 
+    // Create our set of allowed detector types
+    private allowedDetectors : Set<string> = new Set<string>();
+
     // Nodes which contain check results, or maps to them by name.
     private byTypeNode : ExplorerNode = new ExplorerNode("By Type");
     private byTypeMap :  Map<string, ExplorerNode> = new Map<string, ExplorerNode>();
@@ -45,7 +49,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     // A node which is not rendered itself, but contains all nodes which will be shown.
     private rootNode : ExplorerNode = this.bySeverityNode;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(private context: vscode.ExtensionContext, private detectorFilterTree : DetectorFilterTree) {
         // Set up the severity nodes with their respective icons.
         let highSeverityNode = new ExplorerNode("High", vscode.TreeItemCollapsibleState.Expanded);
         highSeverityNode.iconPath = { 
@@ -76,6 +80,36 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 this.bySeverityMap.set(severityNode.label,  severityNode);
             }
         }
+
+        // Subscribe to the detector filter changed event
+        this.detectorFilterTree.changedEnabledFilters.push(async() => {
+            await this.onDetectorFiltersChanged();
+        });
+    }
+
+    private async refreshSeverityNodeCounts() : Promise<number> {
+        // Refresh our counts for every severity
+        let totalCount : number = 0;
+        for (let severityNode of this.bySeverityNode.nodes) {
+            let severityIssueCount = this.getFilteredChildren(severityNode.nodes).length;
+            totalCount += severityIssueCount;
+            severityNode.label = `${severityNode.originalLabel} (${severityIssueCount})`
+        }
+        return totalCount;
+    }
+
+    private async onDetectorFiltersChanged() {
+        // Obtain our new enabled detector list.
+        this.allowedDetectors = await this.detectorFilterTree.getEnabledDetectors();
+
+        // Change the list of printable detectors for slither.
+        slither.setPrintableDetectors(this.allowedDetectors);
+
+        // Change the severity counts
+        await this.refreshSeverityNodeCounts();
+
+        // Fire the event to refresh our tree
+        this.changeTreeEmitter.fire();
     }
 
     public async toggleTreeMode() {
@@ -115,8 +149,11 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
         
         // Loop for each result.
-        let issueCount = 0;
+        let issueCount : number = 0;
         for (let [workspaceFolder, workspaceResults] of slither.results) {
+            // Organize the workspace results.
+            workspaceResults.sort((a, b) => (a.description > b.description) ? 1 : -1);
+
             // Loop through all the results.
             for(let workspaceResult of workspaceResults) {
                 // Create our issue node.
@@ -140,15 +177,15 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
             }
         }
 
-        // Refresh our counts for every severity
-        for (let severityNode of this.bySeverityNode.nodes) {
-            severityNode.label = `${severityNode.originalLabel} (${severityNode.nodes.length})`
+        // Refresh our severity counts
+        let filteredIssueCount = await this.refreshSeverityNodeCounts();
+
+        // Print our message
+        if (logging) {
+            Logger.log(`Loaded ${issueCount} issues, displaying ${filteredIssueCount}`);
         }
 
-        // Print our message and fire our changed event.
-        if (logging) {
-            Logger.log(`Refreshed explorer with ${issueCount} results`);
-        }
+        // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
     }
 
@@ -164,18 +201,38 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         return element;
     }
 
+    private getFilteredChildren(children : ExplorerNode[]) : ExplorerNode[] {
+        // Using our provided child list, we remove all items which do not conform to the enabled detector list.
+        let filteredChildren : ExplorerNode[] = [];
+        for(let childNode of children) {
+            // If this is a result which is not on allowed list, we skip it.
+            if (childNode instanceof CheckResultNode) {
+                if (!this.allowedDetectors.has(childNode.result.check)) {
+                    continue;
+                }
+            }
+            // Otherwise we add the item appropriately.
+            filteredChildren.push(childNode);
+        }
+        return filteredChildren;
+    }
+
     public getChildren(element?: ExplorerNode): ExplorerNode[] | Thenable<ExplorerNode[]> {
+        // Create our resulting list
+        let children : ExplorerNode[] = [];
+
         // If there is a provided node, return its subnodes.
         if (element) {
-            return element.nodes;
-        }
-
-        // If there are no items under the root node, we simply return a default node.
-        if (this.rootNode.nodes.length == 0) {
+            children = element.nodes;
+        } else if (this.rootNode.nodes.length == 0) {
+            // If there is no provided node and we have no nodes, return a blank message.
             return [new ExplorerNode("<No analysis results>")];
+        } else {
+            // If we have nodes under our root nodes, return those.
+            children = this.rootNode.nodes;
         }
 
-        // Otherwise we return our subnodes.
-        return this.rootNode.nodes;
+        // Using our provided child list, we remove all items which do not conform to the enabled detector list.
+        return this.getFilteredChildren(children);
     }
 }
