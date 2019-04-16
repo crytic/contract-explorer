@@ -3,8 +3,34 @@ import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
 import { Logger } from "./logger";
 import * as config from "./config";
-import { ExplorerNode, CheckResultNode } from "./explorerNode"
+import { SlitherResult } from './slitherResults';
 
+// Generic tree node implementation.
+export class ExplorerNode extends vscode.TreeItem {
+    public nodes : ExplorerNode[];
+    public readonly originalLabel : string;
+    constructor(originalLabel: string, collapsibleState?: vscode.TreeItemCollapsibleState) {
+        super(originalLabel, collapsibleState);
+        this.originalLabel = originalLabel;
+        this.nodes = [];
+        this.command = {
+            title: "",
+            command: "slither.clickedExplorerNode",
+            arguments: [this],
+        };
+    }
+}
+
+// A special type of node which denotes an issue.
+export class CheckResultNode extends ExplorerNode {
+    public result : SlitherResult;
+    constructor(result : SlitherResult) {
+        super(String(result.description), vscode.TreeItemCollapsibleState.None);
+        this.result = result;
+    }
+}
+
+// The explorer/treeview for slither analysis results.
 export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
     public changeTreeEmitter: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();

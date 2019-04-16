@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as semver from 'semver';
 import * as child_process from 'child_process';
 import { Logger } from "./logger";
-import { SlitherResult } from "./slitherResults";
+import { SlitherDetector, SlitherResult } from "./slitherResults";
 
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
@@ -36,21 +36,12 @@ Please install slither: "pip install slither-analyzer"`
     return true;
 }
 
-export async function getDetectors() : Promise<any> {
+export async function getDetectors() : Promise<SlitherDetector[]> {
     // Obtain our detectors in json format.
     let output = (await exec_slither("--list-detectors-json")).output;
 
     // Return our parsed detectors.
     return JSON.parse(output);
-}
-
-export const validateDetectors = async(input: []) => {
-    // Parse supported detectors
-    let detectors = (await getDetectors()).map((item: any) => item['check']);
-
-    // Verify no detectors were provided which are unsupported.
-    let unsupported  = input.filter(x => !detectors.includes(x));
-    return unsupported.length === 0;
 }
 
 export async function analyze() : Promise<boolean> {

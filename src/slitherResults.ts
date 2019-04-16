@@ -1,6 +1,14 @@
 import * as vscode from 'vscode';
 import { Logger } from "./logger";
 
+export interface SlitherDetector {
+    check : string;
+    confidence : string;
+    impact : string;
+    title : string;
+    description : string;
+}
+
 export interface SlitherResult {
     check : string;
     confidence : string;

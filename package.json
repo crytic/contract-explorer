@@ -104,6 +104,10 @@
                 {
                     "id": "slither-explorer",
                     "name": "Analysis"
+                },
+                {
+                    "id": "slither-detector-filters",
+                    "name": "Detector Filters"
                 }
             ]
         },
