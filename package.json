@@ -56,6 +56,21 @@
         "vscode": "^1.1.25"
     },
     "contributes": {
+        "configuration": [
+            {
+                "title": "slither",
+                "properties": {
+                    "slither.solcPath": {
+                        "type": "string",
+                        "description": "Path to solc compiler used for analysis ('solc' if blank)"
+                    },
+                    "slither.hiddenDetectors": {
+                        "type": "array",
+                        "description": "List of detectors which are hidden in the explorer"
+                    }
+                }
+            }
+        ],
         "commands": [
             {
                 "command": "slither.analyze",

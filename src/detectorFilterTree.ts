@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
-import { Logger } from "./logger";
+import * as config from "./config";
 
 // Generic tree node implementation.
 export class DetectorFilterNode extends vscode.TreeItem {
@@ -45,8 +45,8 @@ export class DetectorFilterTree implements vscode.TreeDataProvider<DetectorFilte
         for (let detector of slither.detectors) {
             // Determine if this detector is visible or not
             let checked : boolean = true;
-            if (slither.hiddenDetectors) {
-                checked = !slither.hiddenDetectors.has(detector.check);
+            if (config.userConfiguration.hiddenDetectors) {
+                checked = config.userConfiguration.hiddenDetectors.indexOf(detector.check) < 0;
             }
             // Create the node for this detector and add it to the list.
             let detectorFilterNode : DetectorFilterNode = new DetectorFilterNode(detector, checked);

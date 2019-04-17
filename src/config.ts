@@ -1,27 +1,25 @@
 import * as path from "path";
-import * as fs from "fs";
 import * as shell from "shelljs";
 import * as vscode from "vscode";
 
 // Constants
-const storagePath : string = "./.slither"; // Directory relative to workspace to store files
+const storagePath : string = "./.vscode"; // Directory relative to workspace to store files
 export const slitherPath : string = "slither"; // Slither path
 export const minimumSlitherVersion : string = '0.4.0'; // minimum supported slither version
 export const storageFiles = {
-    analysis: "analysis-results.json", // file where analysis results will be stored
-    config: "config.json" // file where config properties will be saved
+    analysis: "slither-results.json" // file where analysis results will be stored
 }
 
 // User configuration definition
-export interface Configuration {
+export interface UserConfiguration {
     solcPath : string;
-    ignoreDetectors : string[];
+    hiddenDetectors : string[];
 }
-const defaultConfiguration : Configuration = {
+const defaultConfiguration : UserConfiguration = {
     solcPath: "", // default solc path (if blank, no custom path)
-    ignoreDetectors: [] // 'check' properties to ignore in analysis results
+    hiddenDetectors: [] // 'check' properties to ignore in analysis results
 }
-export const configurations : Map<string, Configuration> = new Map<string, Configuration>();
+export let userConfiguration : UserConfiguration = Object.assign({}, defaultConfiguration);
 
 // Functions
 export function createStorageDirectory(workspaceFolder : string) {
@@ -38,51 +36,24 @@ export function getStorageFilePath(workspaceFolder : string, fileName : string) 
     return path.join(storageDirectory, fileName);
 }
 
-export function readAllConfigurations() {
-    // Verify there is a workspace folder open
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
-        return;
-    }
+export function readConfiguration() {
+    // Start with the default configuration as a base to keep it clean
+    userConfiguration = Object.assign({}, defaultConfiguration);
 
-    // Clear all configurations
-    configurations.clear();
-
-    // Loop through all workspaces
-    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
-        // Read the configuration for this workspace
-        let workspaceFolder : string = vscode.workspace.workspaceFolders[i].uri.fsPath;
-        let configPath : string = getStorageFilePath(workspaceFolder, storageFiles.config);
-        let config : Configuration;
-        if(fs.existsSync(configPath)) {
-            config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        } else {
-            config = Object.assign({}, defaultConfiguration);
+    // Dynamically copy every property which we define in.
+    let workspaceConfiguration = Object.assign({}, vscode.workspace.getConfiguration('slither'));
+    for (let key of Object.keys(userConfiguration)) {
+        if(workspaceConfiguration.has(key)) {
+            (<any>userConfiguration)[key] = workspaceConfiguration[key];
         }
-
-        // Set the configuration in the set.
-        configurations.set(workspaceFolder, config);
     }
 }
 
-export function saveConfiguration(workspaceFolder : string) : boolean {
-    // Check if this workspace is in our configurations.
-    if (!configurations.has(workspaceFolder)) {
-        return false;
+export function saveConfiguration() : boolean {
+    // Obtain every property of the configuration.
+    let workspaceConfiguration = vscode.workspace.getConfiguration('slither');
+    for (let key of Object.keys(userConfiguration)) {
+        workspaceConfiguration.update(key, (<any>userConfiguration)[key]);
     }
-
-    // Write the configuration file.
-    let configPath : string = getStorageFilePath(workspaceFolder, storageFiles.config);
-    let config : Configuration = <Configuration>configurations.get(workspaceFolder);
-    fs.writeFileSync(configPath, JSON.stringify(config, null, '\t'));
-
     return true;
-}
-
-export function saveAllConfigurations() : boolean { 
-    // Loop through all workspaces and save each configuration
-    let result : boolean = true;
-    for (let [workspaceFolder, config] of configurations) {
-        result = result && saveConfiguration(workspaceFolder);
-    }
-    return result;
 }

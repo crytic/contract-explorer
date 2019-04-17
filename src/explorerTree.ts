@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
+import * as config from "./config"
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
 import { Logger } from "./logger";
-import * as config from "./config";
 import { SlitherResult } from './slitherResults';
 import { DetectorFilterTree } from './detectorFilterTree';
 
@@ -102,8 +102,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Obtain our new hidden detector list.
         this.hiddenDetectors = await this.detectorFilterTree.getHiddenDetectors();
 
-        // Set the hidden detectors in our slither instance.
-        slither.setHiddenDetectors(this.hiddenDetectors);
+        // Update the hidden detectors in the user configuration and save changes.
+        config.userConfiguration.hiddenDetectors = Array.from(this.hiddenDetectors);
+        config.saveConfiguration();
 
         // Change the severity counts
         await this.refreshSeverityNodeCounts();

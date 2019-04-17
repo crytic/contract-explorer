@@ -11,24 +11,7 @@ import { SlitherDetector, SlitherResult } from "./slitherResults";
 export let initialized : boolean = false;
 export let version : string;
 export let detectors : SlitherDetector[];
-export let hiddenDetectors : Set<string> | null = null;
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
-
-// Property-setters
-export function setHiddenDetectors(hiddenDetectorSet : Set<string>) {
-    hiddenDetectors = hiddenDetectorSet;
-
-    // Loop for each workspace and change all filters.
-    let hiddenDetectorArray : string[] = Array.from(hiddenDetectors);
-    for (let [workspaceFolder, workspaceConfig] of config.configurations) {
-        workspaceConfig.ignoreDetectors = hiddenDetectorArray;
-    }
-
-    // TODO: This is temporary. This should be saving on a timed thread 
-    // that is postponed every detector filter change. This will reduce
-    // writes to disk.
-    config.saveAllConfigurations();
-}
 
 // Functions
 export async function initialize() : Promise<boolean> {
@@ -41,7 +24,7 @@ export async function initialize() : Promise<boolean> {
         detectors = JSON.parse(output);
 
         // Obtain our slither version
-        let version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
+        version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
 
         // Verify we meet the minimum version requirement.
         if(!semver.gte(version, config.minimumSlitherVersion)){
@@ -69,6 +52,13 @@ export async function analyze() : Promise<boolean> {
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
         return false;
+    }
+
+    // If we have not initialized slither, try to do so now.
+    if (!initialized) {
+        if(!await initialize()) {
+            return false;
+        }
     }
 
     // Print our starting analysis message.
@@ -122,7 +112,7 @@ export async function analyze() : Promise<boolean> {
     Logger.log(`\u2E3B Analysis: ${successCount} succeeded, ${failCount} failed, ${vscode.workspace.workspaceFolders.length - (successCount + failCount)} skipped \u2E3B`);
 
     // Save all configurations
-    config.saveAllConfigurations();
+    config.saveConfiguration();
 
     // We completed analysis without error.
     return true;
@@ -191,8 +181,8 @@ async function printResults(data: SlitherResult[], filterDetectors : boolean = t
     data.forEach((item: SlitherResult) => {
 
         // If this detector is hidden, skip it.
-        if(filterDetectors && hiddenDetectors) {
-            if (hiddenDetectors.has(item.check)) {
+        if(filterDetectors && config.userConfiguration.hiddenDetectors.length > 0) {
+            if (config.userConfiguration.hiddenDetectors.indexOf(item.check) >= 0) {
                 return;
             }
         }

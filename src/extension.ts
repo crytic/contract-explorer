@@ -7,23 +7,24 @@ import * as detectorFilters from "./detectorFilterTree";
 import * as explorer from "./explorerTree";
 import SlitherResultLensProvider from './slitherResults';
 
+// Properties
+let detectorFilterTree : detectorFilters.DetectorFilterTree;
+let slitherExplorer : explorer.SlitherExplorer;
 
+// Functions
 export async function activate(context: vscode.ExtensionContext) {
     // Log our introductory message.
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
-
-    // Read all configurations
-    config.readAllConfigurations();
     
     // Initialize slither
     await slither.initialize();
 
     // Initialize the detector filter tree
-    let detectorFilterTree = new detectorFilters.DetectorFilterTree(context);
+    detectorFilterTree = new detectorFilters.DetectorFilterTree(context);
     vscode.window.registerTreeDataProvider("slither-detector-filters", detectorFilterTree);
 
     // Initialize the analysis explorer.
-    let slitherExplorer = new explorer.SlitherExplorer(context, detectorFilterTree);
+    slitherExplorer = new explorer.SlitherExplorer(context, detectorFilterTree);
     vscode.window.registerTreeDataProvider("slither-explorer", slitherExplorer);
 
     // Register our explorer button commands.
@@ -64,16 +65,24 @@ export async function activate(context: vscode.ExtensionContext) {
 	    Logger.show();
     }
 
+    // Refresh the workspace.
+    await refreshWorkspace();
+}
+
+async function refreshWorkspace() {
+    // Read any new configuration.
+    config.readConfiguration();
+
     // Refresh the detector filters and slither analysis explorer tree (loads last results).
     await detectorFilterTree.populateTree();
     await slitherExplorer.refreshExplorer();
 }
 
-export function deactivate() {
-    
-}
-
 async function isDebuggingExtension() : Promise<boolean> {
     const debugRegex = /^--inspect(-brk)?=?/;
     return process.execArgv ? process.execArgv.some(arg => debugRegex.test(arg)) : false;
+}
+
+export function deactivate() {
+    
 }
