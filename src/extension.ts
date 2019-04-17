@@ -5,11 +5,15 @@ import { Logger } from "./logger";
 import * as config from "./config";
 import * as detectorFilters from "./detectorFilterTree";
 import * as explorer from "./explorerTree";
+import SlitherResultLensProvider from './slitherResults';
 
 
 export async function activate(context: vscode.ExtensionContext) {
     // Log our introductory message.
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
+
+    // Initialize slither
+    await slither.initialize();
 
     // Initialize the detector filter tree
     let detectorFilterTree = new detectorFilters.DetectorFilterTree(context);
@@ -46,6 +50,10 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', async (node : explorer.ExplorerNode) => { 
         await slitherExplorer.clickedNode(node); 
     }));
+
+    // Register our code lens provider for slither results
+    let slitherLensDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new SlitherResultLensProvider()));
     
     // If we are in debug mode, log our activation message and focus on the output channel
 	if(config.isDebuggingExtension()) {

@@ -7,23 +7,32 @@ import * as child_process from 'child_process';
 import { Logger } from "./logger";
 import { SlitherDetector, SlitherResult } from "./slitherResults";
 
-const errorSlitherNotFound : string = 
-`Error: Slither execution failed 
-Please verify slither is installed: "pip install slither-analyzer"
-`;
-
-let printableDetectors : Set<string> | null = null;
-export function setPrintableDetectors(printableDetectorSet : Set<string>) {
-    printableDetectors = printableDetectorSet;
-}
+// Properties
+export let initialized : boolean = false;
+export let version : string;
+export let detectors : SlitherDetector[];
+export let detectorFilter : Set<string> | null = null;
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
-async function checkVersion() : Promise<boolean> {
+// Property-setters
+export function setDetectorFilter(detectorFilterSet : Set<string>) {
+    detectorFilter = detectorFilterSet;
+}
+
+// Functions
+export async function initialize() : Promise<boolean> {
+    // Set our initialized flag to false in case of re-initialization.
+    initialized = false;
+
     try {
-        // Invoke slither to obtain the current version.
+        // Obtain our slither detectors
+        let output = (await exec_slither("--list-detectors-json")).output;
+        detectors = JSON.parse(output);
+
+        // Obtain our slither version
         let version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
 
-        // Verify we meet the minimum requirement.
+        // Verify we meet the minimum version requirement.
         if(!semver.gte(version, config.minimumSlitherVersion)){
             Logger.error(
 `Error: Incompatible version of slither
@@ -31,40 +40,23 @@ Minimum Requirement: ${config.minimumSlitherVersion}
 Current version ${version}
 Please upgrade slither: "pip install slither-analyzer --upgrade"`
             );
-            return false;
         }
-    } catch(e){
-        // An error occurred checking version, assume slither is not installed.
-        Logger.error(errorSlitherNotFound);
-        
-        return false;
-    }
-    return true;
-}
-
-export async function getDetectors() : Promise<SlitherDetector[]> {
-    try {
-        // Obtain our detectors in json format.
-        let output = (await exec_slither("--list-detectors-json")).output;
-
-        // Return our parsed detectors.
-        return JSON.parse(output);
+        initialized = true;
     } catch (e) {
         // Print our error and return a null array.
-        Logger.error(errorSlitherNotFound);
-        return [];
+        Logger.error(
+`Error: Slither execution failed 
+Please verify slither is installed: "pip install slither-analyzer"`
+        );
     }
+
+    return initialized;
 }
 
 export async function analyze() : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
-        return false;
-    }
-    
-    // Verify the provided slither version is supported.
-    if(!(await checkVersion())) {
         return false;
     }
 
@@ -96,7 +88,7 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --json ${resultsPath}`, false);
+        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --json "${resultsPath}"`, false);
 
         // Errors are thrown when slither succeeds. We should also have a results file.
         if (error && !fs.existsSync(resultsPath)) {
@@ -120,28 +112,6 @@ export async function analyze() : Promise<boolean> {
 
     // We completed analysis without error.
     return true;
-}
-
-export async function clear() {
-    // Verify there is a workspace folder open to clear results for.
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
-        return;
-    }
-
-    // Loop for every workspace to remove
-    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
-        
-        // Obtain our workspace path.
-        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
-
-        // Obtain our results storage path.
-        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
-
-        // Clear the results file if it exists.
-        if(fs.existsSync(resultsPath)) {
-            fs.unlinkSync(resultsPath);
-        }
-    }
 }
 
 export async function readResults(print : boolean = false) : Promise<boolean> {
@@ -181,12 +151,34 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
     return true;
 }
 
-async function printResults(data: SlitherResult[]) {
+export async function clear() {
+    // Verify there is a workspace folder open to clear results for.
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
+        return;
+    }
+
+    // Loop for every workspace to remove
+    for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
+        
+        // Obtain our workspace path.
+        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
+
+        // Obtain our results storage path.
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+
+        // Clear the results file if it exists.
+        if(fs.existsSync(resultsPath)) {
+            fs.unlinkSync(resultsPath);
+        }
+    }
+}
+
+async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
     data.forEach((item: SlitherResult) => {
 
         // If this isn't an allowed detector to print, we skip it.
-        if(printableDetectors) {
-            if (!printableDetectors.has(item.check)) {
+        if(filterDetectors && detectorFilter) {
+            if (!detectorFilter.has(item.check)) {
                 return;
             }
         }

@@ -43,7 +43,7 @@ export async function gotoResult(result : SlitherResult) {
         // Obtain the filename
         let fileUri : vscode.Uri = vscode.Uri.file(resultElement.source_mapping.filename);
 
-        // Open the document, then select the appropriate range for source mapping.
+        // Open the document, then select the appropriate range for source mapping. 
         vscode.workspace.openTextDocument(fileUri).then((doc) => {
             vscode.window.showTextDocument(doc).then((editor) => {
                 if (vscode.window.activeTextEditor) {
@@ -65,5 +65,19 @@ export async function gotoResult(result : SlitherResult) {
 
         // Show an error message.
         vscode.window.showErrorMessage(r.message);
+    }
+}
+
+export default class SlitherResultLensProvider implements vscode.CodeLensProvider {
+
+    async provideCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+      // Code lens annotation+command for this section of the code.
+      let codeLensAnnotation: vscode.Command = {
+        command: "slither.TODO",
+        title: "Test CodeLens Provider"
+      };
+  
+      let codeLens = new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), codeLensAnnotation);
+      return [codeLens];
     }
 }

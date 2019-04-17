@@ -103,7 +103,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         this.allowedDetectors = await this.detectorFilterTree.getEnabledDetectors();
 
         // Change the list of printable detectors for slither.
-        slither.setPrintableDetectors(this.allowedDetectors);
+        slither.setDetectorFilter(this.allowedDetectors);
 
         // Change the severity counts
         await this.refreshSeverityNodeCounts();

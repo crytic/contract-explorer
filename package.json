@@ -150,6 +150,16 @@
         },
         "languages": [
             {
+                "id": "solidity",
+                "aliases": [
+                    "Solidity",
+                    "solidity"
+                ],
+                "extensions": [
+                    ".sol"
+                ]
+            },
+            {
                 "id": "slither-output",
                 "configuration": "./resources/log.configuration.json",
                 "mimetypes": [
