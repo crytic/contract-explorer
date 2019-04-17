@@ -12,6 +12,9 @@ export async function activate(context: vscode.ExtensionContext) {
     // Log our introductory message.
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
 
+    // Read all configurations
+    config.readAllConfigurations();
+    
     // Initialize slither
     await slither.initialize();
 
@@ -56,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new SlitherResultLensProvider()));
     
     // If we are in debug mode, log our activation message and focus on the output channel
-	if(config.isDebuggingExtension()) {
+	if(await isDebuggingExtension()) {
         Logger.log("Activated in debug mode");
 	    Logger.show();
     }
@@ -68,4 +71,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
     
+}
+
+async function isDebuggingExtension() : Promise<boolean> {
+    const debugRegex = /^--inspect(-brk)?=?/;
+    return process.execArgv ? process.execArgv.some(arg => debugRegex.test(arg)) : false;
 }

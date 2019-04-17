@@ -7,9 +7,10 @@ import { Logger } from "./logger";
 export class DetectorFilterNode extends vscode.TreeItem {
     public readonly detector : slitherResults.SlitherDetector;
     public checked : boolean = true;
-    constructor(detector : slitherResults.SlitherDetector) {
+    constructor(detector : slitherResults.SlitherDetector, checked : boolean) {
         super(`${detector.check}: ${detector.title}\n${detector.description}`, vscode.TreeItemCollapsibleState.None);
         this.detector = detector;
+        this.checked = checked;
         this.command = {
             title: "",
             command: "slither.clickedDetectorFilterNode",
@@ -42,8 +43,13 @@ export class DetectorFilterTree implements vscode.TreeDataProvider<DetectorFilte
         // Add a node for each detector to the tree.
         this.detectorFilterNodes = [];
         for (let detector of slither.detectors) {
-            // Create a tree node to add to our root node
-            let detectorFilterNode : DetectorFilterNode = new DetectorFilterNode(detector);
+            // Determine if this detector is visible or not
+            let checked : boolean = true;
+            if (slither.hiddenDetectors) {
+                checked = !slither.hiddenDetectors.has(detector.check);
+            }
+            // Create the node for this detector and add it to the list.
+            let detectorFilterNode : DetectorFilterNode = new DetectorFilterNode(detector, checked);
             this.refreshNodeIcon(detectorFilterNode);
             this.detectorFilterNodes.push(detectorFilterNode);
         }
@@ -95,19 +101,19 @@ export class DetectorFilterTree implements vscode.TreeDataProvider<DetectorFilte
         await this.fireChangedEnabledFilters();
     }
 
-    public async getEnabledDetectors() : Promise<Set<string>> {
+    public async getHiddenDetectors() : Promise<Set<string>> {
         // Create a new set
-        let enabledDetectors : Set<string> = new Set<string>();
+        let hiddenDetectors : Set<string> = new Set<string>();
 
-        // For each enabled detector, add it to the set
+        // For each hidden detector, add it to the set
         for(let node of this.detectorFilterNodes) {
-            if (node.checked) {
-                enabledDetectors.add(node.detector.check);
+            if (!node.checked) {
+                hiddenDetectors.add(node.detector.check);
             }
         }
 
         // Return the resulting set.
-        return enabledDetectors;
+        return hiddenDetectors;
     }
 
     public async clickedNode(node : DetectorFilterNode) {

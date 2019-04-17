@@ -11,12 +11,23 @@ import { SlitherDetector, SlitherResult } from "./slitherResults";
 export let initialized : boolean = false;
 export let version : string;
 export let detectors : SlitherDetector[];
-export let detectorFilter : Set<string> | null = null;
+export let hiddenDetectors : Set<string> | null = null;
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
 // Property-setters
-export function setDetectorFilter(detectorFilterSet : Set<string>) {
-    detectorFilter = detectorFilterSet;
+export function setHiddenDetectors(hiddenDetectorSet : Set<string>) {
+    hiddenDetectors = hiddenDetectorSet;
+
+    // Loop for each workspace and change all filters.
+    let hiddenDetectorArray : string[] = Array.from(hiddenDetectors);
+    for (let [workspaceFolder, workspaceConfig] of config.configurations) {
+        workspaceConfig.ignoreDetectors = hiddenDetectorArray;
+    }
+
+    // TODO: This is temporary. This should be saving on a timed thread 
+    // that is postponed every detector filter change. This will reduce
+    // writes to disk.
+    config.saveAllConfigurations();
 }
 
 // Functions
@@ -80,7 +91,7 @@ export async function analyze() : Promise<boolean> {
         config.createStorageDirectory(workspacePath);
 
         // Obtain our results storage path.
-        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageFiles.analysis);
 
         // Clear the results file if it exists.
         if(fs.existsSync(resultsPath)) {
@@ -110,6 +121,9 @@ export async function analyze() : Promise<boolean> {
     Logger.log("");
     Logger.log(`\u2E3B Analysis: ${successCount} succeeded, ${failCount} failed, ${vscode.workspace.workspaceFolders.length - (successCount + failCount)} skipped \u2E3B`);
 
+    // Save all configurations
+    config.saveAllConfigurations();
+
     // We completed analysis without error.
     return true;
 }
@@ -131,7 +145,7 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
         // Obtain our workspace results path.
         const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
-        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageFiles.analysis);
 
         // If the file exists, we read its contents into memory.
         if(fs.existsSync(resultsPath)) {
@@ -164,7 +178,7 @@ export async function clear() {
         const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
 
         // Obtain our results storage path.
-        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageResultsFileName);
+        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageFiles.analysis);
 
         // Clear the results file if it exists.
         if(fs.existsSync(resultsPath)) {
@@ -176,9 +190,9 @@ export async function clear() {
 async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
     data.forEach((item: SlitherResult) => {
 
-        // If this isn't an allowed detector to print, we skip it.
-        if(filterDetectors && detectorFilter) {
-            if (!detectorFilter.has(item.check)) {
+        // If this detector is hidden, skip it.
+        if(filterDetectors && hiddenDetectors) {
+            if (hiddenDetectors.has(item.check)) {
                 return;
             }
         }

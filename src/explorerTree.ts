@@ -37,8 +37,8 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     public changeTreeEmitter: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
     public readonly onDidChangeTreeData: vscode.Event<any> = this.changeTreeEmitter.event;
 
-    // Create our set of allowed detector types
-    private allowedDetectors : Set<string> = new Set<string>();
+    // Create our set of hidden detector types
+    private hiddenDetectors : Set<string> = new Set<string>();
 
     // Nodes which contain check results, or maps to them by name.
     private byTypeNode : ExplorerNode = new ExplorerNode("By Type");
@@ -99,11 +99,11 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     }
 
     private async onDetectorFiltersChanged() {
-        // Obtain our new enabled detector list.
-        this.allowedDetectors = await this.detectorFilterTree.getEnabledDetectors();
+        // Obtain our new hidden detector list.
+        this.hiddenDetectors = await this.detectorFilterTree.getHiddenDetectors();
 
-        // Change the list of printable detectors for slither.
-        slither.setDetectorFilter(this.allowedDetectors);
+        // Set the hidden detectors in our slither instance.
+        slither.setHiddenDetectors(this.hiddenDetectors);
 
         // Change the severity counts
         await this.refreshSeverityNodeCounts();
@@ -205,9 +205,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Using our provided child list, we remove all items which do not conform to the enabled detector list.
         let filteredChildren : ExplorerNode[] = [];
         for(let childNode of children) {
-            // If this is a result which is not on allowed list, we skip it.
+            // If this is a result which is hidden, we skip it.
             if (childNode instanceof CheckResultNode) {
-                if (!this.allowedDetectors.has(childNode.result.check)) {
+                if (this.hiddenDetectors.has(childNode.result.check)) {
                     continue;
                 }
             }
