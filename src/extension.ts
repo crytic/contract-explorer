@@ -58,6 +58,11 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register our code lens provider for slither results
     let slitherLensDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
     context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new SlitherResultLensProvider()));
+
+    // Add our workspace change event handler
+    vscode.workspace.onDidChangeWorkspaceFolders(async e => {
+        await refreshWorkspace();
+    });
     
     // If we are in debug mode, log our activation message and focus on the output channel
 	if(await isDebuggingExtension()) {

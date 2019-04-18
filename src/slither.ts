@@ -39,7 +39,7 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
     } catch (e) {
         // Print our error and return a null array.
         Logger.error(
-`Error: Slither execution failed 
+`Error: Slither initialization failed 
 Please verify slither is installed: "pip install slither-analyzer"`
         );
     }

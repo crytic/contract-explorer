@@ -5,8 +5,7 @@ export class Logger {
     private static outputChannel : vscode.OutputChannel = vscode.window.createOutputChannel("Slither Extension");
 
     public static initialize() : void {
-        // TODO: Initialization code.
-   
+
     }
 
     public static show() : void {
