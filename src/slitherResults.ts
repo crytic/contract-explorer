@@ -31,6 +31,8 @@ export interface SlitherSourceMapping {
     length : number;
     filename : string;
     lines : number[];
+    starting_column : number;
+    ending_column : number;
 }
 
 async function getSlitherResultRange(result : SlitherResult) : Promise<[number, number, number, number]> {
@@ -43,15 +45,10 @@ async function getSlitherResultRange(result : SlitherResult) : Promise<[number, 
     }
 
     let startLine = resultElement.source_mapping.lines[0] - 1;
-    let startColumn = 0;
+    let startColumn = resultElement.source_mapping.starting_column - 1;
     let endLine = resultElement.source_mapping.lines[resultElement.source_mapping.lines.length - 1] - 1;
-    let documentsWithName = vscode.workspace.textDocuments.find(document => path.normalize(document.fileName) == path.normalize(resultElement.source_mapping.filename));
-    if (documentsWithName) {
-        let endColumn = documentsWithName.lineAt(endLine).text.length;
-        return [startLine, startColumn, endLine, endColumn];
-    } else {
-        return [startLine, startColumn, endLine + 1, 0];
-    }
+    let endColumn = resultElement.source_mapping.ending_column - 1;
+    return [startLine, startColumn, endLine, endColumn];
 }
 
 export async function gotoResult(result : SlitherResult) {
