@@ -1,11 +1,12 @@
 'use strict';
-import * as vscode from 'vscode';
-import * as slither from "./slither";
-import { Logger } from "./logger";
+import * as vscode from "vscode";
 import * as config from "./config";
 import * as detectorFilters from "./detectorFilterTree";
 import * as explorer from "./explorerTree";
-import SlitherResultLensProvider from './slitherResults';
+import { Logger } from "./logger";
+import * as slither from "./slither";
+import * as slitherResults from "./slitherResults";
+import * as sourceHelper from "./sourceHelper";
 
 // Properties
 let detectorFilterTree : detectorFilters.DetectorFilterTree;
@@ -57,7 +58,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register our code lens provider for slither results
     let slitherLensDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new SlitherResultLensProvider()));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new sourceHelper.SlitherResultLensProvider()));
+
+    // Register our code lens click commands.
+    context.subscriptions.push(vscode.commands.registerCommand('slither.onCodeLensClick', async (checkResult : slitherResults.SlitherResult) => { 
+        await sourceHelper.SlitherResultLensProvider.onCodeLensClick(checkResult);
+    }));
 
     // Add our workspace change event handler
     vscode.workspace.onDidChangeWorkspaceFolders(async e => {

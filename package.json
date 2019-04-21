@@ -62,11 +62,13 @@
                 "properties": {
                     "slither.solcPath": {
                         "type": "string",
-                        "description": "Path to solc compiler used for analysis ('solc' if blank)"
+                        "description": "Path to solc compiler used for analysis ('solc' if blank)",
+                        "default": ""
                     },
                     "slither.hiddenDetectors": {
                         "type": "array",
-                        "description": "List of detectors which are hidden in the explorer"
+                        "description": "List of detectors which are hidden in the explorer",
+                        "default": []
                     }
                 }
             }
@@ -78,7 +80,7 @@
                     "dark": "resources/analyze-dark.svg",
                     "light": "resources/analyze-light.svg"
                 },
-                "title": "Run Slither"
+                "title": "Slither: Analyze"
             },
             {
                 "command": "slither.refreshExplorer",
@@ -86,7 +88,7 @@
                     "dark": "resources/refresh-dark.svg",
                     "light": "resources/refresh-light.svg"
                 },
-                "title": "Refresh Explorer"
+                "title": "Slither: Refresh Explorer"
             },
             {
                 "command": "slither.toggleTreeMode",
@@ -94,7 +96,7 @@
                     "dark": "resources/tree-mode-dark.svg",
                     "light": "resources/tree-mode-light.svg"
                 },
-                "title": "Change Tree Mode"
+                "title": "Slither: Change Tree Mode"
             },
             {
                 "command": "slither.clear",
@@ -102,7 +104,7 @@
                     "dark": "resources/clear-dark.svg",
                     "light": "resources/clear-light.svg"
                 },
-                "title": "Clear Results"
+                "title": "Slither: Clear Results"
             },
             {
                 "command": "slither.toggleAllDetectors",
@@ -110,14 +112,14 @@
                     "dark": "resources/detectors-toggle-dark.svg",
                     "light": "resources/detectors-toggle-light.svg"
                 },
-                "title": "Toggle All Detectors"
+                "title": "Slither: Toggle All Detectors"
             }
         ],
         "viewsContainers": {
             "activitybar": [
                 {
                     "id": "slither-container",
-                    "title": "Slither Analysis",
+                    "title": "Slither",
                     "icon": "resources/viewsContainer-icon.png"
                 }
             ]

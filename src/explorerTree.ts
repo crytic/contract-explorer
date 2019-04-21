@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as config from "./config"
+import { DetectorFilterTree } from './detectorFilterTree';
+import { Logger } from "./logger";
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
-import { Logger } from "./logger";
-import { SlitherResult } from './slitherResults';
-import { DetectorFilterTree } from './detectorFilterTree';
+import * as sourceHelper from "./sourceHelper";
 
 // Generic tree node implementation.
 export class ExplorerNode extends vscode.TreeItem {
@@ -24,9 +24,9 @@ export class ExplorerNode extends vscode.TreeItem {
 
 // A special type of node which denotes an issue.
 export class CheckResultNode extends ExplorerNode {
-    public result : SlitherResult;
-    constructor(result : SlitherResult) {
-        super(String(result.description), vscode.TreeItemCollapsibleState.None);
+    public result : slitherResults.SlitherResult;
+    constructor(result : slitherResults.SlitherResult) {
+        super(slitherResults.getSanitizedDescription(result), vscode.TreeItemCollapsibleState.None);
         this.result = result;
     }
 }
@@ -194,7 +194,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
-            slitherResults.gotoResult(checkResultNode.result);
+            sourceHelper.gotoResult(checkResultNode.result);
         }
     }
 

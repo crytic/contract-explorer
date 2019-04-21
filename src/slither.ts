@@ -1,11 +1,11 @@
-import * as config from "./config";
 import * as vscode from 'vscode';
-import * as util from "util";
-import * as fs from "fs";
-import * as semver from 'semver';
+import * as config from "./config";
 import * as child_process from 'child_process';
+import * as fs from "fs";
 import { Logger } from "./logger";
+import * as semver from 'semver';
 import { SlitherDetector, SlitherResult } from "./slitherResults";
+import * as util from "util";
 
 // Properties
 export let initialized : boolean = false;
@@ -177,41 +177,43 @@ export async function clear() {
     }
 }
 
-async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
-    data.forEach((item: SlitherResult) => {
+export async function printResult(item : SlitherResult, filterDetectors : boolean = true) {
+      // If this detector is hidden, skip it.
+      if(filterDetectors && config.userConfiguration.hiddenDetectors.length > 0) {
+        if (config.userConfiguration.hiddenDetectors.indexOf(item.check) >= 0) {
+            return;
+        }
+    }
 
-        // If this detector is hidden, skip it.
-        if(filterDetectors && config.userConfiguration.hiddenDetectors.length > 0) {
-            if (config.userConfiguration.hiddenDetectors.indexOf(item.check) >= 0) {
-                return;
-            }
+    // Obtain the description and reformat it line-by-line.
+    const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
+    descriptions.forEach((description: any) => {
+
+        // Trim the description
+        description = description.trim();
+        
+        // If any issue doesn't have a description, it is not output.
+        if (description === "") {
+            return;
+        }
+        
+        // Seperate issues (following lines with a dash are usually connected to the issue above)
+        if (!description.startsWith("-")) {
+            Logger.log("");
         }
 
-        // Obtain the description and reformat it line-by-line.
-        const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
-        descriptions.forEach((description: any) => {
-
-            // Trim the description
-            description = description.trim();
-            
-            // If any issue doesn't have a description, it is not output.
-            if (description === "") {
-                return;
-            }
-            
-            // Seperate issues (following lines with a dash are usually connected to the issue above)
-            if (!description.startsWith("-")) {
-                Logger.log("");
-            }
-
-            // If it looks like a list item (starts with "-"), we standardize indenting and prefix with a bullet.
-            // If it doesn't, it probably starts a new issue, and we prefix it with a red X.
-            if (description.startsWith("-")) {
-                Logger.log(`\t\u2022${description.substring(1)}`);
-            } else {
-                Logger.log(`\u274C ${description}`);
-            }
-        });
+        // If it looks like a list item (starts with "-"), we standardize indenting and prefix with a bullet.
+        // If it doesn't, it probably starts a new issue, and we prefix it with a red X.
+        if (description.startsWith("-")) {
+            Logger.log(`\t\u2022${description.substring(1)}`);
+        } else {
+            Logger.log(`\u274C ${description}`);
+        }
+    });
+}
+export async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
+    data.forEach((item: SlitherResult) => {
+        printResult(item, filterDetectors);
     });
 }
 
