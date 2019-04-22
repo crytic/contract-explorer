@@ -14,6 +14,9 @@ let slitherExplorer : explorer.SlitherExplorer;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
+    // Set our slither panel to visible
+    vscode.commands.executeCommand('setContext', 'slitherCompatibleWorkspace', true);
+
     // Log our introductory message.
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
     
@@ -69,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeWorkspaceFolders(async e => {
         await refreshWorkspace();
     });
-    
+
     // If we are in debug mode, log our activation message and focus on the output channel
 	if(await isDebuggingExtension()) {
         Logger.log("Activated in debug mode");

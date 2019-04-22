@@ -187,29 +187,32 @@ export async function printResult(item : SlitherResult, filterDetectors : boolea
 
     // Obtain the description and reformat it line-by-line.
     const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
-    descriptions.forEach((description: any) => {
-
+    let outputLine : boolean = false;
+    for (let i = 0; i < descriptions.length; i++) {
         // Trim the description
-        description = description.trim();
+        let description = descriptions[i].trim();
         
         // If any issue doesn't have a description, it is not output.
         if (description === "") {
-            return;
+            continue;
         }
         
-        // Seperate issues (following lines with a dash are usually connected to the issue above)
-        if (!description.startsWith("-")) {
-            Logger.log("");
-        }
-
-        // If it looks like a list item (starts with "-"), we standardize indenting and prefix with a bullet.
-        // If it doesn't, it probably starts a new issue, and we prefix it with a red X.
-        if (description.startsWith("-")) {
-            Logger.log(`\t\u2022${description.substring(1)}`);
-        } else {
+        // Print the line accordingly.
+        if (!outputLine) {
+            // The first line output should be prefixed with a red X icon.
             Logger.log(`\u274C ${description}`);
+            outputLine = true;
         }
-    });
+        else if (description.startsWith("-")) {
+            // Dashes which indicate a list are converted into bullets.
+            Logger.log(`\t\u2022${description.substring(1)}`);
+        }
+    }
+
+    // Seperate issues (following lines with a dash are usually connected to the issue above)
+    if(outputLine) {
+        Logger.log("");
+    }
 }
 export async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
     data.forEach((item: SlitherResult) => {

@@ -25,9 +25,9 @@
         "auditing"
     ],
     "activationEvents": [
-        "onCommand:extension.slither",
+        "onCommand:slither.analyze",
         "onLanguage:slither-output",
-        "onView:slither-explorer"
+        "onLanguage:solidity"
     ],
     "main": "./out/extension",
     "icon": "./resources/extension-icon.png",
@@ -128,11 +128,13 @@
             "slither-container": [
                 {
                     "id": "slither-explorer",
-                    "name": "Analysis"
+                    "name": "Analysis",
+                    "when": "slitherCompatibleWorkspace"
                 },
                 {
                     "id": "slither-detector-filters",
-                    "name": "Detector Filters"
+                    "name": "Detector Filters",
+                    "when": "slitherCompatibleWorkspace"
                 }
             ]
         },
