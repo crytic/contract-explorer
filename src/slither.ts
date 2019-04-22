@@ -139,7 +139,21 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
         // If the file exists, we read its contents into memory.
         if(fs.existsSync(resultsPath)) {
-            let workspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            // Read our results to a temporary array
+            let tempWorkspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            let processedResults : Set<string> = new Set<string>();
+            let workspaceResults : SlitherResult[] = [];
+        
+            // Compile a filtered, final array (free of duplicates).
+            for(let i = 0; i < tempWorkspaceResults.length; i++) {
+                let jsonStringResult = JSON.stringify(tempWorkspaceResults[i]);
+                if(!processedResults.has(jsonStringResult)) {
+                    workspaceResults.push(tempWorkspaceResults[i]);
+                    processedResults.add(jsonStringResult);
+                }
+            }
+
+            // Set the results and print them.
             results.set(workspacePath, workspaceResults);
             if (print) {
                 printResults(workspaceResults);
