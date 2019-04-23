@@ -279,9 +279,6 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         } else if(!element && this.rootNode == this.byTypeNode) {
             // We filter all type nodes
             children = children.filter(x => !this.hiddenDetectors.has((<CheckTypeNode>x).check) && x.nodes.length > 0);
-
-            // Sort the types appropriately.
-            children.sort((a, b) => ((<CheckTypeNode>a).check > (<CheckTypeNode>b).check) ? 1 : -1);
         }
 
         // If we are populated root nodes and have no results, return a node to represent that.

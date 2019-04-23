@@ -23,6 +23,9 @@ export async function initialize() : Promise<boolean> {
         let output = (await exec_slither("--list-detectors-json")).output;
         detectors = JSON.parse(output);
 
+        // Obtain a list of detectors and sort them by check name.
+        detectors.sort((a, b) => (a.check > b.check) ? 1 : -1);
+
         // Obtain our slither version
         version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
 

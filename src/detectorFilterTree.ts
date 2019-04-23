@@ -37,9 +37,6 @@ export class DetectorFilterTree implements vscode.TreeDataProvider<DetectorFilte
     }
 
     public async populateTree() {
-        // Obtain a list of detectors and sort them by check name.
-        slither.detectors.sort((a, b) => (a.check > b.check) ? 1 : -1);
-
         // Add a node for each detector to the tree.
         this.detectorFilterNodes = [];
         for (let detector of slither.detectors) {
