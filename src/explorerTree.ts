@@ -22,6 +22,15 @@ export class ExplorerNode extends vscode.TreeItem {
     }
 }
 
+// A special type of parent node which denotes a type of issue.
+export class CheckTypeNode extends ExplorerNode {
+    public check : string;
+    constructor(detector : slitherResults.SlitherDetector) {
+        super(`${detector.check}: ${detector.title}\n${detector.description}\n\nImpact: ${detector.impact}\nConfidence: ${detector.confidence}`, vscode.TreeItemCollapsibleState.Collapsed);
+        this.check = detector.check;
+    }
+}
+
 // A special type of node which denotes an issue.
 export class CheckResultNode extends ExplorerNode {
     public result : slitherResults.SlitherResult;
@@ -52,25 +61,17 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     constructor(private context: vscode.ExtensionContext, private detectorFilterTree : DetectorFilterTree) {
         // Set up the severity nodes with their respective icons.
         let highSeverityNode = new ExplorerNode("High", vscode.TreeItemCollapsibleState.Expanded);
-        highSeverityNode.iconPath = { 
-            light: this.context.asAbsolutePath("resources/severity-high-light.svg"),
-            dark: this.context.asAbsolutePath("resources/severity-high-dark.svg"),
-        };
+        this.setIconBySeverity(highSeverityNode, <string>highSeverityNode.label);
+
         let mediumSeverityNode = new ExplorerNode("Medium", vscode.TreeItemCollapsibleState.Expanded);
-        mediumSeverityNode.iconPath = { 
-            light: this.context.asAbsolutePath("resources/severity-medium-light.svg"),
-            dark: this.context.asAbsolutePath("resources/severity-medium-dark.svg"),
-        };
+        this.setIconBySeverity(mediumSeverityNode, <string>mediumSeverityNode.label);
+
         let lowSeverityNode = new ExplorerNode("Low", vscode.TreeItemCollapsibleState.Expanded);
-        lowSeverityNode.iconPath = { 
-            light: this.context.asAbsolutePath("resources/severity-low-light.svg"),
-            dark: this.context.asAbsolutePath("resources/severity-low-dark.svg"),
-        };
+        this.setIconBySeverity(lowSeverityNode, <string>lowSeverityNode.label);
+
         let informationalSeverityNode = new ExplorerNode("Informational", vscode.TreeItemCollapsibleState.Expanded);
-        informationalSeverityNode.iconPath = { 
-            light: this.context.asAbsolutePath("resources/severity-info-light.svg"),
-            dark: this.context.asAbsolutePath("resources/severity-info-dark.svg"),
-        };
+        this.setIconBySeverity(informationalSeverityNode, <string>informationalSeverityNode.label);
+
         let severityNodes = [highSeverityNode, mediumSeverityNode, lowSeverityNode, informationalSeverityNode];
             
         // Set up the severity node map.
@@ -87,14 +88,46 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         });
     }
 
+    private setIconBySeverity(node : ExplorerNode, severity : string) {
+        // Set the node icon according to severity.
+        switch(severity) {
+            case "High":
+                node.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/severity-high-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/severity-high-dark.svg"),
+                };
+                break;
+            case "Medium":
+                node.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/severity-medium-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/severity-medium-dark.svg"),
+                };
+                break;
+            case "Low":
+                node.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/severity-low-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/severity-low-dark.svg"),
+                };
+                break;
+            case "Informational":
+                node.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/severity-info-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/severity-info-dark.svg"),
+                };
+                break;
+        }
+    }
+
     private async refreshSeverityNodeCounts() : Promise<number> {
-        // Refresh our counts for every severity
+        // Refresh our counts for every severity class
         let totalCount : number = 0;
         for (let severityNode of this.bySeverityNode.nodes) {
             let severityIssueCount = this.getFilteredChildren(severityNode.nodes).length;
             totalCount += severityIssueCount;
             severityNode.label = `${severityNode.originalLabel} (${severityIssueCount})`
         }
+
+        // Return our filtered/displayed count
         return totalCount;
     }
 
@@ -148,6 +181,14 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         for (let typeNode of this.byTypeNode.nodes) {
             typeNode.nodes = [];
         }
+
+        // Populate all types of detectors
+        for (let detector of slither.detectors) {
+            let typeNode = new CheckTypeNode(detector);
+            this.setIconBySeverity(typeNode, detector.impact);
+            this.byTypeNode.nodes.push(typeNode);
+            this.byTypeMap.set(detector.check, typeNode);
+        }
         
         // Loop for each result.
         let issueCount : number = 0;
@@ -157,6 +198,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
             // Loop through all the results.
             for(let workspaceResult of workspaceResults) {
+                // Add to our issue count
+                issueCount++;
+
                 // Create our issue node.
                 let issueNode = new CheckResultNode(workspaceResult);
 
@@ -169,12 +213,10 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 // Add our issue by type
                 let typeNode = this.byTypeMap.get(workspaceResult.check);
                 if(!typeNode) {
-                    typeNode = new ExplorerNode(workspaceResult.check, vscode.TreeItemCollapsibleState.Collapsed);
-                    this.byTypeNode.nodes.push(typeNode);
-                    this.byTypeMap.set(workspaceResult.check, typeNode);
+                    vscode.window.showErrorMessage(`Failed to populate results of unknown detector type "${workspaceResult.check}"`);
+                    continue;
                 }
                 typeNode.nodes.push(issueNode);
-                issueCount++;
             }
         }
 
@@ -225,15 +267,29 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If there is a provided node, return its subnodes.
         if (element) {
             children = element.nodes;
-        } else if (this.rootNode.nodes.length == 0) {
-            // If there is no provided node and we have no nodes, return a blank message.
-            return [new ExplorerNode("<No analysis results>")];
-        } else {
+        } else if (this.rootNode.nodes.length != 0) {
             // If we have nodes under our root nodes, return those.
             children = this.rootNode.nodes;
         }
 
-        // Using our provided child list, we remove all items which do not conform to the enabled detector list.
-        return this.getFilteredChildren(children);
+        // Filter accordingly, depending on view
+        if (element && this.rootNode == this.bySeverityNode) {
+            // We filter the children under each severity node
+            children = this.getFilteredChildren(children);
+        } else if(!element && this.rootNode == this.byTypeNode) {
+            // We filter all type nodes
+            children = children.filter(x => !this.hiddenDetectors.has((<CheckTypeNode>x).check) && x.nodes.length > 0);
+
+            // Sort the types appropriately.
+            children.sort((a, b) => ((<CheckTypeNode>a).check > (<CheckTypeNode>b).check) ? 1 : -1);
+        }
+
+        // If we are populated root nodes and have no results, return a node to represent that.
+        if (!element && children.length == 0) {
+            return [new ExplorerNode("<No analysis results>")];
+        }
+
+        // Return the children nodes
+        return children;
     }
 }

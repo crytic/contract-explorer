@@ -8,7 +8,7 @@ export class DetectorFilterNode extends vscode.TreeItem {
     public readonly detector : slitherResults.SlitherDetector;
     public checked : boolean = true;
     constructor(detector : slitherResults.SlitherDetector, checked : boolean) {
-        super(`${detector.check}: ${detector.title}\n${detector.description}`, vscode.TreeItemCollapsibleState.None);
+        super(`${detector.check}: ${detector.title}\n${detector.description}\n\nImpact: ${detector.impact}\nConfidence: ${detector.confidence}`, vscode.TreeItemCollapsibleState.None);
         this.detector = detector;
         this.checked = checked;
         this.command = {
