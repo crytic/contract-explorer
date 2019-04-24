@@ -243,6 +243,12 @@ async function exec_slither(args : string[] | string, logError : boolean = true)
         args = args.join(' ');
     }
 
+    // If we have a custom defined solc path, prefix our arguments with that.
+    if(config.userConfiguration.solcPath) {
+        args = `--solc "${config.userConfiguration.solcPath}" ${args}`;
+        Logger.log(`Invoking slither with custom solc path: "${config.userConfiguration.solcPath}"`);
+    }
+
     // Now we can invoke slither.
     let stderr;
     let cmd = util.promisify(child_process.exec);

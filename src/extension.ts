@@ -73,6 +73,16 @@ export async function activate(context: vscode.ExtensionContext) {
         await refreshWorkspace();
     });
 
+    // Add our configuration changed handler.
+    vscode.workspace.onDidChangeConfiguration(async e => {
+        // Changing detector filters will change configuration,
+        // causing a double-reload. So we only reload if solcPath
+        // was changed, and do not change UI components.
+        if(e.affectsConfiguration("slither.solcPath")) {
+            config.readConfiguration();
+        }
+    });
+
     // If we are in debug mode, log our activation message and focus on the output channel
 	if(await isDebuggingExtension()) {
         Logger.log("Activated in debug mode");
