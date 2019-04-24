@@ -37,8 +37,10 @@ Minimum Requirement: ${config.minimumSlitherVersion}
 Current version ${version}
 Please upgrade slither: "pip install slither-analyzer --upgrade"`
             );
+        } else {
+            // Initialization succeeded.
+            initialized = true;
         }
-        initialized = true;
     } catch (e) {
         // Print our error and return a null array.
         Logger.error(
@@ -57,15 +59,15 @@ export async function analyze() : Promise<boolean> {
         return false;
     }
 
+    // Print our starting analysis message.
+    Logger.log("\u2E3B Starting analysis \u2E3B");
+
     // If we have not initialized slither, try to do so now.
     if (!initialized) {
         if(!await initialize()) {
             return false;
         }
     }
-
-    // Print our starting analysis message.
-    Logger.log("\u2E3B Starting analysis \u2E3B");
 
     // Setup our state
     results.clear();
@@ -92,7 +94,7 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --json "${resultsPath}"`, false);
+        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --disable-color --json "${resultsPath}"`, false);
 
         // Errors are thrown when slither succeeds. We should also have a results file.
         if (error && !fs.existsSync(resultsPath)) {
