@@ -94,7 +94,7 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(`${workspacePath} --disable-solc-warnings --disable-color --json "${resultsPath}"`, false);
+        let { output, error } = await exec_slither(`${workspacePath} --solc-disable-warnings --disable-color --json "${resultsPath}"`, false);
 
         // Errors are thrown when slither succeeds. We should also have a results file.
         if (error && !fs.existsSync(resultsPath)) {

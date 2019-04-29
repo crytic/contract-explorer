@@ -49,7 +49,7 @@ export async function gotoResult(result : slitherResults.SlitherResult) {
         let resultElement : slitherResults.SlitherResultElement = result.elements[0];
 
         // Obtain the filename
-        let fileUri : vscode.Uri = vscode.Uri.file(resultElement.source_mapping.filename);
+        let fileUri : vscode.Uri = vscode.Uri.file(resultElement.source_mapping.filename_absolute);
 
         // Open the document, then select the appropriate range for source mapping. 
         vscode.workspace.openTextDocument(fileUri).then((doc) => {
@@ -83,7 +83,7 @@ export class SlitherResultLensProvider implements vscode.CodeLensProvider {
         for(let [workspaceFolder, workspaceResults] of slither.results) {
             for (let workspaceResult of workspaceResults) {
                 // Skip this result if it is not the correct filename.
-                if (!workspaceResult.elements || path.normalize(workspaceResult.elements[0].source_mapping.filename) != documentFilename) {
+                if (!workspaceResult.elements || path.normalize(workspaceResult.elements[0].source_mapping.filename_absolute) != documentFilename) {
                     continue;
                 }
                 // Skip this result if it is on the hidden detector list.

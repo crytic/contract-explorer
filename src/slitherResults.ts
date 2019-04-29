@@ -23,7 +23,10 @@ export interface SlitherResultElement {
 export interface SlitherSourceMapping { 
     start : number;
     length : number;
-    filename : string;
+    filename_absolute : string;
+    filename_relative : string;
+    filename_short : string;
+    filename_used : string;
     lines : number[];
     starting_column : number;
     ending_column : number;
