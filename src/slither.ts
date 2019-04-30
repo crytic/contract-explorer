@@ -40,6 +40,9 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
         } else {
             // Initialization succeeded.
             initialized = true;
+
+            // Log the current version of slither.
+            Logger.log(`Using slither version: ${version}`);
         }
     } catch (e) {
         // Print our error and return a null array.
@@ -94,7 +97,7 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(`${workspacePath} --solc-disable-warnings --disable-color --json "${resultsPath}"`, false);
+        let { output, error } = await exec_slither(`. --solc-disable-warnings --disable-color --json "${resultsPath}"`, false, workspacePath);
 
         // Errors are thrown when slither succeeds. We should also have a results file.
         if (error && !fs.existsSync(resultsPath)) {
@@ -239,7 +242,7 @@ export async function printResults(data: SlitherResult[], filterDetectors : bool
     });
 }
 
-async function exec_slither(args : string[] | string, logError : boolean = true) : Promise<{output : string, error : string}> { 
+async function exec_slither(args : string[] | string, logError : boolean = true, workingDirectory : string | undefined = undefined) : Promise<{output : string, error : string}> { 
     // If this is an array, make it into a single string.
     if (args instanceof Array) {
         args = args.join(' ');
@@ -254,7 +257,7 @@ async function exec_slither(args : string[] | string, logError : boolean = true)
     // Now we can invoke slither.
     let stderr;
     let cmd = util.promisify(child_process.exec);
-    let { stdout } = await cmd(`${config.slitherPath} ${args}`).catch((e: any) => stderr = e);
+    let { stdout } = await cmd(`${config.slitherPath} ${args}`, { cwd : workingDirectory}).catch((e: any) => stderr = e);
 
     // If we encountered an error, log it
     if (stderr && logError) { 
