@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as config from "./config"
-import { DetectorFilterTree } from './detectorFilterTree';
 import { Logger } from "./logger";
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
 import * as sourceHelper from "./sourceHelper";
+import * as extension from "./extension";
 
 // Generic tree node implementation.
 export class ExplorerNode extends vscode.TreeItem {
@@ -34,6 +34,8 @@ export class CheckTypeNode extends ExplorerNode {
 // A special type of node which denotes an issue.
 export class CheckResultNode extends ExplorerNode {
     public result : slitherResults.SlitherResult;
+    public severityNodeParent : ExplorerNode | undefined;
+    public typeNodeParent : CheckTypeNode | undefined;
     constructor(result : slitherResults.SlitherResult) {
         super(slitherResults.getSanitizedDescription(result), vscode.TreeItemCollapsibleState.None);
         this.result = result;
@@ -51,14 +53,15 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
     // Nodes which contain check results, or maps to them by name.
     private byTypeNode : ExplorerNode = new ExplorerNode("By Type");
-    private byTypeMap :  Map<string, ExplorerNode> = new Map<string, ExplorerNode>();
+    private byTypeMap :  Map<string, CheckTypeNode> = new Map<string, CheckTypeNode>();
     private bySeverityNode : ExplorerNode = new ExplorerNode("By Severity");
     private bySeverityMap :  Map<string, ExplorerNode> = new Map<string, ExplorerNode>();
+    private byResultMap : Map<slitherResults.SlitherResult, CheckResultNode> = new Map<slitherResults.SlitherResult, CheckResultNode>();
 
     // A node which is not rendered itself, but contains all nodes which will be shown.
     private rootNode : ExplorerNode = this.bySeverityNode;
 
-    constructor(private context: vscode.ExtensionContext, private detectorFilterTree : DetectorFilterTree) {
+    constructor(private context: vscode.ExtensionContext) {
         // Set up the severity nodes with their respective icons.
         let highSeverityNode = new ExplorerNode("High", vscode.TreeItemCollapsibleState.Expanded);
         this.setIconBySeverity(highSeverityNode, <string>highSeverityNode.label);
@@ -83,7 +86,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
 
         // Subscribe to the detector filter changed event
-        this.detectorFilterTree.changedEnabledFilters.push(async() => {
+        extension.detectorFilterTreeProvider.changedEnabledFilters.push(async() => {
             await this.onDetectorFiltersChanged();
         });
     }
@@ -133,7 +136,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
     private async onDetectorFiltersChanged() {
         // Obtain our new hidden detector list.
-        this.hiddenDetectors = await this.detectorFilterTree.getHiddenDetectors();
+        this.hiddenDetectors = await extension.detectorFilterTreeProvider.getHiddenDetectors();
 
         // Update the hidden detectors in the user configuration and save changes.
         config.userConfiguration.hiddenDetectors = Array.from(this.hiddenDetectors);
@@ -182,6 +185,10 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
             typeNode.nodes = [];
         }
 
+        // Clear our maps
+        this.byTypeMap.clear();
+        this.byResultMap.clear();
+
         // Populate all types of detectors
         for (let detector of slither.detectors) {
             let typeNode = new CheckTypeNode(detector);
@@ -204,18 +211,23 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 // Create our issue node.
                 let issueNode = new CheckResultNode(workspaceResult);
 
+                // Set it in our result->node map.
+                this.byResultMap.set(workspaceResult, issueNode);
+
                 // Add our issue by severity.
                 let severityNode = this.bySeverityMap.get(workspaceResult.impact);
                 if (severityNode) {
                     severityNode.nodes.push(issueNode);
+                    issueNode.severityNodeParent = severityNode;
                 }
 
                 // Add our issue by type
                 let typeNode = this.byTypeMap.get(workspaceResult.check);
                 if(!typeNode) {
-                    vscode.window.showErrorMessage(`Failed to populate results of unknown detector type "${workspaceResult.check}"`);
+                    vscode.window.showErrorMessage(`Failed to populate results by type with unknown detector type "${workspaceResult.check}"`);
                     continue;
                 }
+                issueNode.typeNodeParent = typeNode;
                 typeNode.nodes.push(issueNode);
             }
         }
@@ -236,12 +248,33 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
-            sourceHelper.gotoResult(checkResultNode.result);
+            sourceHelper.gotoResultCode(checkResultNode.result);
         }
     }
 
     public getTreeItem(element: ExplorerNode): vscode.TreeItem {
         return element;
+    }
+
+    public getNodeFromResult(result : slitherResults.SlitherResult) : CheckResultNode | undefined {
+        return this.byResultMap.get(result);
+    }
+
+    public getParent(element: ExplorerNode): ExplorerNode | undefined {
+        // Verify this is a check result
+        if (element instanceof CheckResultNode) {
+            let checkResultNode = <CheckResultNode>element;
+
+            // Determine the appropriate parent depending on the current view
+            if (this.rootNode == this.bySeverityNode) {
+                return checkResultNode.severityNodeParent;
+            } else if (this.rootNode == this.byTypeNode) {
+                return checkResultNode.typeNodeParent;
+            }
+        }
+
+        // The parent could not be obtained.
+        return undefined;
     }
 
     private getFilteredChildren(children : ExplorerNode[]) : ExplorerNode[] {

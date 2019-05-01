@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as config from "./config";
+import * as extension from "./extension";
 import { Logger } from "./logger";
 import * as path from "path";
 import * as slither from "./slither";
@@ -38,7 +39,7 @@ async function getSlitherResultRange(result : slitherResults.SlitherResult) : Pr
     return [startLine, startColumn, endLine, endColumn];
 }
 
-export async function gotoResult(result : slitherResults.SlitherResult) {
+export async function gotoResultCode(result : slitherResults.SlitherResult) {
     try {
         // If there are no elements for this check which map to source, we stop.
         if (result.elements.length == 0) {
@@ -107,6 +108,14 @@ export class SlitherResultLensProvider implements vscode.CodeLensProvider {
     }
 
     public static async onCodeLensClick (result : slitherResults.SlitherResult) {
+        // Obtain the issue node
+        let resultNode = extension.slitherExplorerTreeProvider.getNodeFromResult(result);
+        if (resultNode) {
+            extension.slitherExplorerTree.reveal(resultNode, { select: true, focus : true, expand : false});
+        } else {
+            vscode.window.showErrorMessage("Failed to select node for slither result.");
+        }
+
         // Print the result
         slither.printResult(result);
     }    

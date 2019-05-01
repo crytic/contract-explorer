@@ -9,8 +9,10 @@ import * as slitherResults from "./slitherResults";
 import * as sourceHelper from "./sourceHelper";
 
 // Properties
-let detectorFilterTree : detectorFilters.DetectorFilterTree;
-let slitherExplorer : explorer.SlitherExplorer;
+export let detectorFilterTree : vscode.TreeView<detectorFilters.DetectorFilterNode>;
+export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvider;
+export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
+export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -24,39 +26,39 @@ export async function activate(context: vscode.ExtensionContext) {
     await slither.initialize();
 
     // Initialize the detector filter tree
-    detectorFilterTree = new detectorFilters.DetectorFilterTree(context);
-    vscode.window.registerTreeDataProvider("slither-detector-filters", detectorFilterTree);
+    detectorFilterTreeProvider = new detectorFilters.DetectorFilterTreeProvider(context);
+    detectorFilterTree = vscode.window.createTreeView("slither-detector-filters", { treeDataProvider: detectorFilterTreeProvider });
 
     // Initialize the analysis explorer.
-    slitherExplorer = new explorer.SlitherExplorer(context, detectorFilterTree);
-    vscode.window.registerTreeDataProvider("slither-explorer", slitherExplorer);
+    slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
+    slitherExplorerTree = vscode.window.createTreeView("slither-explorer", { treeDataProvider: slitherExplorerTreeProvider });
 
     // Register our explorer button commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.analyze', async () => {
         await slither.analyze();
-        await slitherExplorer.refreshExplorer();
+        await slitherExplorerTreeProvider.refreshExplorer();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', async () => { 
-        await slitherExplorer.refreshExplorer(); 
+        await slitherExplorerTreeProvider.refreshExplorer(); 
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.toggleTreeMode', async () => {
-        await slitherExplorer.toggleTreeMode(); 
+        await slitherExplorerTreeProvider.toggleTreeMode(); 
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.clear', async () => {
         Logger.log("Clearing results...");
         await slither.clear();
-        await slitherExplorer.refreshExplorer(); 
+        await slitherExplorerTreeProvider.refreshExplorer(); 
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.toggleAllDetectors', async () => {
-        await detectorFilterTree.toggleAll();
+        await detectorFilterTreeProvider.toggleAll();
     }));
 
     // Register our tree click commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.clickedDetectorFilterNode', async (node : detectorFilters.DetectorFilterNode) => { 
-        await detectorFilterTree.clickedNode(node); 
+        await detectorFilterTreeProvider.clickedNode(node); 
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', async (node : explorer.ExplorerNode) => { 
-        await slitherExplorer.clickedNode(node); 
+        await slitherExplorerTreeProvider.clickedNode(node); 
     }));
 
     // Register our code lens provider for slither results
@@ -98,8 +100,8 @@ async function refreshWorkspace() {
     config.readConfiguration();
 
     // Refresh the detector filters and slither analysis explorer tree (loads last results).
-    await detectorFilterTree.populateTree();
-    await slitherExplorer.refreshExplorer();
+    await detectorFilterTreeProvider.populateTree();
+    await slitherExplorerTreeProvider.refreshExplorer();
 }
 
 async function isDebuggingExtension() : Promise<boolean> {

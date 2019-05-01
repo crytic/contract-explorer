@@ -20,7 +20,7 @@ export class DetectorFilterNode extends vscode.TreeItem {
 }
 
 // The explorer/treeview for slither analysis results.
-export class DetectorFilterTree implements vscode.TreeDataProvider<DetectorFilterNode> {
+export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<DetectorFilterNode> {
 
     // Create our event emitters for the changed tree event.
     public changeTreeEmitter: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
