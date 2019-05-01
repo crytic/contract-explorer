@@ -27,7 +27,8 @@
     "activationEvents": [
         "onCommand:slither.analyze",
         "onLanguage:slither-output",
-        "onLanguage:solidity"
+        "onLanguage:solidity",
+        "workspaceContains:*.sol"
     ],
     "main": "./out/extension",
     "icon": "./resources/extension-icon.png",
