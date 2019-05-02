@@ -13,6 +13,7 @@ export let detectorFilterTree : vscode.TreeView<detectorFilters.DetectorFilterNo
 export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvider;
 export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
 export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
+export let codeLensProvider : sourceHelper.SlitherResultLensProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -63,7 +64,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register our code lens provider for slither results
     let slitherLensDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, new sourceHelper.SlitherResultLensProvider()));
+    codeLensProvider = new sourceHelper.SlitherResultLensProvider();
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, codeLensProvider));
 
     // Register our code lens click commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.onCodeLensClick', async (checkResult : slitherResults.SlitherResult) => { 

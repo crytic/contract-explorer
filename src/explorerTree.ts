@@ -149,6 +149,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
+
+        // Fire the event to refresh our CodeLens annotations
+        extension.codeLensProvider.codeLensChangeEmitter.fire();
     }
 
     public async toggleTreeMode() {
@@ -246,6 +249,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
 
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
+
+        // Fire the event to refresh our CodeLens annotations
+        extension.codeLensProvider.codeLensChangeEmitter.fire();
     }
 
     public async clickedNode(node : ExplorerNode) {

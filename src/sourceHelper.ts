@@ -75,6 +75,9 @@ export async function gotoResultCode(workspaceFolder : string, result : slitherR
 
 export class SlitherResultLensProvider implements vscode.CodeLensProvider {
 
+    public codeLensChangeEmitter: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
+    public readonly onDidChangeCodeLenses: vscode.Event<void> = this.codeLensChangeEmitter.event;
+
     async provideCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
         // Loop through each slither result to build a list of codelens objects.
         let codeLensResults : vscode.CodeLens[] = [];
