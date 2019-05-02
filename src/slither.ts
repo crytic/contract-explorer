@@ -11,6 +11,7 @@ import * as util from "util";
 export let initialized : boolean = false;
 export let version : string;
 export let detectors : SlitherDetector[];
+export let detectorsByCheck : Map<string, SlitherDetector> = new Map<string, SlitherDetector>();
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
 
 // Functions
@@ -25,6 +26,12 @@ export async function initialize() : Promise<boolean> {
 
         // Obtain a list of detectors and sort them by check name.
         detectors.sort((a, b) => (a.check > b.check) ? 1 : -1);
+
+        // Create a map of check->detector
+        detectorsByCheck.clear();
+        for (let detector of detectors) {
+            detectorsByCheck.set(detector.check, detector);
+        }
 
         // Obtain our slither version
         version = (await exec_slither('--version')).output.replace(/\r?\n|\r/g, "");
@@ -58,7 +65,7 @@ Please verify slither is installed: "pip install slither-analyzer"`
 export async function analyze(print : boolean = true) : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
-        vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
+        Logger.log('There are no open workspace folders to run slither analysis on.');
         return false;
     }
 
@@ -165,7 +172,7 @@ async function postProcessResults(results : SlitherResult[]) : Promise<SlitherRe
 export async function readResults(print : boolean = false) : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
-        vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
+        Logger.error('There are no open workspace folders to run slither analysis on.');
         return false;
     }
 

@@ -39,7 +39,7 @@ async function getSlitherResultRange(result : slitherResults.SlitherResult) : Pr
     return [startLine, startColumn, endLine, endColumn];
 }
 
-export async function gotoResultCode(result : slitherResults.SlitherResult) {
+export async function gotoResultCode(workspaceFolder : string, result : slitherResults.SlitherResult) {
     try {
         // If there are no elements for this check which map to source, we stop.
         if (result.elements.length == 0) {
@@ -50,7 +50,8 @@ export async function gotoResultCode(result : slitherResults.SlitherResult) {
         let resultElement : slitherResults.SlitherResultElement = result.elements[0];
 
         // Obtain the filename
-        let fileUri : vscode.Uri = vscode.Uri.file(resultElement.source_mapping.filename_absolute);
+        let filename_absolute = path.join(workspaceFolder, resultElement.source_mapping.filename_relative);
+        let fileUri : vscode.Uri = vscode.Uri.file(filename_absolute);
 
         // Open the document, then select the appropriate range for source mapping. 
         vscode.workspace.openTextDocument(fileUri).then((doc) => {
@@ -68,10 +69,7 @@ export async function gotoResultCode(result : slitherResults.SlitherResult) {
         });
     } catch (r) {
         // Log our error.
-        Logger.log(`Error: ${r.message}`);
-
-        // Show an error message.
-        vscode.window.showErrorMessage(r.message);
+        Logger.error(r.message);
     }
 }
 
@@ -84,7 +82,8 @@ export class SlitherResultLensProvider implements vscode.CodeLensProvider {
         for(let [workspaceFolder, workspaceResults] of slither.results) {
             for (let workspaceResult of workspaceResults) {
                 // Skip this result if it is not the correct filename.
-                if (!workspaceResult.elements || path.normalize(workspaceResult.elements[0].source_mapping.filename_absolute) != documentFilename) {
+                let filename_absolute = path.join(workspaceFolder, workspaceResult.elements[0].source_mapping.filename_relative);
+                if (!workspaceResult.elements || path.normalize(filename_absolute) != path.normalize(documentFilename)) {
                     continue;
                 }
                 // Skip this result if it is on the hidden detector list.
@@ -113,10 +112,19 @@ export class SlitherResultLensProvider implements vscode.CodeLensProvider {
         if (resultNode) {
             extension.slitherExplorerTree.reveal(resultNode, { select: true, focus : true, expand : false});
         } else {
-            vscode.window.showErrorMessage("Failed to select node for slither result.");
+            Logger.error("Failed to select node for slither result.");
         }
 
         // Print the result
+        Logger.log(
+`\u2E3B\u2E3B\u2E3B
+Clicked issue annotation:`
+            );
         slither.printResult(result);
+        let resultDetector = slither.detectorsByCheck.get(result.check);
+        if (resultDetector) {
+            Logger.log(`Recommendation:\n ${resultDetector.recommendation}`);
+        }
+        Logger.log("\u2E3B\u2E3B\u2E3B");
     }    
 }

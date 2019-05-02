@@ -33,12 +33,14 @@ export class CheckTypeNode extends ExplorerNode {
 
 // A special type of node which denotes an issue.
 export class CheckResultNode extends ExplorerNode {
+    public workspaceFolder : string;
     public result : slitherResults.SlitherResult;
     public severityNodeParent : ExplorerNode | undefined;
     public typeNodeParent : CheckTypeNode | undefined;
-    constructor(result : slitherResults.SlitherResult) {
-        super(slitherResults.getSanitizedDescription(result), vscode.TreeItemCollapsibleState.None);
-        this.result = result;
+    constructor(workspaceFolder : string, workspaceResult : slitherResults.SlitherResult) {
+        super(slitherResults.getSanitizedDescription(workspaceResult), vscode.TreeItemCollapsibleState.None);
+        this.result = workspaceResult;
+        this.workspaceFolder = workspaceFolder;
     }
 }
 
@@ -211,7 +213,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 issueCount++;
 
                 // Create our issue node.
-                let issueNode = new CheckResultNode(workspaceResult);
+                let issueNode = new CheckResultNode(workspaceFolder, workspaceResult);
 
                 // Set it in our result->node map.
                 this.byResultMap.set(workspaceResult, issueNode);
@@ -226,7 +228,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 // Add our issue by type
                 let typeNode = this.byTypeMap.get(workspaceResult.check);
                 if(!typeNode) {
-                    vscode.window.showErrorMessage(`Failed to populate results by type with unknown detector type "${workspaceResult.check}"`);
+                    Logger.error(`Failed to populate results by type with unknown detector type "${workspaceResult.check}"`);
                     continue;
                 }
                 issueNode.typeNodeParent = typeNode;
@@ -250,7 +252,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
-            sourceHelper.gotoResultCode(checkResultNode.result);
+            sourceHelper.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
         }
     }
 

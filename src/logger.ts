@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import chalk from "chalk";
 
 export class Logger {
     private static outputChannel : vscode.OutputChannel = vscode.window.createOutputChannel("Slither Extension");
@@ -19,13 +18,21 @@ export class Logger {
     }
 
     public static info(msg : string): void {
-        // Output the info in bright green.
-        this.outputChannel.appendLine(chalk.greenBright(msg));
+        // Output the info to console
+        this.outputChannel.appendLine(msg);
     }
 
-    public static error(msg : string): void {
-        // Output the error in bright red.
-        this.outputChannel.appendLine(chalk.redBright(msg));
+    public static error(msg : string, showErrorDialog : boolean = true): void {
+        // Prefix the error
+        msg = `Error: ${msg}`;
+
+        // Output the error to console
+        this.outputChannel.appendLine(msg);
+
+        // Show our error dialog if desired
+        if (showErrorDialog) {
+            vscode.window.showErrorMessage(msg);
+        }
     }
 }
 
