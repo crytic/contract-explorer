@@ -163,11 +163,13 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         this.changeTreeEmitter.fire();
     }
 
-    public async refreshExplorer(logging : boolean = true) {
-        // Read our last slither results 
-        let success : boolean = await slither.readResults(false);
-        if (!success) {
-            return;
+    public async refreshExplorer(reloadResults : boolean = true, logging : boolean = true) {
+        // Read our last slither results if the user indicates we wish to.
+        if (reloadResults) {
+            let success : boolean = await slither.readResults(false);
+            if (!success) {
+                return;
+            }
         }
 
         // Print our refreshing explorer message.

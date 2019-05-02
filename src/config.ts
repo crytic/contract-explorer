@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 // Constants
 const storagePath : string = "./.vscode"; // Directory relative to workspace to store files
 export const slitherPath : string = "slither"; // Slither path
-export const minimumSlitherVersion : string = '0.4.0'; // minimum supported slither version
+export const minimumSlitherVersion : string = '0.6.2'; // minimum supported slither version
 export const storageFiles = {
     analysis: "slither-results.json" // file where analysis results will be stored
 }

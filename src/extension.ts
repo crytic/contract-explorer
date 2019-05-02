@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register our explorer button commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.analyze', async () => {
         await slither.analyze();
-        await slitherExplorerTreeProvider.refreshExplorer();
+        await slitherExplorerTreeProvider.refreshExplorer(false);
     }));
     context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', async () => { 
         await slitherExplorerTreeProvider.refreshExplorer(); 

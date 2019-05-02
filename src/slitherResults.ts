@@ -1,9 +1,13 @@
 export interface SlitherDetector {
+    index : number;
     check : string;
-    confidence : string;
-    impact : string;
     title : string;
+    impact : string;
+    confidence : string;
+    wiki_url : string;
     description : string;
+    exploit_scenario : string;
+    recommendation : string;
 }
 
 export interface SlitherResult {

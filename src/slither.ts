@@ -55,7 +55,7 @@ Please verify slither is installed: "pip install slither-analyzer"`
     return initialized;
 }
 
-export async function analyze() : Promise<boolean> {
+export async function analyze(print : boolean = true) : Promise<boolean> {
     // Verify there is a workspace folder open to run analysis on.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         vscode.window.showErrorMessage('Error: There are no open workspace folders to run slither analysis on.');
@@ -80,8 +80,6 @@ export async function analyze() : Promise<boolean> {
     let failCount = 0;
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
-        // TODO: Add ability to filter workspace folders out here.
-
         // Obtain our workspace path.
         const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
 
@@ -97,10 +95,34 @@ export async function analyze() : Promise<boolean> {
         }
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(`. --solc-disable-warnings --disable-color --json "${resultsPath}"`, false, workspacePath);
+        let { output, error } = await exec_slither(". --json -", false, workspacePath);
 
-        // Errors are thrown when slither succeeds. We should also have a results file.
-        if (error && !fs.existsSync(resultsPath)) {
+        // Try to parse output as json, filter duplicates, and set in map.
+        let workspaceResults : SlitherResult[] | undefined;
+        if (!error) {
+            try {
+                workspaceResults = <SlitherResult[]>JSON.parse(output);
+                workspaceResults = await postProcessResults(workspaceResults);
+                results.set(workspacePath, workspaceResults);
+            } catch(e) {
+                error = output;
+            }
+        }
+
+        // If we succeeded in parsing results for this workspace
+        if(workspaceResults) {
+
+            // Cache the results
+            fs.writeFileSync(resultsPath, JSON.stringify(workspaceResults, null, "\t"));
+
+            // Print the results
+            if (print) {
+                printResults(workspaceResults);
+            }
+        }
+
+        // If an error was encountered, log it.
+        if (error) {
             // We couldn't find a results file, this is probably a real error.
             Logger.error(`Error in workspace "${workspacePath}":`);
             Logger.error(error!.toString());
@@ -112,9 +134,6 @@ export async function analyze() : Promise<boolean> {
         successCount++;
     }
 
-    // Print our results.
-    readResults(true);
-
     // Print our analysis results.
     Logger.log("");
     Logger.log(`\u2E3B Analysis: ${successCount} succeeded, ${failCount} failed, ${vscode.workspace.workspaceFolders.length - (successCount + failCount)} skipped \u2E3B`);
@@ -124,6 +143,23 @@ export async function analyze() : Promise<boolean> {
 
     // We completed analysis without error.
     return true;
+}
+
+async function postProcessResults(results : SlitherResult[]) : Promise<SlitherResult[]> {
+    // Create a set and resulting array for filtered results.
+    let processedResults : Set<string> = new Set<string>();
+    let filteredResults : SlitherResult[] = [];
+
+    // Compile a filtered, final array (free of duplicates).
+    for(let i = 0; i < results.length; i++) {
+        let jsonStringResult = JSON.stringify(results[i]);
+        if(!processedResults.has(jsonStringResult)) {
+            filteredResults.push(results[i]);
+            processedResults.add(jsonStringResult);
+        }
+    }
+
+    return filteredResults;
 }
 
 export async function readResults(print : boolean = false) : Promise<boolean> {
@@ -139,27 +175,14 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
     // Loop for every workspace to read results from.
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
-        // TODO: Add ability to filter workspace folders out here.
-
         // Obtain our workspace results path.
         const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
         const resultsPath  = config.getStorageFilePath(workspacePath, config.storageFiles.analysis);
 
         // If the file exists, we read its contents into memory.
         if(fs.existsSync(resultsPath)) {
-            // Read our results to a temporary array
-            let tempWorkspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
-            let processedResults : Set<string> = new Set<string>();
-            let workspaceResults : SlitherResult[] = [];
-        
-            // Compile a filtered, final array (free of duplicates).
-            for(let i = 0; i < tempWorkspaceResults.length; i++) {
-                let jsonStringResult = JSON.stringify(tempWorkspaceResults[i]);
-                if(!processedResults.has(jsonStringResult)) {
-                    workspaceResults.push(tempWorkspaceResults[i]);
-                    processedResults.add(jsonStringResult);
-                }
-            }
+            // Read our cached results
+            let workspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
 
             // Set the results and print them.
             results.set(workspacePath, workspaceResults);
@@ -255,9 +278,16 @@ async function exec_slither(args : string[] | string, logError : boolean = true,
     }
 
     // Now we can invoke slither.
+    let error : any;
     let stderr;
     let cmd = util.promisify(child_process.exec);
-    let { stdout } = await cmd(`${config.slitherPath} ${args}`, { cwd : workingDirectory}).catch((e: any) => stderr = e);
+    let { stdout } = await cmd(`${config.slitherPath} ${args}`, { cwd : workingDirectory}).catch((e: any) => error = e);
+    
+    // If we caught an error, copy our data from it.
+    if(error) {
+        stdout = error.stdout;
+        stderr = error.stderr;
+    }
 
     // If we encountered an error, log it
     if (stderr && logError) { 
