@@ -77,6 +77,14 @@ export async function activate(context: vscode.ExtensionContext) {
         await refreshWorkspace();
     });
 
+    // Add a handler for document changes, to refresh sync status of slither results.
+    vscode.workspace.onDidSaveTextDocument(async (e : vscode.TextDocument) => {
+        await slither.updateSourceMappingSyncStatus(false, e.fileName);
+        await slitherExplorerTreeProvider.refreshIconsForCheckResults();
+        await slitherExplorerTreeProvider.changeTreeEmitter.fire();
+        await codeLensProvider.codeLensChangeEmitter.fire();
+    });
+
     // Add our configuration changed handler.
     vscode.workspace.onDidChangeConfiguration(async e => {
         // Changing detector filters will change configuration,

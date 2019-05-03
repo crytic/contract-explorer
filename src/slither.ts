@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as config from "./config";
 import * as child_process from 'child_process';
 import * as fs from "fs";
+import * as sparkmd5 from "spark-md5";
+import * as path from "path";
 import { Logger } from "./logger";
 import * as semver from 'semver';
 import { SlitherDetector, SlitherResult } from "./slitherResults";
@@ -13,6 +15,7 @@ export let version : string;
 export let detectors : SlitherDetector[];
 export let detectorsByCheck : Map<string, SlitherDetector> = new Map<string, SlitherDetector>();
 export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
+export const out_of_sync_results : Set<SlitherResult[]> = new Set<SlitherResult[]>();
 
 // Functions
 export async function initialize() : Promise<boolean> {
@@ -79,8 +82,8 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
         }
     }
 
-    // Setup our state
-    results.clear();
+    // Clear any existing results
+    clear(true);
 
     // Loop for every workspace to run analysis on.
     let successCount = 0;
@@ -88,57 +91,64 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
     for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
 
         // Obtain our workspace path.
-        const workspacePath = vscode.workspace.workspaceFolders[i].uri.fsPath;
+        const workspaceFolder = vscode.workspace.workspaceFolders[i].uri.fsPath;
 
         // Create the storage directory if it does not exist.
-        config.createStorageDirectory(workspacePath);
-
-        // Obtain our results storage path.
-        const resultsPath  = config.getStorageFilePath(workspacePath, config.storageFiles.analysis);
-
-        // Clear the results file if it exists.
-        if(fs.existsSync(resultsPath)) {
-            fs.unlinkSync(resultsPath);
-        }
+        config.createStorageDirectory(workspaceFolder);
 
         // Execute slither on this workspace.
-        let { output, error } = await exec_slither(". --json -", false, workspacePath);
+        let { output, error } = await exec_slither(". --json -", false, workspaceFolder);
 
         // Try to parse output as json, filter duplicates, and set in map.
         let workspaceResults : SlitherResult[] | undefined;
         if (!error) {
             try {
                 workspaceResults = <SlitherResult[]>JSON.parse(output);
-                workspaceResults = await postProcessResults(workspaceResults);
-                results.set(workspacePath, workspaceResults);
+                workspaceResults = await filterDuplicateResults(workspaceResults);
+                results.set(workspaceFolder, workspaceResults);
             } catch(e) {
                 error = output;
-            }
-        }
-
-        // If we succeeded in parsing results for this workspace
-        if(workspaceResults) {
-
-            // Cache the results
-            fs.writeFileSync(resultsPath, JSON.stringify(workspaceResults, null, "\t"));
-
-            // Print the results
-            if (print) {
-                printResults(workspaceResults);
             }
         }
 
         // If an error was encountered, log it.
         if (error) {
             // We couldn't find a results file, this is probably a real error.
-            Logger.error(`Error in workspace "${workspacePath}":`);
-            Logger.error(error!.toString());
+            Logger.error(
+`Error in workspace "${workspaceFolder}":
+${error!.toString()}`);
             failCount++;
             continue;
         }
 
         // Add to the success count
         successCount++;
+    }
+
+    // Recalculate hash sourcemappings
+    updateSourceMappingSyncStatus(true);
+
+    // Loop for each result to write and print
+    for (let [workspaceFolder, workspaceResults] of results) {
+        // If we succeeded in parsing results for this workspace
+        if(workspaceResults) {
+
+            // Obtain our results storage path.
+            const resultsPath  = config.getStorageFilePath(workspaceFolder, config.storageFiles.analysis);
+
+            // Cache the results
+            fs.writeFileSync(resultsPath, JSON.stringify(workspaceResults, null, "\t"));
+
+            // Loop for every result and set its sync status to valid
+            for (let workspaceResult of workspaceResults) {
+                workspaceResult._ext_in_sync = true;
+            }
+
+            // Print the results
+            if (print) {
+                printResults(workspaceResults);
+            }
+        }
     }
 
     // Print our analysis results.
@@ -152,7 +162,60 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
     return true;
 }
 
-async function postProcessResults(results : SlitherResult[]) : Promise<SlitherResult[]> {
+export async function updateSourceMappingSyncStatus(firstTimeCalculation : boolean = false, fileNameFilter : string | undefined = undefined) {
+    // Create a mapping of filename -> source
+    let sourceContentMap : Map<string, string> = new Map<string, string>();
+
+    // Loop for every workspace
+    for(let [workspaceFolder, workspaceResults] of results) {
+        // Loop through each result element
+        for (let workspaceResult of workspaceResults) {
+            let workspaceResultValidity : boolean | undefined = undefined;
+            for(let workspaceResultElement of workspaceResult.elements) {
+                // Try to obtain any cached source content
+                let sourceMappingFile = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
+                let sourceContent = sourceContentMap.get(workspaceResultElement.source_mapping.filename_relative);
+
+                // If we are trying to only refresh results for a certain filename, we skip if our filename doesnt match.
+                if (fileNameFilter && path.normalize(sourceMappingFile) != path.normalize(fileNameFilter)) {
+                    continue;
+                }
+
+                // If we have no source content cached, we read it.
+                if(!sourceContent) {
+                    sourceContent = fs.readFileSync(sourceMappingFile, 'utf8');
+                    sourceContentMap.set(workspaceResultElement.source_mapping.filename_relative, sourceContent);
+                }
+
+                // Copy out the source mapped data
+                let mappedSource = sourceContent.substring(workspaceResultElement.source_mapping.start, workspaceResultElement.source_mapping.start + workspaceResultElement.source_mapping.length);
+
+                // Hash the data
+                let mappedSourceHash = sparkmd5.hash(mappedSource);
+
+                // Determine if we're calculating hash for the first time, or verifying.
+                if(firstTimeCalculation) {
+                    workspaceResultElement.source_mapping._ext_source_hash = mappedSourceHash;
+                } else {
+                    // If our hash doesn't match, set our result as "out of sync", and skip to the next result.
+                    workspaceResultValidity = workspaceResultElement.source_mapping._ext_source_hash == mappedSourceHash;
+
+                    // If our result is out of sync, we don't need to check other elements, break the loop
+                    if(workspaceResultValidity == false) {
+                        break;
+                    }
+                }
+            }
+
+            // If we determined a new result validity, set it
+            if(workspaceResultValidity != undefined) {
+                workspaceResult._ext_in_sync = workspaceResultValidity;
+            }
+        }
+    }
+}
+
+async function filterDuplicateResults(results : SlitherResult[]) : Promise<SlitherResult[]> {
     // Create a set and resulting array for filtered results.
     let processedResults : Set<string> = new Set<string>();
     let filteredResults : SlitherResult[] = [];
@@ -193,9 +256,6 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
 
             // Set the results and print them.
             results.set(workspacePath, workspaceResults);
-            if (print) {
-                printResults(workspaceResults);
-            }
         }
         else {
             // The file did not exist, so we simply use an empty array of results.
@@ -203,14 +263,29 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
         }
     }
 
+    // Verify the integrity of source mapping
+    updateSourceMappingSyncStatus(false);
+
+    // Loop for each result to print
+    for (let [workspaceFolder, workspaceResults] of results) {
+        if (print) {
+            printResults(workspaceResults);
+        }
+    }
+
     // We succeeded without error.
     return true;
 }
 
-export async function clear() {
+export async function clear(clearCurrentResults : boolean = true) {
     // Verify there is a workspace folder open to clear results for.
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length == 0) {
         return;
+    }
+
+    // Clear the current known results
+    if (clearCurrentResults) {
+        results.clear();
     }
 
     // Loop for every workspace to remove

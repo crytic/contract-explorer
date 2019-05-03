@@ -46,6 +46,12 @@ export async function gotoResultCode(workspaceFolder : string, result : slitherR
             return;
         }
 
+        // If this is out of sync, show an error.
+        if (!result._ext_in_sync) {
+            Logger.error("Could not navigate to slither result. The mapped source code has been modified.");
+            return;
+        }
+
         // Obtain our result element.
         let resultElement : slitherResults.SlitherResultElement = result.elements[0];
 
@@ -86,7 +92,7 @@ export class SlitherResultLensProvider implements vscode.CodeLensProvider {
             for (let workspaceResult of workspaceResults) {
                 // Skip this result if it is not the correct filename.
                 let filename_absolute = path.join(workspaceFolder, workspaceResult.elements[0].source_mapping.filename_relative);
-                if (!workspaceResult.elements || path.normalize(filename_absolute) != path.normalize(documentFilename)) {
+                if (!workspaceResult._ext_in_sync || !workspaceResult.elements || path.normalize(filename_absolute) != path.normalize(documentFilename)) {
                     continue;
                 }
                 // Skip this result if it is on the hidden detector list.

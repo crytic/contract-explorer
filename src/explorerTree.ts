@@ -123,6 +123,23 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
     }
 
+    public refreshIconsForCheckResults() {
+        // Loop for each check result
+        for (let [checkResult, checkNode] of this.byResultMap) {
+            if (checkResult._ext_in_sync) {
+                checkNode.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/explorer-result-blank.svg"),
+                    dark: this.context.asAbsolutePath("resources/explorer-result-blank.svg"),
+                };
+            } else {
+                checkNode.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/explorer-result-oos-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/explorer-result-oos-dark.svg"),
+                };
+            }
+        }
+    }
+
     private async refreshSeverityNodeCounts() : Promise<number> {
         // Refresh our counts for every severity class
         let totalCount : number = 0;
@@ -246,6 +263,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         if (logging) {
             Logger.log(`Loaded ${issueCount} issues, displaying ${filteredIssueCount}`);
         }
+
+        // Refresh icons for our results
+        this.refreshIconsForCheckResults();
 
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();

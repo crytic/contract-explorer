@@ -16,6 +16,8 @@ export interface SlitherResult {
     impact : string;
     description : string;
     elements : SlitherResultElement[];
+
+    _ext_in_sync : boolean | undefined; // Extension: Used to check if source mappings are still valid.
 }
 
 export interface SlitherResultElement { 
@@ -34,6 +36,8 @@ export interface SlitherSourceMapping {
     lines : number[];
     starting_column : number;
     ending_column : number;
+
+    _ext_source_hash : string | undefined; // Extension: Hash of mapped source code.
 }
 
 export function getSanitizedDescription(result : SlitherResult) : string {
