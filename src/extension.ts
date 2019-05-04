@@ -6,14 +6,16 @@ import * as explorer from "./explorerTree";
 import { Logger } from "./logger";
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
-import * as sourceHelper from "./sourceHelper";
+import { SlitherCodeLensProvider } from "./slitherCodeLens";
+import { SlitherDiagnosticProvider } from "./slitherDiagnostics";
 
 // Properties
 export let detectorFilterTree : vscode.TreeView<detectorFilters.DetectorFilterNode>;
 export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvider;
 export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
 export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
-export let codeLensProvider : sourceHelper.SlitherResultLensProvider;
+export let codeLensProvider : SlitherCodeLensProvider;
+export let diagnosticsProvider : SlitherDiagnosticProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -64,13 +66,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register our code lens provider for slither results
     let slitherLensDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
-    codeLensProvider = new sourceHelper.SlitherResultLensProvider();
+    codeLensProvider = new SlitherCodeLensProvider();
     context.subscriptions.push(vscode.languages.registerCodeLensProvider(slitherLensDocumentSelector, codeLensProvider));
 
     // Register our code lens click commands.
     context.subscriptions.push(vscode.commands.registerCommand('slither.onCodeLensClick', async (checkResult : slitherResults.SlitherResult) => { 
-        await sourceHelper.SlitherResultLensProvider.onCodeLensClick(checkResult);
+        await codeLensProvider.onCodeLensClick(checkResult);
     }));
+
+    // Register the linter (vscode diagnostics)
+    diagnosticsProvider = new SlitherDiagnosticProvider(vscode.languages.createDiagnosticCollection("Slither"));
 
     // Add our workspace change event handler
     vscode.workspace.onDidChangeWorkspaceFolders(async e => {
@@ -83,6 +88,7 @@ export async function activate(context: vscode.ExtensionContext) {
         await slitherExplorerTreeProvider.refreshIconsForCheckResults();
         await slitherExplorerTreeProvider.changeTreeEmitter.fire();
         await codeLensProvider.codeLensChangeEmitter.fire();
+        await diagnosticsProvider.refreshDiagnostics();
     });
 
     // Add our configuration changed handler.

@@ -3,7 +3,6 @@ import * as config from "./config"
 import { Logger } from "./logger";
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
-import * as sourceHelper from "./sourceHelper";
 import * as extension from "./extension";
 
 // Generic tree node implementation.
@@ -167,8 +166,9 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
 
-        // Fire the event to refresh our CodeLens annotations
+        // Fire the event to refresh our CodeLens annotations and diagnostics
         extension.codeLensProvider.codeLensChangeEmitter.fire();
+        await extension.diagnosticsProvider.refreshDiagnostics();
     }
 
     public async toggleTreeMode() {
@@ -270,15 +270,16 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
 
-        // Fire the event to refresh our CodeLens annotations
+        // Fire the event to refresh our CodeLens annotations and diagnostics
         extension.codeLensProvider.codeLensChangeEmitter.fire();
+        await extension.diagnosticsProvider.refreshDiagnostics();
     }
 
     public async clickedNode(node : ExplorerNode) {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
-            sourceHelper.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
+            slitherResults.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
         }
     }
 
