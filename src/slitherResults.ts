@@ -68,15 +68,10 @@ export async function getResultElementRange(result : SlitherResult, elementIndex
     let endLine = resultElement.source_mapping.lines[resultElement.source_mapping.lines.length - 1] - 1;
     let endColumn = resultElement.source_mapping.ending_column - 1;
 
-    // Special types of elements have optional mapping overrides
-    if(cleanerOverrides) {
-        switch (resultElement.type) {
-            case "contract":
-            case "function":
-                endLine = startLine + 1;
-                endColumn = 0;
-                break;
-        }
+    // If the result is more than one line, we simply select the first line.
+    if (cleanerOverrides && endLine != startLine) {
+        endLine = startLine + 1;
+        endColumn = 0;
     }
 
     return [startLine, startColumn, endLine, endColumn];
