@@ -166,8 +166,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
 
-        // Fire the event to refresh our CodeLens annotations and diagnostics
-        extension.codeLensProvider.codeLensChangeEmitter.fire();
+        // Fire the event to refresh our diagnostics
         await extension.diagnosticsProvider.refreshDiagnostics();
     }
 
@@ -270,8 +269,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // Fire the event to refresh our tree
         this.changeTreeEmitter.fire();
 
-        // Fire the event to refresh our CodeLens annotations and diagnostics
-        extension.codeLensProvider.codeLensChangeEmitter.fire();
+        // Fire the event to refresh our diagnostics
         await extension.diagnosticsProvider.refreshDiagnostics();
     }
 
