@@ -26,7 +26,7 @@ export interface SlitherResult {
 
 export interface SlitherResultElement { 
     name : string;
-    source_mapping : SlitherSourceMapping;
+    source_mapping : SlitherSourceMapping | undefined;
     type : string;
 }
 
@@ -50,11 +50,16 @@ export function getSanitizedDescription(result : SlitherResult) : string {
 }
 
 export async function getResultElementRange(result : SlitherResult, elementIndex : number = 0, cleanerOverrides : boolean = true) : Promise<[number, number, number, number]> {
+    // Verify the index is correct
+    if (result.elements.length <= elementIndex) {
+        return [0, 0, 0, 0];
+    }
+
     // Obtain our result element.
     let resultElement : SlitherResultElement = result.elements[elementIndex];
 
     // If we don't have a sourcemapping line, skip
-    if (!resultElement.source_mapping.lines[0]) {
+    if (!resultElement.source_mapping || resultElement.source_mapping.lines.length <= 0) {
         return [0, 0, 0, 0];
     }
 
@@ -80,7 +85,8 @@ export async function getResultElementRange(result : SlitherResult, elementIndex
 export async function gotoResultCode(workspaceFolder : string, result : SlitherResult) {
     try {
         // If there are no elements for this check which map to source, we stop.
-        if (result.elements.length == 0) {
+        if (result.elements.length <= 0 || !result.elements[0].source_mapping) {
+            Logger.error("Could not navigate to slither result. The result has no source mappings.");
             return;
         }
 
@@ -90,11 +96,8 @@ export async function gotoResultCode(workspaceFolder : string, result : SlitherR
             return;
         }
 
-        // Obtain our result element.
-        let resultElement : SlitherResultElement = result.elements[0];
-
         // Obtain the filename
-        let filename_absolute = path.join(workspaceFolder, resultElement.source_mapping.filename_relative);
+        let filename_absolute = path.join(workspaceFolder, result.elements[0].source_mapping.filename_relative);
         let fileUri : vscode.Uri = vscode.Uri.file(filename_absolute);
 
         // Open the document, then select the appropriate range for source mapping. 

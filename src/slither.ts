@@ -172,6 +172,16 @@ export async function updateSourceMappingSyncStatus(firstTimeCalculation : boole
         for (let workspaceResult of workspaceResults) {
             let workspaceResultValidity : boolean | undefined = undefined;
             for(let workspaceResultElement of workspaceResult.elements) {
+
+                // If this workspace element has no source mapping, we skip to the next
+                if (!workspaceResultElement.source_mapping) {
+                    // If we are verifying, this element is considered valid.
+                    if (!firstTimeCalculation) {
+                        workspaceResultValidity = true;
+                    }
+                    continue;
+                }
+                
                 // Try to obtain any cached source content
                 let sourceMappingFile = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
                 let sourceContent = sourceContentMap.get(workspaceResultElement.source_mapping.filename_relative);

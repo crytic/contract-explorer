@@ -17,26 +17,35 @@ export class SlitherCodeLensProvider implements vscode.CodeLensProvider {
         let documentFilename = path.normalize(document.fileName);
         for(let [workspaceFolder, workspaceResults] of slither.results) {
             for (let workspaceResult of workspaceResults) {
-                // Skip this result if it is not the correct filename.
-                let filename_absolute = path.join(workspaceFolder, workspaceResult.elements[0].source_mapping.filename_relative);
-                if (!workspaceResult._ext_in_sync || !workspaceResult.elements || path.normalize(filename_absolute) != path.normalize(documentFilename)) {
-                    continue;
-                }
-                // Skip this result if it is on the hidden detector list.
-                if (config.userConfiguration.hiddenDetectors) {
-                    if(config.userConfiguration.hiddenDetectors.indexOf(workspaceResult.check) >= 0) {
+                // Loop for each workspace result element
+                for(let workspaceResultElement of workspaceResult.elements) {
+                    // If this result does not have an element with a source mapping, we skip it.
+                    if(!workspaceResultElement.source_mapping) {
                         continue;
                     }
-                }
 
-                // Create the annotation for this code.
-                let codeLensAnnotation: vscode.Command = {
-                    command: "slither.onCodeLensClick",
-                    title: this.getCodeLensDescription(workspaceResult),
-                    arguments: [workspaceResult]
-                };
-                let [startLine, startColumn, endLine, endColumn] = await slitherResults.getResultElementRange(workspaceResult);
-                codeLensResults.push(new vscode.CodeLens(new vscode.Range(startLine, startColumn, endLine, endColumn), codeLensAnnotation));
+                    // Skip this result if it is not the correct filename.
+                    let filename_absolute = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
+                    if (!workspaceResult._ext_in_sync || !workspaceResult.elements || path.normalize(filename_absolute) != path.normalize(documentFilename)) {
+                        continue;
+                    }
+                    // Skip this result if it is on the hidden detector list.
+                    if (config.userConfiguration.hiddenDetectors) {
+                        if(config.userConfiguration.hiddenDetectors.indexOf(workspaceResult.check) >= 0) {
+                            continue;
+                        }
+                    }
+
+                    // Create the annotation for this code.
+                    let codeLensAnnotation: vscode.Command = {
+                        command: "slither.onCodeLensClick",
+                        title: this.getCodeLensDescription(workspaceResult),
+                        arguments: [workspaceResult]
+                    };
+                    let [startLine, startColumn, endLine, endColumn] = await slitherResults.getResultElementRange(workspaceResult);
+                    codeLensResults.push(new vscode.CodeLens(new vscode.Range(startLine, startColumn, endLine, endColumn), codeLensAnnotation));
+                    break;
+                }
             }
         }
         return codeLensResults;
