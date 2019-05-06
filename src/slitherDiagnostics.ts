@@ -61,7 +61,7 @@ export class SlitherDiagnosticProvider {
                 }
 
                 // Create a diagnostic
-                let diagnosticResult : vscode.Diagnostic = new vscode.Diagnostic(resultRange, workspaceResult.description, diagnosticSeverity);
+                let diagnosticResult : vscode.Diagnostic = new vscode.Diagnostic(resultRange, workspaceResult.description.replace(/^\s+|\s+$/g, ''), diagnosticSeverity);
                 
                 // If we don't have an item for this yet, set it
                 let diagnosticArray = fileDiagnosticMap.get(filename_absolute);
