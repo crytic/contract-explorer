@@ -322,6 +322,9 @@ export async function printResult(item : SlitherResult, filterDetectors : boolea
         }
     }
 
+    // Define our output result
+    let outputResult = "";
+
     // Obtain the description and reformat it line-by-line.
     const descriptions = item.description.replace("#", ":").replace("\t", "").split("\n");
     let outputLine : boolean = false;
@@ -337,19 +340,22 @@ export async function printResult(item : SlitherResult, filterDetectors : boolea
         // Print the line accordingly.
         if (!outputLine) {
             // The first line output should be prefixed with a red X icon.
-            Logger.log(`\u274C ${description}`);
+            outputResult += `\u274C ${description}\n`;
             outputLine = true;
         }
         else if (description.startsWith("-")) {
             // Dashes which indicate a list are converted into bullets.
-            Logger.log(`\t\u2022${description.substring(1)}`);
+            outputResult += `\t\u2022${description.substring(1)}\n`;
         }
     }
 
     // Seperate issues (following lines with a dash are usually connected to the issue above)
     if(outputLine) {
-        Logger.log("");
+        outputResult += "\n";
     }
+
+    // Log our output result
+    Logger.log(outputResult);
 }
 export async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
     data.forEach((item: SlitherResult) => {

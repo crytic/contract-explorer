@@ -118,7 +118,7 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
             let currentResult = resultArray[i];
             if(range.intersection(currentDiagnostic.range)) {
                 resultingCommands.push({
-                    title: `Goto #${++count}: ${currentResult.check}`,
+                    title: `Show #${++count}: ${currentResult.check}`,
                     command: "slither.gotoExplorerResult",
                     arguments: [currentResult],
                 });

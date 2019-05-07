@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 // Constants
 const storagePath : string = "./.vscode"; // Directory relative to workspace to store files
 export const slitherPath : string = "slither"; // Slither path
-export const minimumSlitherVersion : string = '0.6.2'; // minimum supported slither version
+export const minimumSlitherVersion : string = "0.6.3"; // minimum supported slither version
 export const storageFiles = {
     analysis: "slither-results.json" // file where analysis results will be stored
 }
@@ -17,7 +17,7 @@ export interface UserConfiguration {
 }
 const defaultConfiguration : UserConfiguration = {
     solcPath: "", // default solc path (if blank, no custom path)
-    hiddenDetectors: [] // 'check' properties to ignore in analysis results
+    hiddenDetectors: [] // "check" properties to ignore in analysis results
 }
 export let userConfiguration : UserConfiguration = Object.assign({}, defaultConfiguration);
 
@@ -41,7 +41,7 @@ export function readConfiguration() {
     userConfiguration = Object.assign({}, defaultConfiguration);
 
     // Dynamically copy every property which we define in.
-    let workspaceConfiguration = Object.assign({}, vscode.workspace.getConfiguration('slither'));
+    let workspaceConfiguration = Object.assign({}, vscode.workspace.getConfiguration("slither"));
     for (let key of Object.keys(userConfiguration)) {
         if(workspaceConfiguration.has(key)) {
             (<any>userConfiguration)[key] = workspaceConfiguration[key];
@@ -51,7 +51,7 @@ export function readConfiguration() {
 
 export function saveConfiguration() : boolean {
     // Obtain every property of the configuration.
-    let workspaceConfiguration = vscode.workspace.getConfiguration('slither');
+    let workspaceConfiguration = vscode.workspace.getConfiguration("slither");
     for (let key of Object.keys(userConfiguration)) {
         workspaceConfiguration.update(key, (<any>userConfiguration)[key]);
     }

@@ -71,7 +71,12 @@ export async function activate(context: vscode.ExtensionContext) {
         } else {
             Logger.error("Failed to select node for slither result.");
         }
-    }))
+    }));
+
+    // Register context menu actions for the explorer
+    context.subscriptions.push(vscode.commands.registerCommand("slither.printResultNodeDetails", async (node : explorer.CheckResultNode) => {
+        await slitherExplorerTreeProvider.printDetailedDescription(node);
+    }));
 
     // Register the diagnostics/code action provider
     let solidityDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };

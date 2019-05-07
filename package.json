@@ -116,6 +116,10 @@
                     "light": "resources/detectors-toggle-light.svg"
                 },
                 "title": "Slither: Toggle All Detectors"
+            },
+            {
+                "command": "slither.printResultNodeDetails",
+                "title": "Print detailed description"
             }
         ],
         "viewsContainers": {
@@ -167,6 +171,13 @@
                     "command": "slither.toggleAllDetectors",
                     "when": "view == slither-detector-filters",
                     "group": "navigation@0"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "slither.printResultNodeDetails",
+                    "when": "viewItem == ExplorerCheckResultNode",
+                    "group": "slither-explorer@0"
                 }
             ]
         },

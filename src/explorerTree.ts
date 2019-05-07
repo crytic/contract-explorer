@@ -40,6 +40,7 @@ export class CheckResultNode extends ExplorerNode {
         super(slitherResults.getSanitizedDescription(workspaceResult), vscode.TreeItemCollapsibleState.None);
         this.result = workspaceResult;
         this.workspaceFolder = workspaceFolder;
+        this.contextValue = "ExplorerCheckResultNode";
     }
 }
 
@@ -279,6 +280,39 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
             let checkResultNode = node as CheckResultNode;
             slitherResults.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
         }
+    }
+
+    public async printDetailedDescription(node : CheckResultNode) {
+       
+        // Obtain the detector for this result
+        let detector = slither.detectorsByCheck.get(node.result.check);
+        if(!detector) {
+            Logger.error(`Could not print result information. Detector "${node.result.check}" could not be resolved.`);
+            return;
+        }
+        
+        // Print the header
+        Logger.log("\u2E3B\u2E3B Detailed Result Output \u2E3B\u2E3B")
+        
+        // Print our initial message
+        Logger.log(
+`Type: ${detector.title} (${node.result.check})
+Impact: ${node.result.impact}
+Confidence: ${node.result.confidence}
+Finding:`);
+
+        // Print the description
+        slither.printResult(node.result);
+
+        // Print the recommendation
+        Logger.log(
+`Recommendation: ${detector.recommendation}
+
+Reference: ${detector.wiki_url}`
+);
+
+        // Print the footer
+        Logger.log("\u2E3B\u2E3B\u2E3B\u2E3B\u2E3B\u2E3B\u2E3B\u2E3B\n");
     }
 
     public getTreeItem(element: ExplorerNode): vscode.TreeItem {
