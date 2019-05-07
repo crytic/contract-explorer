@@ -5,6 +5,7 @@ import * as detectorFilters from "./detectorFilterTree";
 import * as explorer from "./explorerTree";
 import { Logger } from "./logger";
 import * as slither from "./slither";
+import { SlitherResult } from "./slitherResults";
 import { SlitherDiagnosticProvider } from "./slitherDiagnostics";
 
 // Properties
@@ -17,7 +18,7 @@ export let diagnosticsProvider : SlitherDiagnosticProvider;
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
     // Set our slither panel to visible
-    vscode.commands.executeCommand('setContext', 'slitherCompatibleWorkspace', true);
+    vscode.commands.executeCommand("setContext", "slitherCompatibleWorkspace", true);
 
     // Log our introductory message.
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
@@ -34,35 +35,48 @@ export async function activate(context: vscode.ExtensionContext) {
     slitherExplorerTree = vscode.window.createTreeView("slither-explorer", { treeDataProvider: slitherExplorerTreeProvider });
 
     // Register our explorer button commands.
-    context.subscriptions.push(vscode.commands.registerCommand('slither.analyze', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand("slither.analyze", async () => {
         await slither.analyze();
         await slitherExplorerTreeProvider.refreshExplorer(false);
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.refreshExplorer', async () => { 
+    context.subscriptions.push(vscode.commands.registerCommand("slither.refreshExplorer", async () => { 
         await slitherExplorerTreeProvider.refreshExplorer(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.toggleTreeMode', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand("slither.toggleTreeMode", async () => {
         await slitherExplorerTreeProvider.toggleTreeMode(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.clear', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand("slither.clear", async () => {
         Logger.log("Clearing results...");
         await slither.clear();
         await slitherExplorerTreeProvider.refreshExplorer(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.toggleAllDetectors', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand("slither.toggleAllDetectors", async () => {
         await detectorFilterTreeProvider.toggleAll();
     }));
 
     // Register our tree click commands.
-    context.subscriptions.push(vscode.commands.registerCommand('slither.clickedDetectorFilterNode', async (node : detectorFilters.DetectorFilterNode) => { 
+    context.subscriptions.push(vscode.commands.registerCommand("slither.clickedDetectorFilterNode", async (node : detectorFilters.DetectorFilterNode) => { 
         await detectorFilterTreeProvider.clickedNode(node); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('slither.clickedExplorerNode', async (node : explorer.ExplorerNode) => { 
+    context.subscriptions.push(vscode.commands.registerCommand("slither.clickedExplorerNode", async (node : explorer.ExplorerNode) => { 
         await slitherExplorerTreeProvider.clickedNode(node); 
     }));
 
-    // Register the diagnostic provider
-    diagnosticsProvider = new SlitherDiagnosticProvider(vscode.languages.createDiagnosticCollection("Slither"));
+    // Register our tree goto result commands.
+    context.subscriptions.push(vscode.commands.registerCommand("slither.gotoExplorerResult", async (result : SlitherResult) => {
+        // Obtain the issue node
+        let resultNode = slitherExplorerTreeProvider.getNodeFromResult(result);
+        if (resultNode) {
+            slitherExplorerTree.reveal(resultNode, { select: true, focus : true, expand : false});
+        } else {
+            Logger.error("Failed to select node for slither result.");
+        }
+    }))
+
+    // Register the diagnostics/code action provider
+    let solidityDocumentSelector : vscode.DocumentSelector = { scheme: "file", language: "solidity" };
+    diagnosticsProvider = new SlitherDiagnosticProvider(context, vscode.languages.createDiagnosticCollection("Slither"));
+    context.subscriptions.push(vscode.languages.registerCodeActionsProvider(solidityDocumentSelector, diagnosticsProvider));
 
     // Add our workspace change event handler
     vscode.workspace.onDidChangeWorkspaceFolders(async e => {
