@@ -6,7 +6,7 @@ import * as sparkmd5 from "spark-md5";
 import * as path from "path";
 import { Logger } from "./logger";
 import * as semver from 'semver';
-import { SlitherDetector, SlitherResult } from "./slitherResults";
+import { SlitherCommandResult, SlitherDetector, SlitherResult } from "./slitherResults";
 import * as util from "util";
 
 // Properties
@@ -103,9 +103,17 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
         let workspaceResults : SlitherResult[] | undefined;
         if (!error) {
             try {
-                workspaceResults = <SlitherResult[]>JSON.parse(output);
-                workspaceResults = await filterDuplicateResults(workspaceResults);
-                results.set(workspaceFolder, workspaceResults);
+                // If we succeeded, we parse the underlying results, otherwise we set the error.
+                let commandResult = <SlitherCommandResult>JSON.parse(output);
+                if (commandResult.success) {
+                    workspaceResults = <SlitherResult[]>commandResult.results;
+                    workspaceResults = await filterDuplicateResults(workspaceResults);
+                    results.set(workspaceFolder, workspaceResults);
+                } else if (commandResult.error) {
+                    error = commandResult.error;
+                } else {
+                    error = "An unknown error occurred for which slither did not provide a message.";
+                }
             } catch(e) {
                 error = output;
             }

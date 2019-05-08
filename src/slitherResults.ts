@@ -2,6 +2,12 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { Logger } from "./logger";
 
+export interface SlitherCommandResult {
+    success : boolean;
+    error : string | null | undefined;
+    results : any;
+}
+
 export interface SlitherDetector {
     index : number;
     check : string;
