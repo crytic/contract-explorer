@@ -2,10 +2,13 @@
     "name": "vscode-slither",
     "displayName": "Slither",
     "description": "Slither: Solidity static analysis framework integration for Visual Studio",
-    "version": "0.0.5",
-    "publisher": "Trail of Bits",
+    "version": "0.0.7",
+    "publisher": "Trail-of-Bits",
     "author": "Trail of Bits",
     "license": "AGPL-3.0",
+    "contributors": [
+        "Trail of Bits"
+    ],
     "homepage": "https://www.trailofbits.com/",
     "repository": {
         "type": "git",
@@ -31,13 +34,14 @@
         "workspaceContains:*.sol"
     ],
     "main": "./out/extension",
-    "icon": "./resources/extension-icon.png",
+    "icon": "extension-icon.png",
     "preview": true,
     "private": true,
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
+        "package": "vsce package",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },

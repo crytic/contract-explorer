@@ -42,7 +42,7 @@ export async function initialize() : Promise<boolean> {
         // Verify we meet the minimum version requirement.
         if(!semver.gte(version, config.minimumSlitherVersion)){
             Logger.error(
-`Error: Incompatible version of slither
+`Incompatible version of slither
 Minimum Requirement: ${config.minimumSlitherVersion}
 Current version ${version}
 Please upgrade slither: "pip install slither-analyzer --upgrade"`
@@ -57,7 +57,7 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
     } catch (e) {
         // Print our error and return a null array.
         Logger.error(
-`Error: Slither initialization failed 
+`Slither initialization failed 
 Please verify slither is installed: "pip install slither-analyzer"`
         );
     }
@@ -181,15 +181,6 @@ export async function updateSourceMappingSyncStatus(firstTimeCalculation : boole
             let workspaceResultValidity : boolean | undefined = undefined;
             for(let workspaceResultElement of workspaceResult.elements) {
 
-                // If this workspace element has no source mapping, we skip to the next
-                if (!workspaceResultElement.source_mapping) {
-                    // If we are verifying, this element is considered valid.
-                    if (!firstTimeCalculation) {
-                        workspaceResultValidity = true;
-                    }
-                    continue;
-                }
-                
                 // Try to obtain any cached source content
                 let sourceMappingFile = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
                 let sourceContent = sourceContentMap.get(workspaceResultElement.source_mapping.filename_relative);

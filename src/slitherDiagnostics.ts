@@ -38,11 +38,6 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
                 // Loop for each element to try and find a source mapping
                 for (let workspaceResultElement of workspaceResult.elements) {
 
-                    // Skip this element if it has no source mapping
-                    if (!workspaceResultElement.source_mapping) {
-                        continue;
-                    }
-
                     // Skip this result if it is on the hidden detector list.
                     if (config.userConfiguration.hiddenDetectors) {
                         if(config.userConfiguration.hiddenDetectors.indexOf(workspaceResult.check) >= 0) {
@@ -79,7 +74,7 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
                     // If we don't have a diagnostic list for this file yet, create one.
                     let diagnosticArray = this.fileDiagnosticMap.get(filename_uri.fsPath);
                     let resultArray = this.fileResultMap.get(filename_uri.fsPath);
-                    if(!diagnosticArray || !resultArray) {
+                    if (!diagnosticArray || !resultArray) {
                         diagnosticArray = [];
                         resultArray = []
                         this.fileDiagnosticMap.set(filename_uri.fsPath, diagnosticArray);

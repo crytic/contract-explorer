@@ -32,7 +32,7 @@ export interface SlitherResult {
 
 export interface SlitherResultElement { 
     name : string;
-    source_mapping : SlitherSourceMapping | undefined;
+    source_mapping : SlitherSourceMapping;
     type : string;
 }
 
@@ -65,7 +65,7 @@ export async function getResultElementRange(result : SlitherResult, elementIndex
     let resultElement : SlitherResultElement = result.elements[elementIndex];
 
     // If we don't have a sourcemapping line, skip
-    if (!resultElement.source_mapping || resultElement.source_mapping.lines.length <= 0) {
+    if (resultElement.source_mapping.lines.length <= 0) {
         return [0, 0, 0, 0];
     }
 
