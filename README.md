@@ -15,7 +15,7 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 
 ## Requirements
 * [Slither](https://github.com/crytic/slither) ( >= 0.6.4 )
-* [Visual Studio Code]([https://](https://code.visualstudio.com/download))
+* [Visual Studio Code](https://code.visualstudio.com/download)
 * Optional: Any desired build/test frameworks supported by Slither, such as Truffle.
 
 ** Slither must be accessible via the `slither` command in order for this extension to invoke it.
