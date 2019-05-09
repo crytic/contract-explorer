@@ -14,6 +14,7 @@ export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvid
 export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
 export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 export let diagnosticsProvider : SlitherDiagnosticProvider;
+export let finishedActivation : boolean = false;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -114,6 +115,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Refresh the workspace.
     await refreshWorkspace();
+
+    // Mark our activation as completed
+    finishedActivation = true;
 }
 
 async function refreshWorkspace() {

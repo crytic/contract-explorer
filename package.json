@@ -3,12 +3,9 @@
     "displayName": "Slither",
     "description": "Slither: Solidity static analysis framework integration for Visual Studio",
     "version": "0.0.7",
-    "publisher": "Trail-of-Bits",
+    "publisher": "trailofbits",
     "author": "Trail of Bits",
     "license": "AGPL-3.0",
-    "contributors": [
-        "Trail of Bits"
-    ],
     "homepage": "https://www.trailofbits.com/",
     "repository": {
         "type": "git",

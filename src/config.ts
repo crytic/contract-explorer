@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as shell from "shelljs";
 import * as vscode from "vscode";
+import * as extension from "./extension";
 
 // Constants
 const storagePath : string = "./.vscode"; // Directory relative to workspace to store files
@@ -49,11 +50,15 @@ export function readConfiguration() {
     }
 }
 
-export function saveConfiguration() : boolean {
+export function saveConfiguration() {
+    // If we haven't fully activated the extension yet, we shouldn't need to resave the configuration
+    if(!extension.finishedActivation) {
+        return;
+    }
+
     // Obtain every property of the configuration.
     let workspaceConfiguration = vscode.workspace.getConfiguration("slither");
     for (let key of Object.keys(userConfiguration)) {
         workspaceConfiguration.update(key, (<any>userConfiguration)[key]);
     }
-    return true;
 }
