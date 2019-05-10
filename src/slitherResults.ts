@@ -111,7 +111,7 @@ export async function gotoResultCode(workspaceFolder : string, result : SlitherR
 
                     // Set the selection.
                     vscode.window.activeTextEditor.selection = selection;
-                    vscode.window.activeTextEditor.revealRange(selection, vscode.TextEditorRevealType.AtTop);
+                    vscode.window.activeTextEditor.revealRange(selection, vscode.TextEditorRevealType.Default);
                 }
             });
         });
