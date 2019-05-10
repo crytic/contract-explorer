@@ -8,10 +8,14 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
     public diagnosticCollection : vscode.DiagnosticCollection;
     private fileDiagnosticMap : Map<string, vscode.Diagnostic[]>;
     private fileResultMap : Map<string, slitherResults.SlitherResult[]>;
+    public hiddenFiles : Set<string>;
 
     constructor(private context: vscode.ExtensionContext, diagnosticCollection : vscode.DiagnosticCollection) {
         // Set the diagnostic collection for this provider.
         this.diagnosticCollection = diagnosticCollection;
+
+        // Initialize our list of files to ignore
+        this.hiddenFiles = new Set<string>();
 
         // Initialize our file->result map to pair workspace results with diagnostics.
         this.fileDiagnosticMap = new Map<string, vscode.Diagnostic[]>();
@@ -70,6 +74,11 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
                     // Obtain the absolute file path
                     let filename_absolute = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
                     let filename_uri = vscode.Uri.file(filename_absolute);
+
+                    // If this is a hidden file, we skip it
+                    if(this.hiddenFiles.has(filename_uri.fsPath)) {
+                        continue;
+                    }
 
                     // If we don't have a diagnostic list for this file yet, create one.
                     let diagnosticArray = this.fileDiagnosticMap.get(filename_uri.fsPath);

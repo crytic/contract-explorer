@@ -89,8 +89,23 @@ export async function activate(context: vscode.ExtensionContext) {
         await refreshWorkspace();
     });
 
-    // Add a handler for document changes, to refresh sync status of slither results.
+    // Add our document event handlers
+    vscode.workspace.onDidChangeTextDocument(async (e : vscode.TextDocumentChangeEvent) => {
+        // Hide all diagnostics in all dirty files.
+        if(e.document.isDirty) {
+            diagnosticsProvider.hiddenFiles.add(e.document.fileName);
+        } else {
+            diagnosticsProvider.hiddenFiles.delete(e.document.fileName);
+        }
+
+        // Refresh diagnostics
+        await diagnosticsProvider.refreshDiagnostics();
+    });
     vscode.workspace.onDidSaveTextDocument(async (e : vscode.TextDocument) => {
+        // Any saved document should no longer be hidden in diagnostics
+        diagnosticsProvider.hiddenFiles.delete(e.fileName);
+
+        // Update source mapping status, and refresh trees + diagnostics
         await slither.updateSourceMappingSyncStatus(false, e.fileName);
         await slitherExplorerTreeProvider.refreshIconsForCheckResults();
         await slitherExplorerTreeProvider.changeTreeEmitter.fire();
