@@ -2,10 +2,14 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { Logger } from "./logger";
 
-export interface SlitherCommandResult {
+export interface SlitherCommandOutput {
     success : boolean;
     error : string | null | undefined;
-    results : any;
+    results : SlitherCommandResults | undefined;
+}
+
+export interface SlitherCommandResults {
+    detectors : SlitherResult[] | undefined;
 }
 
 export interface SlitherDetector {
@@ -26,6 +30,7 @@ export interface SlitherResult {
     impact : string;
     description : string;
     elements : SlitherResultElement[];
+    additional_fields : any | undefined;
 
     _ext_in_sync : boolean | undefined; // Extension: Used to check if source mappings are still valid.
 }
@@ -34,6 +39,12 @@ export interface SlitherResultElement {
     name : string;
     source_mapping : SlitherSourceMapping;
     type : string;
+    type_specific_fields : SlitherTypeSpecificFields | undefined;
+    additional_fields : any | undefined;
+}
+
+export interface SlitherTypeSpecificFields {
+    parent : SlitherResultElement | undefined;
 }
 
 export interface SlitherSourceMapping { 
@@ -111,7 +122,7 @@ export async function gotoResultCode(workspaceFolder : string, result : SlitherR
 
                     // Set the selection.
                     vscode.window.activeTextEditor.selection = selection;
-                    vscode.window.activeTextEditor.revealRange(selection, vscode.TextEditorRevealType.Default);
+                    vscode.window.activeTextEditor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
                 }
             });
         });

@@ -6,7 +6,7 @@ import * as sparkmd5 from "spark-md5";
 import * as path from "path";
 import { Logger } from "./logger";
 import * as semver from 'semver';
-import { SlitherCommandResult, SlitherDetector, SlitherResult } from "./slitherResults";
+import { SlitherCommandOutput, SlitherDetector, SlitherResult } from "./slitherResults";
 import * as util from "util";
 
 // Properties
@@ -57,8 +57,9 @@ Please upgrade slither: "pip install slither-analyzer --upgrade"`
     } catch (e) {
         // Print our error and return a null array.
         Logger.error(
-`Slither initialization failed 
-Please verify slither is installed: "pip install slither-analyzer"`
+`Slither not found:
+Please verify slither is installed with the following command: "pip install slither-analyzer"
+For more information, please visit: https://github.com/crytic/slither`
         );
     }
 
@@ -104,15 +105,15 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
         if (!error) {
             try {
                 // If we succeeded, we parse the underlying results, otherwise we set the error.
-                let commandResult = <SlitherCommandResult>JSON.parse(output);
-                if (commandResult.success) {
-                    workspaceResults = <SlitherResult[]>commandResult.results;
+                let commandResult = <SlitherCommandOutput>JSON.parse(output);
+                if (commandResult.success && commandResult.results && commandResult.results.detectors) {
+                    workspaceResults = commandResult.results.detectors;
                     workspaceResults = await filterDuplicateResults(workspaceResults);
                     results.set(workspaceFolder, workspaceResults);
                 } else if (commandResult.error) {
                     error = commandResult.error;
                 } else {
-                    error = "An unknown error occurred for which slither did not provide a message.";
+                    error = "Could not obtain slither results: An unknown error occurred.";
                 }
             } catch(e) {
                 error = output;
