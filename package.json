@@ -188,7 +188,8 @@
                 "id": "solidity",
                 "aliases": [
                     "Solidity",
-                    "solidity"
+                    "solidity",
+                    "sol"
                 ],
                 "extensions": [
                     ".sol"
@@ -207,6 +208,11 @@
             }
         ],
         "grammars": [
+            {
+                "language": "solidity",
+                "scopeName": "source.solidity",
+                "path": "./resources/solidity.tmGrammar.json"
+            },
             {
                 "language": "slither-output",
                 "scopeName": "slither.output",

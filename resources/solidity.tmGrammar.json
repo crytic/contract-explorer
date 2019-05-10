@@ -1,0 +1,85 @@
+{
+    "scopeName": "source.solidity",
+    "patterns": [
+        { 
+            "include": "#comments" 
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#constants"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "include": "#comment-single-line"
+                },
+                {
+                    "include": "#comment-multi-line"
+                }
+            ]
+        },
+        "comment-single-line": {
+            "name": "comment.single.line",
+            "match": "//.*?$"
+        },
+        "comment-multi-line": {
+            "name": "comment.multi.line",
+            "begin": "/\\*",
+            "end": "\\*/"
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "include": "#keyword-import"
+                },
+                {
+                    "include": "#keyword-using"
+                },
+                {
+                    "include": "#keyword-instance-action"
+                }, 
+                {
+                    "include": "#keyword-control-flow"
+                },
+                {
+                    "include": "#keyword-collection-enumeration"
+                }
+            ]
+        },
+        "keyword-import": {
+            "name": "keyword.import",
+            "match": "\\b(import)\\b"
+        },
+        "keyword-using": {
+            "name": "keyword.using",
+            "match": "\\b(using)\\b"
+        },
+        "keyword-instance-action": {
+            "name": "keyword.instance.action",
+            "match": "\\b(new|delete|emit)\\b"
+        },
+        "keyword-control-flow": {
+            "name": "keyword.control.flow",
+            "match": "\\b(if|else|for|break|continue|return|returns|throw|do|while|switch|try|catch)\\b"
+        },
+        "keyword-collection-enumeration": {
+            "name": "keyword.collection.enumeration",
+            "match": "\\b(in|of)\\b"
+        },
+        "constants" : {
+            "patterns": [
+                {
+                    "include": "#constant-boolean"
+                }
+            ]
+        },
+        "constant-boolean" : {
+            "name": "constant.boolean",
+            "match": "\\b(true|false)\\b"
+        }
+    }
+}
