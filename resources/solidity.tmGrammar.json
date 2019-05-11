@@ -36,9 +36,6 @@
         },
         {
             "include": "#strings"
-        },
-        {
-            "include": "#userdefined-types"
         }
     ],
     "repository": {
@@ -72,13 +69,10 @@
             ]
         },
         "builtin-types": {
-            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)[\\w\\.\\[\\]]*(?:\\s+(memory|storage|calldata))?\\b",
+            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)\\b",
             "captures": {
                 "1": {
                     "name": "storage.type.builtin"
-                },
-                "2": {
-                    "name": "storage.type.location"
                 }
             }
         },
@@ -251,7 +245,7 @@
                             "name": "storage.type.event"
                         },
                         "2": {
-                            "name": "entity.name.type.event"
+                            "name": "entity.name.function.event"
                         }
                     }
                 },
@@ -262,7 +256,7 @@
                             "name": "storage.type.event"
                         },
                         "2": {
-                            "name": "entity.name.type.event"
+                            "name": "entity.name.function.event"
                         }
                     }
                 },
@@ -291,7 +285,7 @@
                 },
                 {
                     "name": "storage.modifier.main",
-                    "match": "\\b(public|private|internal|external)\\b"
+                    "match": "\\b(public|private|internal|external|memory|storage|calldata)\\b"
                 },
                 {
                     "name": "storage.modifier.additional",
@@ -378,6 +372,9 @@
                 "1": {
                     "name": "keyword.other.using.using"
                 },
+                "2": {
+                    "name": "entity.name.type.contract"
+                },
                 "3": {
                     "name": "keyword.other.using.for"
                 }
@@ -398,35 +395,17 @@
         "keyword-other": {
             "patterns": [
                 {
-                    "match": "\\b(is)\\s+([A-Za-z_][\\w\\s\\.,]*,?)*\\b",
-                    "comment": "Naive grammar for inheriting contracts",
-                    "captures": {
-                        "1": {
-                            "name": "keyword.other.other"
-                        },
-                        "2": {
-                            "name": "entity.name.type.userdefined"
-                        }
-                    }
-                },
-                {
-                    "match": "\\b([A-Za-z_]\\w*)\\s+[A-Za-z_]\\w*\\s*\\=\\s*(new)\\s+([A-Za-z_]\\w*)\\b",
-                    "comment": "Naive grammar for new contracts",
-                    "captures": {
-                        "1": {
-                            "name": "entity.name.type.userdefined"
-                        },
-                        "2": {
-                            "name": "keyword.other.instance.action"
-                        },
-                        "3": {
-                            "name": "entity.name.type.userdefined"
-                        }
-                    }
-                },
-                {
                     "name": "keyword.other.other",
                     "match": "\\b(as|is)\\b"
+                },
+                {
+                    "match": "(?:\\b|\\.)([A-Za-z_]\\w*)\\s*\\(.*\\)",
+                    "comment": "Function call highlighting",
+                    "captures": {
+                        "1": {
+                            "name": "entity.name.function.function"
+                        }
+                    }
                 }
             ]
 
@@ -442,17 +421,6 @@
                     "match": "\".*\""
                 }
             ]
-        },
-        "userdefined-types": {
-            "match": "\\b([A-Za-z_]*)\\s*[\\w\\.\\[\\]]*\\s+(memory|storage|calldata|public|internal)\\b",
-            "captures": {
-                "1": {
-                    "name": "entity.name.type.userdefined"
-                },
-                "2": {
-                    "name": "storage.type.location"
-                }
-            }
         }
     }
 }
