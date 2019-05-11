@@ -29,10 +29,16 @@
             "include": "#constants"
         },
         {
+            "include": "#declarations"
+        },
+        {
             "include": "#keywords"
         },
         {
             "include": "#strings"
+        },
+        {
+            "include": "#userdefined-types"
         }
     ],
     "repository": {
@@ -66,25 +72,32 @@
             ]
         },
         "builtin-types": {
-            "name": "support.type.builtin",
-            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)\\b"
+            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)[\\w\\.\\[\\]]*(?:\\s+(memory|storage|calldata))?\\b",
+            "captures": {
+                "1": {
+                    "name": "storage.type.builtin"
+                },
+                "2": {
+                    "name": "storage.type.location"
+                }
+            }
         },
         "builtin-functions": {
             "patterns": [
                 {
-                    "name": "keyword.other.exceptions",
+                    "name": "keyword.control.exceptions",
                     "match": "\\b(assert|require|revert)\\b"
                 },
                 {
-                    "name": "keyword.other.selfdestruct",
+                    "name": "markup.underline.selfdestruct",
                     "match": "\\b(selfdestruct|suicide)\\b"
                 },
                 {
-                    "name": "keyword.other.crypto",
+                    "name": "support.function.crypto",
                     "match": "\\b(sha3|keccak256|blockhash|sha256|ripemd160|ecrecover|addmod|mulmod)\\b"
                 },
                 {
-                    "name":  "keyword.other.other",
+                    "name":  "support.function.other",
                     "match": "\\b(type)\\b"
                 }
             ]
@@ -105,7 +118,7 @@
                 },
                 {
                     "name": "variable.language.toplevel",
-                    "match": "\\b(abi|block|msg|now|tx)\\b"
+                    "match": "\\b(abi|block|msg|now|tx|this|super)\\b"
                 }
             ]
         },
@@ -161,6 +174,160 @@
         "constant-units-time": {
             "name": "constant.language.units.time",
             "match": "\\b(seconds|minutes|hours|days|weeks|years)\\b"
+        },
+        "declarations": {
+            "patterns": [
+                {
+                    "include": "#declared-contract"
+                },
+                {
+                    "include": "#declared-constructor"
+                },
+                {
+                    "include": "#declared-enum"
+                },
+                {
+                    "include": "#declared-event"
+                },
+                {
+                    "include": "#declared-function"
+                },
+                {
+                    "include": "#declared-modifier"
+                },
+                {
+                    "include": "#declared-struct"
+                }
+            ]
+        },
+        "declared-constructor": {
+            "patterns": [
+                {
+                    "match": "\\b(constructor)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.constructor"
+                        }
+                    }
+                }
+            ]
+        },
+        "declared-contract": {
+            "patterns": [
+                {
+                    "match": "\\b(contract|library)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.contract"
+                        },
+                        "2": {
+                            "name": "entity.name.type.contract"
+                        }
+                    }
+                }
+            ]
+        },
+        "declared-enum": {
+            "patterns": [
+                {
+                    "match": "\\b(enum)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.enum"
+                        },
+                        "2": {
+                            "name": "entity.name.type.enum"
+                        }
+                    }
+                }
+            ]
+        },
+        "declared-event": {
+            "patterns": [
+                {
+                    "match": "\\b(emit)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.event"
+                        },
+                        "2": {
+                            "name": "entity.name.type.event"
+                        }
+                    }
+                },
+                {
+                    "match": "\\b(event)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.event"
+                        },
+                        "2": {
+                            "name": "entity.name.type.event"
+                        }
+                    }
+                },
+                {
+                    "name": "keyword.other.event.indexed",
+                    "match": "\\b(indexed)\\b"
+                }
+            ]
+        },
+        "declared-function": {
+            "patterns": [
+                {
+                    "match": "\\b(function)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.function"
+                        },
+                        "2": {
+                            "name": "entity.name.function.function"
+                        }
+                    }
+                },
+                {
+                    "name": "storage.type.fallback",
+                    "match": "\\b(fallback)\\b"
+                },
+                {
+                    "name": "storage.modifier.main",
+                    "match": "\\b(public|private|internal|external)\\b"
+                },
+                {
+                    "name": "storage.modifier.additional",
+                    "match": "\\b(constant|pure|view)\\b"
+                }
+            ]
+        },
+        "declared-modifier": {
+            "patterns": [
+                {
+                    "match": "\\b(modifier)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.modifier"
+                        },
+                        "2": {
+                            "name": "entity.name.function.modifier"
+                        }
+                    }
+                }
+            ]
+        },
+        "declared-struct": {
+            "patterns": [
+                {
+                    "match": "\\b(struct)\\s+([A-Za-z_]\\w*)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.struct"
+                        },
+                        "2": {
+                            "name": "entity.name.type.struct"
+                        }
+                    }
+                }
+            ]
         },
         "keywords": {
             "patterns": [
@@ -222,15 +389,47 @@
         },
         "keyword-instance-action": {
             "name": "keyword.other.instance.action",
-            "match": "\\b(new|delete|emit)\\b"
+            "match": "\\b(new|delete)\\b"
         },
         "keyword-collection-enumeration": {
             "name": "keyword.other.enumeration",
             "match": "\\b(in|of)\\b"
         },
         "keyword-other": {
-            "name": "keyword.other.other",
-            "match": "\\b(from|as|is)\\b"
+            "patterns": [
+                {
+                    "match": "\\b(is)\\s+([A-Za-z_][\\w\\s\\.,]*,?)*\\b",
+                    "comment": "Naive grammar for inheriting contracts",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.other.other"
+                        },
+                        "2": {
+                            "name": "entity.name.type.userdefined"
+                        }
+                    }
+                },
+                {
+                    "match": "\\b([A-Za-z_]\\w*)\\s+[A-Za-z_]\\w*\\s*\\=\\s*(new)\\s+([A-Za-z_]\\w*)\\b",
+                    "comment": "Naive grammar for new contracts",
+                    "captures": {
+                        "1": {
+                            "name": "entity.name.type.userdefined"
+                        },
+                        "2": {
+                            "name": "keyword.other.instance.action"
+                        },
+                        "3": {
+                            "name": "entity.name.type.userdefined"
+                        }
+                    }
+                },
+                {
+                    "name": "keyword.other.other",
+                    "match": "\\b(as|is)\\b"
+                }
+            ]
+
         },
         "strings": {
             "patterns": [
@@ -243,6 +442,17 @@
                     "match": "\".*\""
                 }
             ]
+        },
+        "userdefined-types": {
+            "match": "\\b([A-Za-z_]*)\\s*[\\w\\.\\[\\]]*\\s+(memory|storage|calldata|public|internal)\\b",
+            "captures": {
+                "1": {
+                    "name": "entity.name.type.userdefined"
+                },
+                "2": {
+                    "name": "storage.type.location"
+                }
+            }
         }
     }
 }
