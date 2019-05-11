@@ -1,38 +1,96 @@
 {
+    "__references": [
+        "NOTE: This is not a valid grammar node, but aims to serve as an index of references used to maintain this file!",
+        "",
+        "Language Grammars:",
+        "https://macromates.com/manual/en/language_grammars",
+        "",
+        "VSCode Syntax Highlighting Guideline:",
+        "https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide",
+        "",
+        "Reserved Keywords + Types:",
+        "https://solidity.readthedocs.io/en/v0.5.8/miscellaneous.html",
+        "",
+        "Units and Global Variables",
+        "https://solidity.readthedocs.io/en/v0.5.8/units-and-global-variables.html"
+    ],
     "scopeName": "source.solidity",
     "patterns": [
         { 
             "include": "#comments" 
         },
         {
+            "include": "#constants"
+        },
+        {
             "include": "#keywords"
         },
         {
-            "include": "#constants"
+            "include": "#strings"
+        },
+        {
+            "include": "#types"
         }
     ],
     "repository": {
         "comments": {
             "patterns": [
                 {
-                    "include": "#comment-single-line"
+                    "name": "comment.line.double-slash",
+                    "match": "//.*?$"
                 },
                 {
-                    "include": "#comment-multi-line"
+                    "name": "comment.block",
+                    "begin": "/\\*",
+                    "end": "\\*/"
                 }
             ]
         },
-        "comment-single-line": {
-            "name": "comment.single.line",
-            "match": "//.*?$"
+        "constants": {
+            "patterns": [
+                {
+                    "include": "#constant-boolean"
+                },
+                {
+                    "include": "#constant-integers"
+                },
+                {
+                    "include": "#constant-units-ether"
+                },
+                {
+                    "include": "#constant-units-time"
+                }
+            ]
         },
-        "comment-multi-line": {
-            "name": "comment.multi.line",
-            "begin": "/\\*",
-            "end": "\\*/"
+        "constant-boolean": {
+            "name": "constant.language.boolean",
+            "match": "\\b(true|false)\\b"
+        },
+        "constant-integers" : {
+            "patterns": [
+                {
+                    "name": "constant.numeric.integer.decimal",
+                    "match": "\\b(\\d+)\\b"
+                },
+                {
+                    "name": "constant.numeric.integer.hex",
+                    "match":  "\\b(0x[0-9a-fA-F]+)\\b"
+                }
+            ]
+        },
+        "constant-units-ether": {
+            "name": "constant.language.units.ether",
+            "match": "\\b(wei|finney|szabo|ether)\\b"
+        },
+        "constant-units-time": {
+            "name": "constant.language.units.time",
+            "match": "\\b(seconds|minutes|hours|days|weeks|years)\\b"
         },
         "keywords": {
             "patterns": [
+                {
+                    "include": "#keyword-pragma"
+                },
                 {
                     "include": "#keyword-import"
                 },
@@ -47,39 +105,79 @@
                 },
                 {
                     "include": "#keyword-collection-enumeration"
+                },
+                {
+                    "include": "#keyword-other"
                 }
             ]
         },
+        "keyword-pragma": {
+            "match": "\\s*(pragma)\\s+(\\S+)\\s+(.+)\\s*;",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.pragma.pragma"
+                },
+                "2": {
+                    "name": "keyword.other.pragma.type"
+                },
+                "3": {
+                    "name": "constant.other.pragma.value"
+                }
+            }
+        },
         "keyword-import": {
-            "name": "keyword.import",
+            "name": "keyword.other.import",
             "match": "\\b(import)\\b"
         },
         "keyword-using": {
-            "name": "keyword.using",
-            "match": "\\b(using)\\b"
-        },
-        "keyword-instance-action": {
-            "name": "keyword.instance.action",
-            "match": "\\b(new|delete|emit)\\b"
+            "match": "\\b(using)\\s+(\\S+)\\s+(for)\\s+(\\S+)",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.using.using"
+                },
+                "3": {
+                    "name": "keyword.other.using.for"
+                }
+            }
         },
         "keyword-control-flow": {
             "name": "keyword.control.flow",
             "match": "\\b(if|else|for|break|continue|return|returns|throw|do|while|switch|try|catch)\\b"
         },
+        "keyword-instance-action": {
+            "name": "keyword.other.instance.action",
+            "match": "\\b(new|delete|emit)\\b"
+        },
         "keyword-collection-enumeration": {
-            "name": "keyword.collection.enumeration",
+            "name": "keyword.other.enumeration",
             "match": "\\b(in|of)\\b"
         },
-        "constants" : {
+        "keyword-other": {
+            "name": "keyword.other.other",
+            "match": "\\b(from|as|is)\\b"
+        },
+        "strings": {
             "patterns": [
                 {
-                    "include": "#constant-boolean"
+                    "name": "string.quoted.single.decimal",
+                    "match": "'.*'"
+                },
+                {
+                    "name": "string.quoted.double.decimal",
+                    "match": "\".*\""
                 }
             ]
         },
-        "constant-boolean" : {
-            "name": "constant.boolean",
-            "match": "\\b(true|false)\\b"
+        "types": {
+            "patterns": [
+                {
+                    "include": "#builtin-types"
+                }
+            ]
+        },
+        "builtin-types": {
+            "name": "support.type.builtin",
+            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)\\b"
         }
     }
 }
