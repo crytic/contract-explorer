@@ -11,7 +11,7 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 * Print detailed issue description and recommendations
 * Filter issues by type (per workspace configuration)
 * Specify custom solc path (per workspace configuration)
-
+* Solidity Syntax Highlighting
 
 ## Requirements
 * [Slither](https://github.com/crytic/slither) ( >= 0.6.4 )

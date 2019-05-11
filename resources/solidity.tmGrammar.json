@@ -11,11 +11,17 @@
         "Reserved Keywords + Types:",
         "https://solidity.readthedocs.io/en/v0.5.8/miscellaneous.html",
         "",
-        "Units and Global Variables",
+        "Reserved Functions/Access Variables + Units and Global Variables",
         "https://solidity.readthedocs.io/en/v0.5.8/units-and-global-variables.html"
     ],
     "scopeName": "source.solidity",
     "patterns": [
+        {
+            "include": "#_deprecated"
+        },
+        {
+            "include": "#builtin"
+        },
         { 
             "include": "#comments" 
         },
@@ -27,12 +33,82 @@
         },
         {
             "include": "#strings"
-        },
-        {
-            "include": "#types"
         }
     ],
     "repository": {
+        "_deprecated": {
+            "patterns": [
+                {
+                    "name": "invalid.deprecated.functions",
+                    "match": "\\b(suicide|sha3)\\b"
+                },
+                {
+                    "name": "invalid.deprecated.nodes",
+                    "match": "\\b(throw)\\b"
+                },
+                {
+                    "name": "invalid.deprecated.variables",
+                    "match": "\\b(block\\.blockhash|msg\\.gas)\\b"
+                }
+            ]
+        },
+        "builtin": {
+            "patterns": [
+                {
+                    "include": "#builtin-types"
+                },
+                {
+                    "include": "#builtin-functions"
+                },
+                {
+                    "include": "#builtin-variables"
+                }
+            ]
+        },
+        "builtin-types": {
+            "name": "support.type.builtin",
+            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)\\b"
+        },
+        "builtin-functions": {
+            "patterns": [
+                {
+                    "name": "keyword.other.exceptions",
+                    "match": "\\b(assert|require|revert)\\b"
+                },
+                {
+                    "name": "keyword.other.selfdestruct",
+                    "match": "\\b(selfdestruct|suicide)\\b"
+                },
+                {
+                    "name": "keyword.other.crypto",
+                    "match": "\\b(sha3|keccak256|blockhash|sha256|ripemd160|ecrecover|addmod|mulmod)\\b"
+                },
+                {
+                    "name":  "keyword.other.other",
+                    "match": "\\b(type)\\b"
+                }
+            ]
+        },
+        "builtin-variables": {
+            "patterns": [
+                {
+                    "name": "variable.language.members.block",
+                    "match": "\\b(block\\.(?:coinbase|difficulty|gaslimit|number|timestamp))\\b"
+                },
+                {
+                    "name": "variable.language.members.msg",
+                    "match": "\\b(msg\\.(?:data|sender|sig|value))\\b"
+                },
+                {
+                    "name": "variable.language.members.tx",
+                    "match": "\\b(tx\\.(?:gasprice|origin))\\b"
+                },
+                {
+                    "name": "variable.language.toplevel",
+                    "match": "\\b(abi|block|msg|now|tx)\\b"
+                }
+            ]
+        },
         "comments": {
             "patterns": [
                 {
@@ -130,7 +206,7 @@
             "match": "\\b(import)\\b"
         },
         "keyword-using": {
-            "match": "\\b(using)\\s+(\\S+)\\s+(for)\\s+(\\S+)",
+            "match": "\\b(using)\\s+(\\S+)\\s+(for)",
             "captures": {
                 "1": {
                     "name": "keyword.other.using.using"
@@ -167,17 +243,6 @@
                     "match": "\".*\""
                 }
             ]
-        },
-        "types": {
-            "patterns": [
-                {
-                    "include": "#builtin-types"
-                }
-            ]
-        },
-        "builtin-types": {
-            "name": "support.type.builtin",
-            "match": "\\b(address|bool|mapping|u?int\\d{0,3}|(?:bytes|string)(?:3[0-2]|[12][0-9]|[1-9])?)\\b"
         }
     }
 }
