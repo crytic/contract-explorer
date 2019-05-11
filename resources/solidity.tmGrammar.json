@@ -99,19 +99,19 @@
         "builtin-variables": {
             "patterns": [
                 {
-                    "name": "variable.language.members.block",
+                    "name": "support.variable.members.block",
                     "match": "\\b(block\\.(?:coinbase|difficulty|gaslimit|number|timestamp))\\b"
                 },
                 {
-                    "name": "variable.language.members.msg",
+                    "name": "support.variable.members.msg",
                     "match": "\\b(msg\\.(?:data|sender|sig|value))\\b"
                 },
                 {
-                    "name": "variable.language.members.tx",
+                    "name": "support.variable.members.tx",
                     "match": "\\b(tx\\.(?:gasprice|origin))\\b"
                 },
                 {
-                    "name": "variable.language.toplevel",
+                    "name": "support.variable.toplevel",
                     "match": "\\b(abi|block|msg|now|tx|this|super)\\b"
                 }
             ]
@@ -290,6 +290,10 @@
                 {
                     "name": "storage.modifier.additional",
                     "match": "\\b(constant|pure|view)\\b"
+                },
+                {
+                    "name": "storage.modifier.returns",
+                    "match": "\\b(returns)\\b"
                 }
             ]
         },
@@ -382,7 +386,7 @@
         },
         "keyword-control-flow": {
             "name": "keyword.control.flow",
-            "match": "\\b(if|else|for|break|continue|return|returns|throw|do|while|switch|try|catch)\\b"
+            "match": "\\b(if|else|for|break|continue|return|throw|do|while|switch|try|catch)\\b"
         },
         "keyword-instance-action": {
             "name": "keyword.other.instance.action",
@@ -399,7 +403,7 @@
                     "match": "\\b(as|is)\\b"
                 },
                 {
-                    "match": "(?:\\b|\\.)([A-Za-z_]\\w*)\\s*\\(.*\\)",
+                    "match": "(?:\\b|\\.)([A-Za-z_]\\w*)\\s*\\(",
                     "comment": "Function call highlighting",
                     "captures": {
                         "1": {
