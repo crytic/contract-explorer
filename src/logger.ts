@@ -33,6 +33,9 @@ export class Logger {
         if (showErrorDialog) {
             vscode.window.showErrorMessage(msg);
         }
+
+        // Show our output channel
+        this.show();
     }
 }
 

@@ -77,6 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register context menu actions for the explorer
     context.subscriptions.push(vscode.commands.registerCommand("slither.printResultNodeDetails", async (node : explorer.CheckResultNode) => {
         await slitherExplorerTreeProvider.printDetailedDescription(node);
+        Logger.show();
     }));
 
     // Register the diagnostics/code action provider
