@@ -21,9 +21,26 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 ** Slither must be accessible via the `slither` command in order for this extension to invoke it.
 
 ## Installation
-The Slither Visual Studio Code extension can be installed from the Visual Studio Marketplace within Visual Studio Code, or a built from this respository. To run from source, open the source folder in Visual Studio Code and in the menu bar, click Terminal->New Terminal. Type in `npm i` to install all relevant node packages/dependencies. Afterward, in the menu bar you can select Debug->Start Debugging to run a new instance of Visual Studio Code with your extension activated in debug mode.
+
+### From the Visual Studio Marketplace
+
+Install `Slither` from the Visual Studio Marketplace. 
+
+### From git
+
+```
+git clone https://github.com/crytic/slither-vscode
+```
+
+Open the `slither-vscode folder` in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
+```
+npm i
+```
+ 
+In the menu bar you can then select `Debug`->`Start Debugging` to run a new instance of Visual Studio Code with your extension activated in debug mode.
 
 ## Getting Started
+
 After installing the extension, simply open a workspace containing any Solidity (*.sol) files. The extension will activate, revealing the Slither logo on the action bar. Click it to reveal a new container with a results explorer and detector filter tree. Hovering over the explorer tree will reveal buttons on the top title bar which can be used to run slither, refresh, change viewing mode, and delete results.
 
 Clicking a detector filter will toggle its visibility. Hovering over the detector filter tree will reveal a button with a flag icon, which is used as a toggle all button.
