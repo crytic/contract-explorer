@@ -1,7 +1,10 @@
 # Slither (Visual Studio Code Extension)
-Visual Studio Code integration for Slither, a Solidity static analysis framework.
+Visual Studio Code integration for [Slither](https://github.com/crytic/slither), a Solidity static analysis framework.
 
 This extension offers Visual Studio Code integration for Slither, a Solidity static analysis framework written in Python 3. With Slither for Visual Studio Code, users can run a suite of vulnerability detectors on their Solidity smart contracts to annotate potentially dangerous code and receive suggested fixes.
+
+<img src="https://raw.githubusercontent.com/crytic/slither-vscode/master/resources/screenshot.png" alt="Logo" width="900"/>
+
 
 ## Features
 * Analyze open workspaces
