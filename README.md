@@ -27,20 +27,27 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 
 ### From the Visual Studio Marketplace
 
-Install `Slither` from the Visual Studio Marketplace. 
+Install `Slither` from the Visual Studio Marketplace within the Extensions tab of Visual Studio Code.
 
-### From git
+### From source
 
 ```
 git clone https://github.com/crytic/slither-vscode
 ```
 
-Open the `slither-vscode folder` in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
+Open the `slither-vscode` folder in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
 ```
 npm i
 ```
  
-In the menu bar you can then select `Debug`->`Start Debugging` to run a new instance of Visual Studio Code with your extension activated in debug mode.
+Ensure `vsce` is installed with the command
+```
+npm install -g vsce
+```
+
+You can then run the `vsce package` command within the Visual Studio Code terminal to create a VSIX package within the root of the repository directory. 
+
+VSIX files can be installed in the Extensions tab of Visual Studio Code, under the `...` menu.
 
 ## Getting Started
 
