@@ -1,5 +1,5 @@
 {
-    "name": "vscode-slither",
+    "name": "slither-vscode",
     "displayName": "Slither",
     "description": "Slither: Solidity static analysis framework integration for Visual Studio",
     "version": "0.0.7",

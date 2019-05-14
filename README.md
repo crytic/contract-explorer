@@ -38,7 +38,7 @@ npm i
 npm install -g vsce
 vsce package
 ```
-`vscode-slither-X.X.X.vsix` will be created.
+`slither-vscode-X.X.X.vsix` will be created.
 
 Install the VSIX file in Visual Studio through `Extensions`, under the `...` menu.
 
