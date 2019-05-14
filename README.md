@@ -24,7 +24,7 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 
 ### From the Visual Studio Marketplace
 
-Install `Slither` from the Visual Studio Marketplace. 
+Install `Slither` from the Visual Studio Marketplace within the Extensions tab of Visual Studio Code.
 
 ### From Source
 
