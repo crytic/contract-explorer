@@ -32,7 +32,7 @@ Install `Slither` from the Visual Studio Marketplace within the Extensions tab o
 git clone https://github.com/crytic/slither-vscode
 ```
 
-Open the `slither-vscode folder` in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
+Open the `slither-vscode` folder in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
 ```
 npm i
 ```
