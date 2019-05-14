@@ -15,6 +15,7 @@ export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
 export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 export let diagnosticsProvider : SlitherDiagnosticProvider;
 export let finishedActivation : boolean = false;
+export let analysisRunning : boolean = false;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -37,8 +38,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register our explorer button commands.
     context.subscriptions.push(vscode.commands.registerCommand("slither.analyze", async () => {
-        await slither.analyze();
-        await slitherExplorerTreeProvider.refreshExplorer(false);
+        if(!analysisRunning) {
+            analysisRunning = true;
+            let progressOptions : vscode.ProgressOptions = {
+                title: "Slither: Please wait while analysis is performed...",
+                location: vscode.ProgressLocation.Notification,
+                cancellable: false
+            };
+            vscode.window.withProgress(progressOptions, async (progress, token) => {
+                await slither.analyze();
+                await slitherExplorerTreeProvider.refreshExplorer(false);
+                analysisRunning = false;
+            });
+        }
     }));
     context.subscriptions.push(vscode.commands.registerCommand("slither.refreshExplorer", async () => { 
         await slitherExplorerTreeProvider.refreshExplorer(); 
