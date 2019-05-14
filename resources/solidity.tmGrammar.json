@@ -285,7 +285,7 @@
                 },
                 {
                     "name": "storage.modifier.main",
-                    "match": "\\b(public|private|internal|external|memory|storage|calldata)\\b"
+                    "match": "\\b(public|private|internal|external|memory|storage|calldata|payable)\\b"
                 },
                 {
                     "name": "storage.modifier.additional",
