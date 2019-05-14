@@ -209,7 +209,7 @@
         "declared-contract": {
             "patterns": [
                 {
-                    "match": "\\b(contract|library)\\s+([A-Za-z_]\\w*)\\b",
+                    "match": "\\b(contract|library|interface)\\s+([A-Za-z_]\\w*)\\b",
                     "captures": {
                         "1": {
                             "name": "storage.type.contract"
