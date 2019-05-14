@@ -32,7 +32,7 @@
     ],
     "main": "./out/extension",
     "icon": "extension-icon.png",
-    "preview": true,
+    "preview": false,
     "private": true,
     "scripts": {
         "vscode:prepublish": "npm run compile",
