@@ -339,8 +339,11 @@
                     "include": "#keyword-using"
                 },
                 {
-                    "include": "#keyword-instance-action"
+                    "include": "#keyword-instance"
                 }, 
+                {
+                    "include": "#keyword-assembly"
+                },
                 {
                     "include": "#keyword-control-flow"
                 },
@@ -384,13 +387,17 @@
                 }
             }
         },
+        "keyword-assembly": {
+            "name": "keyword.other.assembly",
+            "match": "\\b(assembly)\\b"
+        },
         "keyword-control-flow": {
             "name": "keyword.control.flow",
             "match": "\\b(if|else|for|break|continue|return|throw|do|while|switch|try|catch)\\b"
         },
-        "keyword-instance-action": {
-            "name": "keyword.other.instance.action",
-            "match": "\\b(new|delete)\\b"
+        "keyword-instance": {
+            "name": "keyword.other.instance",
+            "match": "\\b(new|delete|let)\\b"
         },
         "keyword-collection-enumeration": {
             "name": "keyword.other.enumeration",
