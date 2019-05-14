@@ -33,21 +33,14 @@ Install `Slither` from the Visual Studio Marketplace within the Extensions tab o
 
 ```
 git clone https://github.com/crytic/slither-vscode
-```
-
-Open the `slither-vscode` folder in Visual Studio Code and in the menu bar, click `Terminal`->`New Terminal`, and run
-```
+cd slither-vscode
 npm i
-```
- 
-Ensure `vsce` is installed with the command
-```
 npm install -g vsce
+vsce package
 ```
+`vscode-slither-X.X.X.vsix` will be created.
 
-You can then run the `vsce package` command within the Visual Studio Code terminal to create a VSIX package within the root of the repository directory. 
-
-VSIX files can be installed in the Extensions tab of Visual Studio Code, under the `...` menu.
+Install the VSIX file in Visual Studio through `Extensions`, under the `...` menu.
 
 ## Getting Started
 
