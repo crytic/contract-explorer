@@ -57,7 +57,7 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
 
     private async fireChangedEnabledFilters() {
         // Fire an event to change our detector filter tree
-        this.changeTreeEmitter.fire();
+        this.changeTreeEmitter.fire(null);
 
         // If we have callback handlers, fire them all.
         if (this.changedEnabledFilters != null) {

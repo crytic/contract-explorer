@@ -7,8 +7,10 @@ import { Logger } from "./logger";
 import * as slither from "./slither";
 import { SlitherResult } from "./slitherResults";
 import { SlitherDiagnosticProvider } from "./slitherDiagnostics";
+import { SlitherRpc } from './rpc/slitherRpc'
 
 // Properties
+export let analysis_key: number | null = null;
 export let detectorFilterTree : vscode.TreeView<detectorFilters.DetectorFilterNode>;
 export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvider;
 export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
@@ -16,6 +18,7 @@ export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 export let diagnosticsProvider : SlitherDiagnosticProvider;
 export let finishedActivation : boolean = false;
 export let analysisRunning : boolean = false;
+export let slitherRpc : SlitherRpc | null = null;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -35,6 +38,9 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize the analysis explorer.
     slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
     slitherExplorerTree = vscode.window.createTreeView("slither-explorer", { treeDataProvider: slitherExplorerTreeProvider });
+    
+    // Initialize the language server
+    slitherRpc = new SlitherRpc(777);
 
     // Register our explorer button commands.
     context.subscriptions.push(vscode.commands.registerCommand("slither.analyze", async () => {
@@ -46,7 +52,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 cancellable: false
             };
             vscode.window.withProgress(progressOptions, async (progress, token) => {
-                await slither.analyze();
                 await slitherExplorerTreeProvider.refreshExplorer(false);
                 analysisRunning = false;
             });
@@ -121,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // Update source mapping status, and refresh trees + diagnostics
         await slither.updateSourceMappingSyncStatus(false, e.fileName);
         await slitherExplorerTreeProvider.refreshIconsForCheckResults();
-        await slitherExplorerTreeProvider.changeTreeEmitter.fire();
+        await slitherExplorerTreeProvider.changeTreeEmitter.fire(null);
         await diagnosticsProvider.refreshDiagnostics();
     });
 
@@ -163,5 +168,7 @@ async function isDebuggingExtension() : Promise<boolean> {
 }
 
 export function deactivate() {
-    
+    if(slitherRpc) {
+        slitherRpc.stop();
+    }
 }

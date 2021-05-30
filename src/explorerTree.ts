@@ -77,13 +77,16 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         let informationalSeverityNode = new ExplorerNode("Informational", vscode.TreeItemCollapsibleState.Expanded);
         this.setIconBySeverity(informationalSeverityNode, <string>informationalSeverityNode.label);
 
-        let severityNodes = [highSeverityNode, mediumSeverityNode, lowSeverityNode, informationalSeverityNode];
+        let optimizationSeverityNode = new ExplorerNode("Optimization", vscode.TreeItemCollapsibleState.Expanded);
+        this.setIconBySeverity(optimizationSeverityNode, <string>optimizationSeverityNode.label);
+
+        let severityNodes = [highSeverityNode, mediumSeverityNode, lowSeverityNode, informationalSeverityNode, optimizationSeverityNode];
             
         // Set up the severity node map.
         for (let severityNode of severityNodes) {
             if(severityNode.label) { 
                 this.bySeverityNode.nodes.push(severityNode);
-                this.bySeverityMap.set(severityNode.label,  severityNode);
+                this.bySeverityMap.set(severityNode.label.toString(),  severityNode);
             }
         }
 
@@ -115,6 +118,12 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
                 };
                 break;
             case "Informational":
+                node.iconPath = { 
+                    light: this.context.asAbsolutePath("resources/severity-info-light.svg"),
+                    dark: this.context.asAbsolutePath("resources/severity-info-dark.svg"),
+                };
+                break;
+            case "Optimization":
                 node.iconPath = { 
                     light: this.context.asAbsolutePath("resources/severity-info-light.svg"),
                     dark: this.context.asAbsolutePath("resources/severity-info-dark.svg"),
@@ -165,7 +174,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         await this.refreshSeverityNodeCounts();
 
         // Fire the event to refresh our tree
-        this.changeTreeEmitter.fire();
+        this.changeTreeEmitter.fire(null);
 
         // Fire the event to refresh our diagnostics
         await extension.diagnosticsProvider.refreshDiagnostics();
@@ -182,7 +191,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         }
         
         // Fire the event to refresh our tree
-        this.changeTreeEmitter.fire();
+        this.changeTreeEmitter.fire(null);
     }
 
     public async refreshExplorer(reloadResults : boolean = true, logging : boolean = true) {
@@ -268,7 +277,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         this.refreshIconsForCheckResults();
 
         // Fire the event to refresh our tree
-        this.changeTreeEmitter.fire();
+        this.changeTreeEmitter.fire(null);
 
         // Fire the event to refresh our diagnostics
         await extension.diagnosticsProvider.refreshDiagnostics();
