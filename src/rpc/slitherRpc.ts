@@ -66,7 +66,7 @@ export class SlitherRpc {
     {
         // Create our command to send.
         let args = { 'target': target };
-        let response = await this.languageClient.sendRequest("slither/analyze", args);
+        let response = await this.languageClient.sendRequest("$/slither/analyze", args);
 
         // TODO: Figure out receiving/notifications, or if we want to do this at all here.
     }
