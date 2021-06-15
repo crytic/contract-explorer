@@ -47,6 +47,7 @@
     },
     "dependencies": {
         "vscode-languageclient": "^7.0.0",
+        "@types/vscode-webview": "^1.57.0",
         "spark-md5": "^3.0.0",
         "shelljs": "^0.8.3",
         "semver": "^6.0.0"
@@ -80,6 +81,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "slither.setBasicCompilationTarget",
+                "title": "Slither: Set Basic Compilation Target"
+            },
+            {
+                "command": "slither.addToCustomCompilation",
+                "title": "Slither: Add To Custom Compilation Manifest"
+            },
             {
                 "command": "slither.analyze",
                 "icon": {
@@ -137,6 +146,12 @@
         "views": {
             "slither-container": [
                 {
+					"type": "webview",
+					"id": "slither-settings-webview",
+					"name": "Project Settings",
+                    "when": "slitherCompatibleWorkspace"
+				},
+                {
                     "id": "slither-explorer",
                     "name": "Analysis",
                     "when": "slitherCompatibleWorkspace"
@@ -149,6 +164,18 @@
             ]
         },
         "menus": {
+            "explorer/context": [
+                {
+                    "command": "slither.setBasicCompilationTarget",
+                    "group": "slithercompilationFileOperations@1",
+                    "when": "slitherCompatibleWorkspace"
+                },
+                {
+                    "command": "slither.addToCustomCompilation",
+                    "group": "slithercompilationFileOperations@1",
+                    "when": "slitherCompatibleWorkspace"
+                }
+            ],
             "view/title": [
                 {
                     "command": "slither.analyze",

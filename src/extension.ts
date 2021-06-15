@@ -1,13 +1,16 @@
 'use strict';
-import * as vscode from "vscode";
-import * as config from "./config";
-import * as detectorFilters from "./detectorFilterTree";
-import * as explorer from "./explorerTree";
-import { Logger } from "./logger";
-import * as slither from "./slither";
-import { SlitherResult } from "./slitherResults";
-import { SlitherDiagnosticProvider } from "./slitherDiagnostics";
-import { SlitherRpc } from './rpc/slitherRpc'
+import * as vscode from 'vscode';
+import * as config from './config';
+import * as detectorFilters from './detectorFilterTree';
+import * as explorer from './explorerTree';
+import { Logger } from './utils/logger';
+import * as slither from './slither';
+import { SlitherResult } from './types/slitherDetectors';
+import { SlitherDiagnosticProvider } from './slitherDiagnostics';
+import { SlitherLanguageClient } from './slitherLanguageClient'
+import { SlitherSettingsProvider } from './views/settings/settingsProvider'
+import { ProtocolNotificationType, StaticRegistrationOptions } from 'vscode-languageserver-protocol';
+import { State } from './state'
 
 // Properties
 export let analysis_key: number | null = null;
@@ -18,7 +21,10 @@ export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 export let diagnosticsProvider : SlitherDiagnosticProvider;
 export let finishedActivation : boolean = false;
 export let analysisRunning : boolean = false;
-export let slitherRpc : SlitherRpc | null = null;
+
+export let state : State;
+
+let slitherSettingsProvider : SlitherSettingsProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -31,6 +37,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize slither
     await slither.initialize();
 
+    // Initialize our project settings panel
+    slitherSettingsProvider = new SlitherSettingsProvider(context);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(SlitherSettingsProvider.view_id, slitherSettingsProvider)
+    );
+
     // Initialize the detector filter tree
     detectorFilterTreeProvider = new detectorFilters.DetectorFilterTreeProvider(context);
     detectorFilterTree = vscode.window.createTreeView("slither-detector-filters", { treeDataProvider: detectorFilterTreeProvider });
@@ -38,12 +50,44 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize the analysis explorer.
     slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
     slitherExplorerTree = vscode.window.createTreeView("slither-explorer", { treeDataProvider: slitherExplorerTreeProvider });
-    
+
+    // Determine if we want to use stdio or attach to an existing process over a network port for our language server.
+    let port: number | null = null;
+    if (process.env.EXISTING_LANGUAGE_SERVER_PORT !== undefined) {
+        port = parseInt(process.env.EXISTING_LANGUAGE_SERVER_PORT);
+    }
+
     // Initialize the language server
-    slitherRpc = new SlitherRpc(777);
+    let slitherLanguageClient = new SlitherLanguageClient(port);
+    state = new State(slitherLanguageClient);
+
+    // When the language server is ready, we'll want to start fetching some state variables.
+    slitherLanguageClient.onReady(
+        async () => {
+            try {
+                // Initialize our state, grabbing detectors
+                await state.initialize();
+
+                // Refresh our detectors in our settings pane.
+                slitherSettingsProvider.refreshDetectors();
+
+            } catch(err) {
+                // Clear our state and log our error.
+                await state.reset();
+                Logger.error(`Initialization failed [${err.code}]: ${err.message}`);
+            }
+        }
+    );
+
 
     // Register our explorer button commands.
     context.subscriptions.push(vscode.commands.registerCommand("slither.analyze", async () => {
+        Logger.log(String(slitherLanguageClient?.languageClient.initializeResult?.serverInfo?.name));
+        await slitherLanguageClient?.analyze(".", (key:number) => {
+            Logger.log(String(key));
+        }, (msg: string) => {
+            Logger.log(msg);
+        });
         if(!analysisRunning) {
             analysisRunning = true;
             let progressOptions : vscode.ProgressOptions = {
@@ -52,6 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 cancellable: false
             };
             vscode.window.withProgress(progressOptions, async (progress, token) => {
+                await slither.analyze();
                 await slitherExplorerTreeProvider.refreshExplorer(false);
                 analysisRunning = false;
             });
@@ -168,7 +213,6 @@ async function isDebuggingExtension() : Promise<boolean> {
 }
 
 export function deactivate() {
-    if(slitherRpc) {
-        slitherRpc.stop();
-    }
+    // Stop the language client.
+    state.slitherLanguageClient.stop();
 }

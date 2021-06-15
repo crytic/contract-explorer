@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import * as config from "./config";
-import * as slither from "./slither";
-import * as slitherResults from "./slitherResults";
+import * as config from './config';
+import * as slither from './slither';
+import * as slitherResults from './types/slitherDetectors';
 
 // Generic tree node implementation.
 export class DetectorFilterNode extends vscode.TreeItem {

@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import { Logger } from "./logger";
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { Logger } from '../utils/logger';
 
 export interface SlitherCommandOutput {
     success : boolean;
@@ -10,6 +10,12 @@ export interface SlitherCommandOutput {
 
 export interface SlitherCommandResults {
     detectors : SlitherResult[] | undefined;
+}
+
+export interface SlitherVersionData {
+    slither: string;
+    crytic_compile: string;
+    slither_lsp: string;
 }
 
 export interface SlitherDetector {

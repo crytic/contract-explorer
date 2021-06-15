@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import * as config from "./config";
+import * as config from './config';
 import * as child_process from 'child_process';
-import * as fs from "fs";
-import * as sparkmd5 from "spark-md5";
-import * as path from "path";
-import { Logger } from "./logger";
+import * as fs from 'fs';
+import * as sparkmd5 from 'spark-md5';
+import * as path from 'path';
+import { Logger } from './utils/logger';
 import * as semver from 'semver';
-import { SlitherCommandOutput, SlitherDetector, SlitherResult } from "./slitherResults";
-import * as util from "util";
+import { SlitherCommandOutput, SlitherDetector, SlitherResult } from './types/slitherDetectors';
+import * as util from 'util';
 
 // Properties
 export let initialized : boolean = false;

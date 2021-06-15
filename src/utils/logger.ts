@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export class Logger {
     private static outputChannel : vscode.OutputChannel = vscode.window.createOutputChannel("Slither Extension");

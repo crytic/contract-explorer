@@ -1,7 +1,7 @@
-import * as path from "path";
-import * as shell from "shelljs";
-import * as vscode from "vscode";
-import * as extension from "./extension";
+import * as path from 'path';
+import * as shell from 'shelljs';
+import * as vscode from 'vscode';
+import * as extension from './extension';
 
 // Constants
 const storagePath : string = "./.vscode"; // Directory relative to workspace to store files

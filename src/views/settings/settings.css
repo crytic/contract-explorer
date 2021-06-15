@@ -1,0 +1,103 @@
+/*
+    Compilation Groups
+*/
+
+#dropdown_compilation_group {
+    box-sizing: border-box;
+    width: 78%;
+    height: 25px;
+}
+
+#add_remove_compilation_group_panel {
+    height: 25px;
+    width: 22%;
+    float: right;
+}
+
+#btn_add_compilation_group, #btn_remove_compilation_group {
+    width: 40%;
+    height: 100%;
+    margin-left: 5%;
+    box-sizing: border-box;
+    text-align: center;
+    vertical-align: top;
+}
+
+/*
+#compilation_group_panel {
+    pointer-events: none;
+    opacity: 0.5;
+}
+*/
+
+
+/* 
+    The compilation target and detector filter lists should not be bulleted lists.
+*/
+#compilation_targets, #detector_filter_list {
+    list-style-type: none;
+    padding-left:0px;
+    overflow: auto;
+}
+
+#detector_filter_list {
+    max-height: 350px;
+}
+
+/*
+    Fix textbox sizing in a table where it overflows a bit.
+*/
+input[type="text"] {
+    width: 100%; 
+    box-sizing: border-box;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing: border-box;
+}
+
+/*
+    Every panel of compilation settings should have some padding between them.
+*/
+.compilation_panel {
+    padding-top: 10px;
+}
+
+
+/*
+    Generic property to disable text selection.
+*/
+.disable-select {
+    user-select: none; /* supported by Chrome and Opera */
+   -webkit-user-select: none; /* Safari */
+   -khtml-user-select: none; /* Konqueror HTML */
+   -moz-user-select: none; /* Firefox */
+   -ms-user-select: none; /* Internet Explorer/Edge */
+}
+
+
+/*
+    Menu Bar Styling
+*/
+.menubar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: var(--vscode-button-secondaryBackground);
+}
+  
+.menubar li {
+    float: left;
+}
+  
+.menubar li a {
+    display: block;
+    color: var(--vscode-button-secondaryForeground);
+    text-align: center;
+    padding: 10px 10px;
+    text-decoration: none;
+}
+  
+  /* Change the link color to #111 (black) on hover */
+.menubar li a:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}

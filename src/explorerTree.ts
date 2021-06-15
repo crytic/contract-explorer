@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import * as config from "./config"
-import { Logger } from "./logger";
-import * as slither from "./slither";
-import * as slitherResults from "./slitherResults";
-import * as extension from "./extension";
+import * as config from './config';
+import { Logger } from './utils/logger';
+import * as slither from './slither';
+import * as slitherResults from './types/slitherDetectors';
+import * as extension from './extension';
 
 // Generic tree node implementation.
 export class ExplorerNode extends vscode.TreeItem {

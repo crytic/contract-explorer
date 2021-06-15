@@ -1,8 +1,8 @@
-import * as vscode from "vscode";
-import * as config from "./config";
-import * as path from "path";
-import * as slither from "./slither";
-import * as slitherResults from "./slitherResults";
+import * as vscode from 'vscode';
+import * as config from './config';
+import * as path from 'path';
+import * as slither from './slither';
+import * as slitherResults from './types/slitherDetectors';
 
 export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
     public diagnosticCollection : vscode.DiagnosticCollection;
