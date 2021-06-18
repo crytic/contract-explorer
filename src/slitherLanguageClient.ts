@@ -22,10 +22,10 @@ export class SlitherLanguageClient {
         // Define server options.
         let serverOptions: ServerOptions;
         if (port == null) {
-            // If we weren't given a port, we use stdio.
+            // If we weren't given a port, we use stdio. We keep the process attached so when we exit, it exits.
             serverOptions = {
-                run: { command: lsp_executable_name, args: [] },
-                debug: { command: lsp_executable_name, args: [] }
+                run: { command: lsp_executable_name, args: [], options: { detached: false} },
+                debug: { command: lsp_executable_name, args: [], options: { detached: false}  }
             };
         } else {
             // If we were given a port, we establish a TCP socket connection to localhost.

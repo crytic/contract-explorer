@@ -5,10 +5,14 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
 
     public static readonly view_id = 'slither-settings-webview';
     private _view?: vscode.WebviewView;
+    private _unsavedState: any;
 
     constructor(
 		private readonly context: vscode.ExtensionContext
-	) {}
+	) {
+        // Create a clean state (underlying default values will be set within the webview).
+        this._unsavedState = null;
+    }
 
     resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken): void | Thenable<void> {
         // Set our internal view
@@ -28,11 +32,14 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
         // Add our event handlers for messages from the webview.
         this._view.webview.onDidReceiveMessage(data => {
 			switch (data.method) {
-				case 'saveSettings':
-					{
-						// Get our settings from our message.
-                        let settings: any = data.settings;
-
+                case 'storeUnsavedState': {
+                    // Store our unsaved state.
+                    this._unsavedState = data.state;
+                    break;
+                }
+				case 'saveConfig': {
+                        // Save our configuration
+                        console.log(data.config);
                         // TODO: Save these settings.
 						break;
 					}
@@ -41,17 +48,36 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
 
         // Get our page content.
         this._view.webview.html = this.getWebviewViewContent();
+
+        // If this panel is hidden/shown, we'll need to save/restore state.
         this._view.onDidChangeVisibility((e) => {
-            this.refreshDetectors();
+            // If we're visible, we are reloading, trigger the relevant event
+            if (this._view?.visible) {
+                this.onReloaded();
+            }
         });
-        // Refresh detectors
+
+        // Trigger our reloaded event since the above onDidChangeVisibility event isn't triggered the first time this is loaded.
+        this.onReloaded();
+    }
+
+    private onReloaded() {
+        // Initialize our UI from our config or some existing backed up state.
+        this.initializeOrRestore();
+
+        // Refresh our detector filter list
         this.refreshDetectors();
     }
 
-    public loadSettings(settings: any) {
-        // If we have a view, send it our settings to load.
-        if (this._view) {
-            this._view.webview.postMessage({method: 'loadSettings', settings: settings});
+    private initializeOrRestore() {
+         // Ensure we have a view to operate on.
+         if (this._view) {
+            // If we have a previously unsaved state, restore it, otherwise flag it as a new initialization.
+            if(this._unsavedState == null) {
+                this._view.webview.postMessage({method: 'initialize', config: null});
+            } else {
+                this._view.webview.postMessage({method: 'restoreUnsavedState', state: this._unsavedState});
+            }
         }
     }
 
@@ -105,7 +131,7 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
             <div id="master_container_panel">
                 <div id="compilation_panel" class="container_panel disable-select">
                     <h3 id="compilation_header">Compilation</h3>
-                    <select id="dropdown_compilation_group"></select>
+                    <select id="dropdown_compilation_group" onchange="refreshCompilationGroupData()"></select>
                     <div id="add_remove_compilation_group_panel">
                         <button type="button" id="btn_add_compilation_group" onclick="addCompilationGroup()">+</button>
                         <button type="button" id="btn_remove_compilation_group" onclick="removeCompilationGroup()">-</button>
@@ -115,22 +141,19 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
                     <div id="compilation_group_panel">
                         <label>Target Type:</label> 
                         <label title="Basic compilation includes one target which is a path to either a single Solidity file, a directory of files, or the path to the root of a compilation/unit test project such as Truffle, Hardhat, etc.">
-                            <input name="compilation_type" value="basic" type="radio" checked="checked" onclick="setCompilationTypeView(false)">
+                            <input type="radio" name="compilation_type" id="radio_compilation_type_basic" value="basic" checked="checked" onchange="setCompilationTypeView(false)">
                             Basic
                         </label>
                         <label title="Custom compilation involves constructing a standard JSON compilation manifest from a list of targets. Targets can be added using context menu options in the Explorer. They can also be observed/removed below.">
-                            <input name="compilation_type" value="custom" type="radio" onclick="setCompilationTypeView(true)">
-                            Custom (Loose Files)
+                            <input type="radio" name="compilation_type" id="radio_compilation_type_solc_standard_json" value="solc_standard_json" onchange="setCompilationTypeView(true)">
+                            Standard JSON (Loose Files)
                         </label>
                         <div id="compilation_panel_basic" class="compilation_panel" style="display:block">
-                            <label>Target(s): <input name="compilation_target" value="." type="text"></label>
+                            <label>Target(s): <input type="text" id="compilation_target" value="." onchange="setUnsavedBasicCompilationTarget()"></label>
                         </div>
                         <div id="compilation_panel_custom" class="compilation_panel" style="display:none">
                             <label>Target(s):</label>
-                            <ul id="compilation_targets">
-                                <li><label><input type="checkbox"> contracts/blah.sol</label></li>
-                                <li><label><input type="checkbox"> contracts/version/whatever/blah/blah2.sol</label></li>
-                            </ul>
+                            <ul id="compilation_targets"></ul>
                             <button type="button">Autopopulate</button>
                         </div>
                         <div id="compilation_panel_shared" class="compilation_panel">
@@ -170,7 +193,7 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
             <br>
         </body>
         <footer>
-            <button type="button">Save Settings</button>
+            <button type="button" onclick="saveConfig()">Save Settings</button>
         </footer>
         </html>
         `;
