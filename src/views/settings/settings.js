@@ -2,6 +2,7 @@
 
 // Our VSCode API instance, populated below.
 vscode = null;
+eventHandlersInitialized = false
 
 // The core state object for this webview. This is both how the underlying configuration will look
 // and how state is temporarily stored/restored when the view becomes invisible/visible again.
@@ -103,6 +104,9 @@ state = {
 }());
 
 function initialize() {
+    // Set our UI event handlers
+    setUIEventHandlers();
+
     // Set our focused container to the last one when we reload this webview view.
     setFocusedContainer(state.runtime.focusedContainerId);
 
@@ -113,6 +117,61 @@ function initialize() {
 function saveConfig() {
     // Post our save configuration message.
     vscode.postMessage({method: 'saveConfig', config: state.config});
+}
+
+function setUIEventHandlers() {
+    // If we already initialized event handlers, stop
+    if(eventHandlersInitialized) {
+        return;
+    }
+
+    // Event handlers for navigation menu bar
+    $('#navbar_item_compilations').on('click', (event) => {
+        setFocusedContainer('compilation_panel');
+    });
+    $('#navbar_item_detector_filters').on('click', (event) => {
+        setFocusedContainer('detector_filter_panel');
+    });
+    $('#navbar_item_about').on('click', (event) => {
+        setFocusedContainer('about_panel');
+    });
+    
+    // Event handler for selecting/adding/removing a compilation group
+    $('#dropdown_compilation_group').on('change', (event) => {
+        refreshCompilationGroupData();
+    });
+    $('#btn_add_compilation_group').on('click', (event) => {
+        addCompilationGroup();
+    });
+    $('#btn_remove_compilation_group').on('click', (event) => {
+        removeCompilationGroup();
+    });
+
+    // Event handlers for compilation group types
+    $('#radio_compilation_type_basic').on('change', (event) => {
+        setCompilationTypeView(false);
+    });
+    $('#radio_compilation_type_solc_standard_json').on('change', (event) => {
+        setCompilationTypeView(true);
+    });
+
+    // Event handlers for compilation group fields.
+    $('#compilation_target').on('change', (event) => {
+        setUnsavedBasicCompilationTarget();
+    });
+
+    // Event handler for the button toggling all detector filters.
+    $('#btn_toggle_all_detector_filters').on('click', (event) => {
+        toggleAllDetectorFilters();
+    });
+
+    // Event handler for saving settings
+    $('#btn_save_settings').on('click', (event) => {
+        saveConfig();
+    });
+
+    // Set our event handlers as initialized
+    eventHandlersInitialized = true;
 }
 
 //#region Menu Bar / Panel Visibility
