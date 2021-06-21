@@ -39,15 +39,15 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "package": "vsce package",
-        "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "engines": {
-		"vscode": "^1.43.0"
+        "vscode": "^1.43.0"
     },
     "dependencies": {
         "vscode-languageclient": "^7.0.0",
         "@types/vscode-webview": "^1.57.0",
+        "ts-deepmerge": "^1.0.8",
         "spark-md5": "^3.0.0",
         "shelljs": "^0.8.3",
         "semver": "^6.0.0"
@@ -67,13 +67,13 @@
             {
                 "title": "slither",
                 "properties": {
-                    "slither.solcPath": {
-                        "type": "string",
-                        "description": "Path to solc compiler used for analysis ('solc' if blank)",
+                    "slither.compilations": {
+                        "type": "array",
+                        "description": "List of configured compilation settings which indicate how analysis should be performed for each target.",
                         "default": ""
                     },
-                    "slither.hiddenDetectors": {
-                        "type": "array",
+                    "slither.detectors": {
+                        "type": "object",
                         "description": "List of detectors which are hidden in the explorer",
                         "default": []
                     }
@@ -122,14 +122,6 @@
                 "title": "Slither: Clear Results"
             },
             {
-                "command": "slither.toggleAllDetectors",
-                "icon": {
-                    "dark": "resources/detectors-toggle-dark.svg",
-                    "light": "resources/detectors-toggle-light.svg"
-                },
-                "title": "Slither: Toggle All Detectors"
-            },
-            {
                 "command": "slither.printResultNodeDetails",
                 "title": "Print detailed description"
             }
@@ -146,19 +138,14 @@
         "views": {
             "slither-container": [
                 {
-					"type": "webview",
-					"id": "slither-settings-webview",
-					"name": "Project Settings",
-                    "when": "slitherCompatibleWorkspace"
-				},
-                {
-                    "id": "slither-explorer",
-                    "name": "Analysis",
+                    "type": "webview",
+                    "id": "slither-settings-webview",
+                    "name": "Project Settings",
                     "when": "slitherCompatibleWorkspace"
                 },
                 {
-                    "id": "slither-detector-filters",
-                    "name": "Detector Filters",
+                    "id": "slither-explorer",
+                    "name": "Analysis",
                     "when": "slitherCompatibleWorkspace"
                 }
             ]
@@ -196,11 +183,6 @@
                     "command": "slither.clear",
                     "when": "view == slither-explorer",
                     "group": "navigation@3"
-                },
-                {
-                    "command": "slither.toggleAllDetectors",
-                    "when": "view == slither-detector-filters",
-                    "group": "navigation@0"
                 }
             ],
             "view/item/context": [

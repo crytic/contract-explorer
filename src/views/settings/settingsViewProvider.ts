@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { state } from '../../extension';
+import * as state from '../../state';
+import { Configuration } from '../../types/configTypes'
 
-export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
+export class SettingsViewProvider implements vscode.WebviewViewProvider {
 
     public static readonly view_id = 'slither-settings-webview';
     private _view?: vscode.WebviewView;
@@ -38,11 +39,10 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
                     break;
                 }
 				case 'saveConfig': {
-                        // Save our configuration
-                        console.log(data.config);
-                        // TODO: Save these settings.
-						break;
-					}
+                    // Save our configuration
+                    state.saveConfiguration(data.config);
+                    break;
+                }
 			}
 		});
 
@@ -53,31 +53,57 @@ export class SlitherSettingsProvider implements vscode.WebviewViewProvider {
         this._view.onDidChangeVisibility((e) => {
             // If we're visible, we are reloading, trigger the relevant event
             if (this._view?.visible) {
-                this.onReloaded();
+                this.onReloaded(false);
             }
         });
 
-        // Trigger our reloaded event since the above onDidChangeVisibility event isn't triggered the first time this is loaded.
-        this.onReloaded();
+        // If our state is initialized already, initialize the webview with our new configuration.
+        // This will happen if the language server is started before the webview is rendered.
+        if (state.isInitialized()) {
+            this.onReloaded(true);
+        }
+
+        // Otherwise, in case the webview was rendered before the language server was started, we subscribe to the
+        // state initialization event to initialize the webview with the data when it is available.
+        state.onInitialized(() => {
+            this.onReloaded(true);
+        });
     }
 
-    private onReloaded() {
+    private onReloaded(forceNewInitialization=false) {
         // Initialize our UI from our config or some existing backed up state.
-        this.initializeOrRestore();
+        if(forceNewInitialization) {
+            this.initialize();
+        } else {
+            this.initializeOrRestore();
+        }
 
         // Refresh our detector filter list
         this.refreshDetectors();
     }
 
-    private initializeOrRestore() {
+    private initialize() {
          // Ensure we have a view to operate on.
          if (this._view) {
-            // If we have a previously unsaved state, restore it, otherwise flag it as a new initialization.
-            if(this._unsavedState == null) {
-                this._view.webview.postMessage({method: 'initialize', config: null});
-            } else {
-                this._view.webview.postMessage({method: 'restoreUnsavedState', state: this._unsavedState});
-            }
+            // Reset any unsaved state so it is not restored over this initialization mistakenly.
+            this._unsavedState = null;
+
+            // Initialize from our state configuration.
+            this._view.webview.postMessage({method: 'initialize', config: state.configuration});
+         }
+    }
+
+    private initializeOrRestore() {
+         // Ensure we have a view to operate on.
+         if (!this._view) {
+             return;
+         }
+
+        // If we have a previously unsaved state, restore it, otherwise flag it as a new initialization.
+        if(this._unsavedState == null) {
+            this.initialize();
+        } else {
+            this._view.webview.postMessage({method: 'restoreUnsavedState', state: this._unsavedState});
         }
     }
 

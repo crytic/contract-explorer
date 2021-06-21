@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import * as config from './config';
 import * as path from 'path';
 import * as slither from './slither';
-import * as slitherResults from './types/slitherDetectors';
+import * as slitherResults from '../types/detectorOutputTypes';
+import * as state from '../state'
 
 export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
     public diagnosticCollection : vscode.DiagnosticCollection;
@@ -43,10 +43,8 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
                 for (let workspaceResultElement of workspaceResult.elements) {
 
                     // Skip this result if it is on the hidden detector list.
-                    if (config.userConfiguration.hiddenDetectors) {
-                        if(config.userConfiguration.hiddenDetectors.indexOf(workspaceResult.check) >= 0) {
-                            continue;
-                        }
+                    if(state.configuration.detectors.hidden.indexOf(workspaceResult.check) >= 0) {
+                        continue;
                     }
 
                     // Obtain the range of our source mapping.

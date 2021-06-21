@@ -1,30 +1,25 @@
 'use strict';
 import * as vscode from 'vscode';
-import * as config from './config';
-import * as detectorFilters from './detectorFilterTree';
+import * as config from './oldCode/config';
 import * as explorer from './explorerTree';
 import { Logger } from './utils/logger';
-import * as slither from './slither';
-import { SlitherResult } from './types/slitherDetectors';
-import { SlitherDiagnosticProvider } from './slitherDiagnostics';
+import * as slither from './oldCode/slither';
+import { SlitherResult } from './types/detectorOutputTypes';
+import { SlitherDiagnosticProvider } from './oldCode/slitherDiagnostics';
 import { SlitherLanguageClient } from './slitherLanguageClient'
-import { SlitherSettingsProvider } from './views/settings/settingsProvider'
+import { SettingsViewProvider } from './views/settings/settingsViewProvider'
 import { ProtocolNotificationType, StaticRegistrationOptions } from 'vscode-languageserver-protocol';
-import { State } from './state'
+import * as state from './state'
 
 // Properties
 export let analysis_key: number | null = null;
-export let detectorFilterTree : vscode.TreeView<detectorFilters.DetectorFilterNode>;
-export let detectorFilterTreeProvider : detectorFilters.DetectorFilterTreeProvider;
 export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
 export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
 export let diagnosticsProvider : SlitherDiagnosticProvider;
 export let finishedActivation : boolean = false;
 export let analysisRunning : boolean = false;
 
-export let state : State;
-
-let slitherSettingsProvider : SlitherSettingsProvider;
+let slitherSettingsProvider : SettingsViewProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -38,14 +33,10 @@ export async function activate(context: vscode.ExtensionContext) {
     await slither.initialize();
 
     // Initialize our project settings panel
-    slitherSettingsProvider = new SlitherSettingsProvider(context);
+    slitherSettingsProvider = new SettingsViewProvider(context);
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(SlitherSettingsProvider.view_id, slitherSettingsProvider)
+        vscode.window.registerWebviewViewProvider(SettingsViewProvider.view_id, slitherSettingsProvider)
     );
-
-    // Initialize the detector filter tree
-    detectorFilterTreeProvider = new detectorFilters.DetectorFilterTreeProvider(context);
-    detectorFilterTree = vscode.window.createTreeView("slither-detector-filters", { treeDataProvider: detectorFilterTreeProvider });
 
     // Initialize the analysis explorer.
     slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
@@ -59,21 +50,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Initialize the language server
     let slitherLanguageClient = new SlitherLanguageClient(port);
-    state = new State(slitherLanguageClient);
 
     // When the language server is ready, we'll want to start fetching some state variables.
     slitherLanguageClient.onReady(
         async () => {
             try {
                 // Initialize our state, grabbing detectors
-                await state.initialize();
+                await state.initialize(slitherLanguageClient);
 
                 // Refresh our detectors in our settings pane.
                 slitherSettingsProvider.refreshDetectors();
 
             } catch(err) {
                 // Clear our state and log our error.
-                await state.reset();
+                await state.resetState();
                 Logger.error(`Initialization failed [${err.code}]: ${err.message}`);
             }
         }
@@ -113,14 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
         await slither.clear();
         await slitherExplorerTreeProvider.refreshExplorer(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand("slither.toggleAllDetectors", async () => {
-        await detectorFilterTreeProvider.toggleAll();
-    }));
-
+    
     // Register our tree click commands.
-    context.subscriptions.push(vscode.commands.registerCommand("slither.clickedDetectorFilterNode", async (node : detectorFilters.DetectorFilterNode) => { 
-        await detectorFilterTreeProvider.clickedNode(node); 
-    }));
     context.subscriptions.push(vscode.commands.registerCommand("slither.clickedExplorerNode", async (node : explorer.ExplorerNode) => { 
         await slitherExplorerTreeProvider.clickedNode(node); 
     }));
@@ -203,7 +187,6 @@ async function refreshWorkspace() {
     config.readConfiguration();
 
     // Refresh the detector filters and slither analysis explorer tree (loads last results).
-    await detectorFilterTreeProvider.populateTree();
     await slitherExplorerTreeProvider.refreshExplorer();
 }
 
@@ -214,5 +197,7 @@ async function isDebuggingExtension() : Promise<boolean> {
 
 export function deactivate() {
     // Stop the language client.
-    state.slitherLanguageClient.stop();
+    if (state.slitherLanguageClient != null) {
+        state.slitherLanguageClient.stop();
+    }
 }

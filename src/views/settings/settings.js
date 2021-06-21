@@ -15,11 +15,9 @@ state = {
         detectorToggle: false, // the state to set all filters into next time toggle is clicked.
     },
     config: {
-        detectorFilters: {
+        detectors: {
             // We define a global detector filter object for now, leaving room for compilation-specific filters.
-            global: {
-                // detector.check (string): enabled(boolean, default=true)
-            }
+            hidden: [] // detector.check (string)
         },
         compilations: [
             /*
@@ -92,7 +90,6 @@ state = {
                 // Refresh our detector filter list with our provided detectors.
                 state.runtime.detectors = data.detectors ?? [];
                 state.runtime.detectors.sort((a,b) => (a.check > b.check) ? 1 : ((b.check > a.check) ? -1 : 0)); // sort by check
-                setRuntimeConfigValue(['runtime', 'detectors'], state.runtime.detectors);
                 refreshDetectorFilterList();
                 break;
             }
@@ -204,7 +201,7 @@ function setCompilationTypeView(useCustomView) {
     selectedIndex = $('#dropdown_compilation_group').prop('selectedIndex');
 
     // Obtain our compilation array.
-    compilations = getRuntimeConfigValue(['compilations']) ?? [];
+    compilations = getRuntimeConfigValue(['compilations'], []);
 
     // If we have a compilation selected, we want to set its type
     if (selectedIndex < compilations.length && selectedIndex >= 0) {
@@ -238,7 +235,7 @@ function addCompilationGroup() {
     }
 
     // Obtain our compilation array, add our new compilation, and set it.
-    compilations = getRuntimeConfigValue(['compilations']) ?? [];
+    compilations = getRuntimeConfigValue(['compilations'], []);
     compilations.push(newCompilationData);
     setRuntimeConfigValue(['compilations'], compilations);
 
@@ -248,7 +245,7 @@ function addCompilationGroup() {
 
 function removeCompilationGroup() {
     // Obtain our compilation array.
-    compilations = getRuntimeConfigValue(['compilations']) ?? [];
+    compilations = getRuntimeConfigValue(['compilations'], []);
 
     // Obtain the selected index.
     selectedIndex = $('#dropdown_compilation_group').prop('selectedIndex');
@@ -269,7 +266,7 @@ function refreshCompilationGroupDropDown(selectedIndex=null, forceCompilationDat
         selectedIndex = selectedIndex ?? previousSelectedIndex;
 
         // Obtain our compilation array.
-        compilations = getRuntimeConfigValue(['compilations']) ?? [];
+        compilations = getRuntimeConfigValue(['compilations'], []);
     
         // Reset our drop down.
         $dropdown.empty();
@@ -298,7 +295,7 @@ function refreshCompilationGroupData() {
     let selectedIndex = $dropdown.prop('selectedIndex');
 
     // Obtain our compilation array.
-    compilations = getRuntimeConfigValue(['compilations']) ?? [];
+    compilations = getRuntimeConfigValue(['compilations'], []);
 
     // Reset state first.
     $compilation_target.val("");
@@ -344,7 +341,7 @@ function setUnsavedBasicCompilationTarget() {
     let selectedIndex = $dropdown.prop('selectedIndex');
 
     // Obtain our compilation array.
-    compilations = getRuntimeConfigValue(['compilations']) ?? [];
+    compilations = getRuntimeConfigValue(['compilations'], []);
 
     // Set the runtime compilation state target if we have a valid index.
     if (selectedIndex < compilations.length && selectedIndex >= 0) {
@@ -387,8 +384,8 @@ function refreshDetectorFilterList() {
 
         // Determine the checked state of this detector filter
         input.checked = true;
-        let detectorFilterState = getRuntimeConfigValue(['detectorFilters', 'global', input.value]);
-        if (detectorFilterState === false) {
+        let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hidden'], []);
+        if (hiddenDetectors.includes(detector.check)) {
             input.checked = false;
         }
 
@@ -400,8 +397,22 @@ function refreshDetectorFilterList() {
 }
 
 function setUnsavedDetectorFilterState(checkId, enabled) {
-    // Set our detector filtered state.
-    setRuntimeConfigValue(['detectorFilters', 'global', checkId], enabled);
+    // Obtain our hidden detector list
+    let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hidden'], []);
+
+    // Determine if we're adding or removing in the hidden detector list.
+    if (!enabled) {
+        if (hiddenDetectors.indexOf(checkId) === -1) {
+            hiddenDetectors.push(checkId);
+        }
+        hiddenDetectors.sort();
+    } else {
+        // Remove the checkId from our hidden detector list.
+        hiddenDetectors = hiddenDetectors.filter(v => v !== checkId);
+    }
+
+    // Set our new hidden detector list
+    setRuntimeConfigValue(['detectors', 'hidden'], hiddenDetectors);
 }
 
 function toggleAllDetectorFilters() {
@@ -423,13 +434,13 @@ function toggleAllDetectorFilters() {
 
 //#region Utilities
 
-function getRuntimeConfigValue(keyPath) {
+function getRuntimeConfigValue(keyPath, defaultValue=undefined) {
     // Loop through all keys in our path and iterate until the end.
     currentPosition = state.config;
     for(let key of keyPath) {
         // If the next key doesn't exist in our position, return undefined.
         if (!(key in currentPosition)) {
-            return undefined;
+            return defaultValue;
         }
 
         // Otherwise iterate by updating the current position.
@@ -459,4 +470,22 @@ function setRuntimeConfigValue(keyPath, val) {
     }
 }
 
+function deleteRuntimeConfigValue(keyPath) {
+    // Traverse through all keys in our path until we get to the last one, which we remove.
+    currentPosition = state.config;
+    for (let i = 0; i < keyPath.length; i++) {
+        // If this isn't the last key
+        let key = keyPath[i];
+        if (i < keyPath.length - 1) {
+            // If the next key doesn't exist at this position, stop, our target key cannot exist.
+            if (!(key in currentPosition)) {
+                return;
+            }
+            currentPosition = currentPosition[key];
+        } else {
+            // This is the last key, so we delete it.
+            currentPosition.delete(key);
+        }
+    }
+}
 //#endregion

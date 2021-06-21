@@ -8,7 +8,7 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import { Logger } from './utils/logger';
-import { SlitherDetector, SlitherVersionData } from './types/slitherDetectors';
+import { SlitherDetector, SlitherVersionData } from './types/detectorOutputTypes';
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";

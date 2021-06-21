@@ -4,9 +4,9 @@ import { Logger } from '../utils/logger';
 
 export interface Configuration {
     // Filters to enable/disable detectors
-    detectorFilters: {
+    detectors: {
         // Global detector filters
-        global: Map<string, boolean>; // detector.check: enabled(default=true).
+        hidden: string[]; // List of detector.check's that are disabled.
 
         // TODO: Per-compilation detector filters can be added in the future, if desired.
     };

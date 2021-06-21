@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import * as config from './config';
+import * as config from './oldCode/config';
 import { Logger } from './utils/logger';
-import * as slither from './slither';
-import * as slitherResults from './types/slitherDetectors';
+import * as slither from './oldCode/slither';
+import * as slitherResults from './types/detectorOutputTypes';
 import * as extension from './extension';
+import * as state from './state'
 
 // Generic tree node implementation.
 export class ExplorerNode extends vscode.TreeItem {
@@ -90,8 +91,8 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
             }
         }
 
-        // Subscribe to the detector filter changed event
-        extension.detectorFilterTreeProvider.changedEnabledFilters.push(async() => {
+        // When the configuration changes, we will want to trigger the relevant event for the explorer.
+        state.onSavedConfiguration(async() => {
             await this.onDetectorFiltersChanged();
         });
     }
@@ -163,12 +164,8 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     }
 
     private async onDetectorFiltersChanged() {
-        // Obtain our new hidden detector list.
-        this.hiddenDetectors = await extension.detectorFilterTreeProvider.getHiddenDetectors();
-
-        // Update the hidden detectors in the user configuration and save changes.
-        config.userConfiguration.hiddenDetectors = Array.from(this.hiddenDetectors);
-        config.saveConfiguration();
+        // Set the new detector list
+        this.hiddenDetectors = new Set<string>(state.configuration.detectors.hidden);
 
         // Change the severity counts
         await this.refreshSeverityNodeCounts();
