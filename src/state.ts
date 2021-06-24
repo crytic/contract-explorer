@@ -1,10 +1,14 @@
-import { SlitherDetector, SlitherVersionData } from './types/detectorOutputTypes';
+import { SlitherDetector, SlitherVersionData } from './types/slitherTypes';
 import { SlitherLanguageClient } from './slitherLanguageClient'
 import { Logger } from './utils/logger';
-import { deepClone, deepMerge } from './utils/common';
+import { createDirectory, deepClone, deepMerge } from './utils/common';
 import { Configuration } from './types/configTypes';
 import * as vscode from 'vscode';
 import { Emitter, Event } from 'vscode-languageclient';
+import { SlitherAnalyses } from './analysis/slitherAnalyses';
+import * as path from 'path';
+import * as fs from 'fs';
+import { CommandLineArgumentGroup } from './types/languageServerTypes';
 
 // Constants
 const DEFAULT_CONFIGURATION: Configuration = {
@@ -15,26 +19,29 @@ const DEFAULT_CONFIGURATION: Configuration = {
 };
 
 // General
+let context: vscode.ExtensionContext;
 let _initialized: boolean = false;
 export function isInitialized(): boolean { return _initialized; }
-export let slitherLanguageClient: SlitherLanguageClient | null;
-export let configuration!: Configuration;
+export let client: SlitherLanguageClient | null;
+export let configuration: Configuration = deepClone(DEFAULT_CONFIGURATION);
 
 // Slither specific
 export let versionData: SlitherVersionData | null = null;
-export let detectors!: SlitherDetector[];
+export let detectors: SlitherDetector[] = [];
+export let compilationArguments: CommandLineArgumentGroup[] = [];
+export let analyses: SlitherAnalyses | null = null;
 
 // Events
 let  _initializedEmitter: Emitter<void> = new Emitter<void>();
-export let onInitialized: vscode.Event<void> = _initializedEmitter.event;
+export let onInitialized: Event<void> = _initializedEmitter.event;
 
 let  _savingConfigurationEmitter: Emitter<Configuration> = new Emitter<Configuration>();
-export let onSavingConfiguration: vscode.Event<Configuration> = _savingConfigurationEmitter.event;
+export let onSavingConfiguration: Event<Configuration> = _savingConfigurationEmitter.event;
 
 let _savedConfigurationEmitter: Emitter<Configuration> = new Emitter<Configuration>();
-export let onSavedConfiguration: vscode.Event<Configuration> = _savedConfigurationEmitter.event;
+export let onSavedConfiguration: Event<Configuration> = _savedConfigurationEmitter.event;
 
-export async function initialize(client: SlitherLanguageClient): Promise<void> {
+export async function initialize(extensionContext: vscode.ExtensionContext, languageClient: SlitherLanguageClient): Promise<void> {
     // If we're already initialized, stop
     if(isInitialized()) {
         return;
@@ -43,17 +50,27 @@ export async function initialize(client: SlitherLanguageClient): Promise<void> {
     // Reset our state
     resetState();
 
+    // Set our extension context
+    context = extensionContext;
+
     // Read our configuration.
     readConfiguration();
 
     // Set our language client
-    slitherLanguageClient = client;
+    client = languageClient;
 
     // Obtain our versions
-    versionData = await slitherLanguageClient.getVersionData();
+    versionData = await client.getVersionData();
 
     // Obtain our detectors list
-    detectors = await slitherLanguageClient.getDetectorList();
+    detectors = await client.getDetectorList();
+
+    // Obtain our compilation command line arguments
+    compilationArguments = await client.getCompileCommandLineArguments();
+
+    // Initialize our analyses class.
+    analyses = new SlitherAnalyses(client);
+    await analyses.analyzeAll();
 
     // Set our initialized state.
     _initialized = true;
@@ -62,9 +79,11 @@ export async function initialize(client: SlitherLanguageClient): Promise<void> {
 
 export async function resetState(): Promise<void> {
     // Clear all state variables
-    slitherLanguageClient = null;
-    detectors = [];
+    client = null;
     versionData = null;
+    detectors = [];
+    compilationArguments = [];
+    analyses = null;
 
     // Perform a deep clone of the default configuration.
     configuration = deepClone(DEFAULT_CONFIGURATION);
@@ -74,11 +93,21 @@ export async function resetState(): Promise<void> {
 }
 
 export function readConfiguration() {
+    // TODO: Re-enable storage in VSCode configuration if https://github.com/microsoft/vscode/issues/126972 is fixed. 
+    /*
     // Obtain the workspace configuration
     let workspaceConfiguration = deepClone(vscode.workspace.getConfiguration("slither"));
-    
+
     // Return a merged copy of the workspace configuration with the default.
     configuration = <Configuration>deepMerge({}, DEFAULT_CONFIGURATION, workspaceConfiguration);
+    */
+    if(vscode.workspace.workspaceFolders?.length) {
+        let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        let configPath = path.join(workspaceFolder, './.vscode/', 'slither-config.json');
+        if(fs.existsSync(configPath)) {
+            configuration = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        }
+    }
 }
 
 export function saveConfiguration(config: Configuration | null = null) {
@@ -90,12 +119,22 @@ export function saveConfiguration(config: Configuration | null = null) {
     // Fire our saving event
     _savingConfigurationEmitter.fire(configuration);
     
+    // TODO: Re-enable storage in VSCode configuration if https://github.com/microsoft/vscode/issues/126972 is fixed. 
+    /*
     // Obtain every property of the configuration.
     let workspaceConfiguration = vscode.workspace.getConfiguration("slither");
 
     // Loop for each key in our configuration and set it.
     for (let key in configuration) {
         workspaceConfiguration.update(key, (<any>configuration)[key]);
+    }
+    */
+    if(vscode.workspace.workspaceFolders?.length) {
+        let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        let storagePath = path.join(workspaceFolder, './.vscode/');
+        createDirectory(storagePath);
+        let configPath = path.join(storagePath, 'slither-config.json');
+        fs.writeFileSync(configPath, JSON.stringify(configuration, null, "\t"));
     }
 
     // Fire our saved event

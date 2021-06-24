@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as config from './oldCode/config';
 import { Logger } from './utils/logger';
 import * as slither from './oldCode/slither';
-import * as slitherResults from './types/detectorOutputTypes';
+import * as slitherResults from './types/slitherTypes';
 import * as extension from './extension';
 import * as state from './state'
 
@@ -34,10 +34,10 @@ export class CheckTypeNode extends ExplorerNode {
 // A special type of node which denotes an issue.
 export class CheckResultNode extends ExplorerNode {
     public workspaceFolder : string;
-    public result : slitherResults.SlitherResult;
+    public result : slitherResults.SlitherDetectorResult;
     public severityNodeParent : ExplorerNode | undefined;
     public typeNodeParent : CheckTypeNode | undefined;
-    constructor(workspaceFolder : string, workspaceResult : slitherResults.SlitherResult) {
+    constructor(workspaceFolder : string, workspaceResult : slitherResults.SlitherDetectorResult) {
         super(slitherResults.getSanitizedDescription(workspaceResult), vscode.TreeItemCollapsibleState.None);
         this.result = workspaceResult;
         this.workspaceFolder = workspaceFolder;
@@ -59,7 +59,7 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
     private byTypeMap :  Map<string, CheckTypeNode> = new Map<string, CheckTypeNode>();
     private bySeverityNode : ExplorerNode = new ExplorerNode("By Severity");
     private bySeverityMap :  Map<string, ExplorerNode> = new Map<string, ExplorerNode>();
-    private byResultMap : Map<slitherResults.SlitherResult, CheckResultNode> = new Map<slitherResults.SlitherResult, CheckResultNode>();
+    private byResultMap : Map<slitherResults.SlitherDetectorResult, CheckResultNode> = new Map<slitherResults.SlitherDetectorResult, CheckResultNode>();
 
     // A node which is not rendered itself, but contains all nodes which will be shown.
     private rootNode : ExplorerNode = this.bySeverityNode;
@@ -325,7 +325,7 @@ Reference: ${detector.wiki_url}`
         return element;
     }
 
-    public getNodeFromResult(result : slitherResults.SlitherResult) : CheckResultNode | undefined {
+    public getNodeFromResult(result : slitherResults.SlitherDetectorResult) : CheckResultNode | undefined {
         return this.byResultMap.get(result);
     }
 

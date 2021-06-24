@@ -8,7 +8,10 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import { Logger } from './utils/logger';
-import { SlitherDetector, SlitherVersionData } from './types/detectorOutputTypes';
+import { SlitherDetector, SlitherDetectorResult, SlitherVersionData } from './types/slitherTypes';
+import { CompilationSettings } from './types/configTypes';
+import * as vscode from 'vscode'
+import { CommandLineArgumentGroup, CreateAnalysisResult } from './types/languageServerTypes';
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -72,32 +75,75 @@ export class SlitherLanguageClient {
 
     public async getVersionData(): Promise<SlitherVersionData> {
         // Obtain version data.
-        let response: SlitherVersionData = await this.languageClient.sendRequest("$/slither/getVersion", null);
-        return response;
+        return await this.languageClient.sendRequest("$/slither/getVersion", null);
     }
+
+    //#region slither Methods
 
     public async getDetectorList(): Promise<SlitherDetector[]> {
         // Obtain the list of all detectors our installation of slither has.
-        let response: SlitherDetector[] = await this.languageClient.sendRequest("$/slither/getDetectorList", null);
+        return await this.languageClient.sendRequest("$/slither/getDetectorList", null);;
+    }
+
+    public async runDetectors(analysisId: number): Promise<SlitherDetectorResult[]> {
+        // Create our params to send.
+        let params = { 'analysisId': analysisId };
+
+        // Run detectors and obtain the results
+        return await this.languageClient.sendRequest("$/slither/runDetectors", params);
+    }
+
+    public async createAnalysis(compilationSettings: CompilationSettings): Promise<number> {
+        // Create our params to send.
+        let params = { 'compilationSettings': compilationSettings };
+
+        // Send the command and return the result.
+        let result: CreateAnalysisResult = await this.languageClient.sendRequest("$/slither/analysis/create", params);
+        return result.analysisId;
+    }
+
+    public async deleteAnalysis(analysisId: number): Promise<void> {
+        // Create our params to send.
+        let params = { 'analysisId': analysisId };
+
+        // Send the command to delete. There is no return value.
+        await this.languageClient.sendRequest("$/slither/analysis/delete", params);
+    }
+
+    //#endregion
+
+    //#region crytic-compile Methods
+
+    public async getCompileCommandLineArguments(): Promise<CommandLineArgumentGroup[]> {
+        // Create our params to send.
+        let params = { };
+
+        // Send the command and return the result.
+        let results: CommandLineArgumentGroup[] = await this.languageClient.sendRequest("$/cryticCompile/getCommandLineArguments", params);
+        return results;
+    }
+
+    public async generateSolcStandardJson(): Promise<any> {
+        // Obtain the list of all detectors our installation of slither has.
+        let folders: string[] = [];
+        if (vscode.workspace.workspaceFolders) {
+            for (let i = 0; i < (vscode.workspace.workspaceFolders?.length ?? 0); i++) {
+                folders.push(vscode.workspace.workspaceFolders[i].uri.fsPath);
+            }
+        }
+        
+        // Obtain our array of solc standard json objects.
+        let response = await this.languageClient.sendRequest(
+            "$/cryticCompile/solcStandardJson/autogenerate", 
+            { 
+                'folders': folders, 
+                'files': []
+            }
+        );
+        
+        // Return our response
         return response;
     }
 
-
-    public async analyze(
-        target: string, 
-        success_cb: (analysis_key: number) => void, 
-        error_cb: (msg: string) => void)
-    {
-        // Create our command to send.
-        try{
-            let args = { 'target': target };
-
-            let response = await this.languageClient.sendRequest("$/slither/analyze", args);
-
-            // TODO: Figure out receiving/notifications, or if we want to do this at all here.
-            Logger.log(String(response));
-        } catch(err) {
-            error_cb(err.msg);
-        }
-    }
+    //#endregion
 }

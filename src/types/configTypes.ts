@@ -29,12 +29,5 @@ export interface CompilationSettings {
     };
 
     // Settings for solc_standard_json compilation target.
-    solc_standard_json: {
-        targets: string[]  
-    };
-
-    // Settings shared between all compilation target types.
-    shared: {
-        remappings: Map<string, string>;
-    }
+    solc_standard_json: {};
 }

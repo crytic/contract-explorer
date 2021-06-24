@@ -6,7 +6,7 @@ import * as sparkmd5 from 'spark-md5';
 import * as path from 'path';
 import { Logger } from '../utils/logger';
 import * as semver from 'semver';
-import { SlitherCommandOutput, SlitherDetector, SlitherResult } from '../types/detectorOutputTypes';
+import { SlitherCommandOutput, SlitherDetector, SlitherDetectorResult } from '../types/slitherTypes';
 import * as util from 'util';
 
 // Properties
@@ -14,8 +14,8 @@ export let initialized : boolean = false;
 export let version : string;
 export let detectors : SlitherDetector[];
 export let detectorsByCheck : Map<string, SlitherDetector> = new Map<string, SlitherDetector>();
-export const results : Map<string, SlitherResult[]> = new Map<string, SlitherResult[]>();
-export const out_of_sync_results : Set<SlitherResult[]> = new Set<SlitherResult[]>();
+export const results : Map<string, SlitherDetectorResult[]> = new Map<string, SlitherDetectorResult[]>();
+export const out_of_sync_results : Set<SlitherDetectorResult[]> = new Set<SlitherDetectorResult[]>();
 
 // Functions
 export async function initialize() : Promise<boolean> {
@@ -101,7 +101,7 @@ export async function analyze(print : boolean = true) : Promise<boolean> {
         let { output, error } = await exec_slither(". --json -", false, workspaceFolder);
 
         // Try to parse output as json, filter duplicates, and set in map.
-        let workspaceResults : SlitherResult[] | undefined;
+        let workspaceResults : SlitherDetectorResult[] | undefined;
         if (!error) {
             try {
                 // If we succeeded, we parse the underlying results, otherwise we set the error.
@@ -225,10 +225,10 @@ export async function updateSourceMappingSyncStatus(firstTimeCalculation : boole
     }
 }
 
-async function filterDuplicateResults(results : SlitherResult[]) : Promise<SlitherResult[]> {
+async function filterDuplicateResults(results : SlitherDetectorResult[]) : Promise<SlitherDetectorResult[]> {
     // Create a set and resulting array for filtered results.
     let processedResults : Set<string> = new Set<string>();
-    let filteredResults : SlitherResult[] = [];
+    let filteredResults : SlitherDetectorResult[] = [];
 
     // Compile a filtered, final array (free of duplicates).
     for(let i = 0; i < results.length; i++) {
@@ -262,7 +262,7 @@ export async function readResults(print : boolean = false) : Promise<boolean> {
         // If the file exists, we read its contents into memory.
         if(fs.existsSync(resultsPath)) {
             // Read our cached results
-            let workspaceResults : SlitherResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            let workspaceResults : SlitherDetectorResult[] = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
 
             // Set the results and print them.
             results.set(workspacePath, workspaceResults);
@@ -314,7 +314,7 @@ export async function clear(clearCurrentResults : boolean = true) {
     }
 }
 
-export async function printResult(item : SlitherResult, filterDetectors : boolean = true) {
+export async function printResult(item : SlitherDetectorResult, filterDetectors : boolean = true) {
       // If this detector is hidden, skip it.
       if(filterDetectors && config.userConfiguration.hiddenDetectors.length > 0) {
         if (config.userConfiguration.hiddenDetectors.indexOf(item.check) >= 0) {
@@ -357,8 +357,8 @@ export async function printResult(item : SlitherResult, filterDetectors : boolea
     // Log our output result
     Logger.log(outputResult);
 }
-export async function printResults(data: SlitherResult[], filterDetectors : boolean = true) {
-    data.forEach((item: SlitherResult) => {
+export async function printResults(data: SlitherDetectorResult[], filterDetectors : boolean = true) {
+    data.forEach((item: SlitherDetectorResult) => {
         printResult(item, filterDetectors);
     });
 }

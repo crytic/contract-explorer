@@ -9,7 +9,7 @@ export interface SlitherCommandOutput {
 }
 
 export interface SlitherCommandResults {
-    detectors : SlitherResult[] | undefined;
+    detectors : SlitherDetectorResult[] | undefined;
 }
 
 export interface SlitherVersionData {
@@ -30,18 +30,18 @@ export interface SlitherDetector {
     recommendation : string;
 }
 
-export interface SlitherResult {
+export interface SlitherDetectorResult {
     check : string;
     confidence : string;
     impact : string;
     description : string;
-    elements : SlitherResultElement[];
+    elements : SlitherDetectorResultElement[];
     additional_fields : any | undefined;
 
     _ext_in_sync : boolean | undefined; // Extension: Used to check if source mappings are still valid.
 }
 
-export interface SlitherResultElement { 
+export interface SlitherDetectorResultElement { 
     name : string;
     source_mapping : SlitherSourceMapping;
     type : string;
@@ -50,7 +50,7 @@ export interface SlitherResultElement {
 }
 
 export interface SlitherTypeSpecificFields {
-    parent : SlitherResultElement | undefined;
+    parent : SlitherDetectorResultElement | undefined;
 }
 
 export interface SlitherSourceMapping { 
@@ -67,19 +67,19 @@ export interface SlitherSourceMapping {
     _ext_source_hash : string | undefined; // Extension: Hash of mapped source code.
 }
 
-export function getSanitizedDescription(result : SlitherResult) : string {
+export function getSanitizedDescription(result : SlitherDetectorResult) : string {
     // Remove all filenames in brackets from the description
     return result.description.replace(new RegExp(/\s{0,1}\(\S*\.sol(?:\#\d+\-\d+|\#\d+){0,1}\)/, 'gi'), "").replace("\r\n","\n");
 }
 
-export async function getResultElementRange(result : SlitherResult, elementIndex : number = 0, cleanerOverrides : boolean = true) : Promise<[number, number, number, number]> {
+export async function getResultElementRange(result : SlitherDetectorResult, elementIndex : number = 0, cleanerOverrides : boolean = true) : Promise<[number, number, number, number]> {
     // Verify the index is correct
     if (result.elements.length <= elementIndex) {
         return [0, 0, 0, 0];
     }
 
     // Obtain our result element.
-    let resultElement : SlitherResultElement = result.elements[elementIndex];
+    let resultElement : SlitherDetectorResultElement = result.elements[elementIndex];
 
     // If we don't have a sourcemapping line, skip
     if (resultElement.source_mapping.lines.length <= 0) {
@@ -100,7 +100,7 @@ export async function getResultElementRange(result : SlitherResult, elementIndex
     return [startLine, startColumn, endLine, endColumn];
 }
 
-export async function gotoResultCode(workspaceFolder : string, result : SlitherResult) {
+export async function gotoResultCode(workspaceFolder : string, result : SlitherDetectorResult) {
     try {
         // If there are no elements for this check which map to source, we stop.
         if (result.elements.length <= 0 || !result.elements[0].source_mapping) {
