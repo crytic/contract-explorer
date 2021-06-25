@@ -16,6 +16,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
+            "skipFiles": ["**/app/out/vs/**.js"],
             "preLaunchTask": "npm: watch"
         },
         {
@@ -29,6 +30,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
+            "skipFiles": ["**/app/out/vs/**.js"],
             "preLaunchTask": "npm: watch",
             "env": {
                 "EXISTING_LANGUAGE_SERVER_PORT": "777",

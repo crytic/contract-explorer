@@ -10,16 +10,19 @@ import { SlitherLanguageClient } from './slitherLanguageClient'
 import { SettingsViewProvider } from './views/settings/settingsViewProvider'
 import { ProtocolNotificationType, StaticRegistrationOptions } from 'vscode-languageserver-protocol';
 import * as state from './state'
+import { OnAnalyzeAllProgress } from './types/analysisTypes';
 
 // Properties
 export let analysis_key: number | null = null;
-export let slitherExplorerTree : vscode.TreeView<explorer.ExplorerNode>;
-export let slitherExplorerTreeProvider : explorer.SlitherExplorer;
-export let diagnosticsProvider : SlitherDiagnosticProvider;
-export let finishedActivation : boolean = false;
-export let analysisRunning : boolean = false;
+export let analysisStatusBarItem: vscode.StatusBarItem;
+export let slitherExplorerTree: vscode.TreeView<explorer.ExplorerNode>;
+export let slitherExplorerTreeProvider: explorer.SlitherExplorer;
 
-let slitherSettingsProvider : SettingsViewProvider;
+export let diagnosticsProvider: SlitherDiagnosticProvider;
+export let finishedActivation: boolean = false;
+export let analysisRunning: boolean = false;
+
+let slitherSettingsProvider: SettingsViewProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -32,11 +35,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize slither
     await slither.initialize();
 
-    // Initialize our project settings panel
-    slitherSettingsProvider = new SettingsViewProvider(context);
-    context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(SettingsViewProvider.view_id, slitherSettingsProvider)
-    );
+    // Create a compilation status bar
+    analysisStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
+    context.subscriptions.push(analysisStatusBarItem);
+    
 
     // Initialize the analysis explorer.
     slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
@@ -47,6 +49,12 @@ export async function activate(context: vscode.ExtensionContext) {
     if (process.env.EXISTING_LANGUAGE_SERVER_PORT !== undefined) {
         port = parseInt(process.env.EXISTING_LANGUAGE_SERVER_PORT);
     }
+
+    // Initialize our project settings panel
+    slitherSettingsProvider = new SettingsViewProvider(context);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(SettingsViewProvider.view_id, slitherSettingsProvider)
+    );
 
     // Initialize the language server
     let slitherLanguageClient = new SlitherLanguageClient(port);
@@ -68,6 +76,15 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     );
+
+    // If we initialize our state, we'll want to add an event to update our status bar on analysis updates
+    state.onInitialized(async() => {
+        // Once our state is initialized, we'll want to track analysis updates.
+        state.analyses?.onAnalyzeAllProgress(updateAnalysisStatusBar);
+
+        // Trigger the first compilation when our state is initialized immediately.
+        await state.analyses?.analyzeAll();
+    });
 
 
     // Register our explorer button commands.
@@ -95,12 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand("slither.toggleTreeMode", async () => {
         await slitherExplorerTreeProvider.toggleTreeMode(); 
     }));
-    context.subscriptions.push(vscode.commands.registerCommand("slither.clear", async () => {
-        Logger.log("Clearing results...");
-        await slither.clear();
-        await slitherExplorerTreeProvider.refreshExplorer(); 
-    }));
-    
+
     // Register our tree click commands.
     context.subscriptions.push(vscode.commands.registerCommand("slither.clickedExplorerNode", async (node : explorer.ExplorerNode) => { 
         await slitherExplorerTreeProvider.clickedNode(node); 
@@ -177,6 +189,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Mark our activation as completed
     finishedActivation = true;
+}
+
+async function updateAnalysisStatusBar(e: OnAnalyzeAllProgress) {
+    // Update our compilation status bar and show it.
+    analysisStatusBarItem.text = `Slither: $(check) ${e.successfulCompilations} $(x) ${e.failedCompilations}`;
+    let remainingCompilations = e.totalCompilations - (e.successfulCompilations + e.failedCompilations);
+    if (remainingCompilations > 0) {
+        analysisStatusBarItem.text += ` $(clock) ${remainingCompilations}`;
+    }
+    analysisStatusBarItem.show();
 }
 
 async function refreshWorkspace() {

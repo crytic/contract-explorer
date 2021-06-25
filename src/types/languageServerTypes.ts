@@ -1,3 +1,9 @@
+export interface VersionData {
+    slither: string;
+    crytic_compile: string;
+    slither_lsp: string;
+}
+
 export interface CommandLineArgumentGroup {
     title: string;
     args: CommandLineArgument[];

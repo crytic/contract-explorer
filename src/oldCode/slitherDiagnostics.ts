@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as slither from './slither';
-import * as slitherResults from '../types/slitherTypes';
+import * as detectorResultHelper from '../analysis/detectorResultHelper';
 import * as state from '../state'
+import { SlitherDetectorResult } from '../types/slitherTypes';
 
 export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
     public diagnosticCollection : vscode.DiagnosticCollection;
     private fileDiagnosticMap : Map<string, vscode.Diagnostic[]>;
-    private fileResultMap : Map<string, slitherResults.SlitherDetectorResult[]>;
+    private fileResultMap : Map<string, SlitherDetectorResult[]>;
     public hiddenFiles : Set<string>;
 
     constructor(private context: vscode.ExtensionContext, diagnosticCollection : vscode.DiagnosticCollection) {
@@ -19,7 +20,7 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
 
         // Initialize our file->result map to pair workspace results with diagnostics.
         this.fileDiagnosticMap = new Map<string, vscode.Diagnostic[]>();
-        this.fileResultMap = new Map<string, slitherResults.SlitherDetectorResult[]>();
+        this.fileResultMap = new Map<string, SlitherDetectorResult[]>();
     } 
 
     public async refreshDiagnostics() {
@@ -48,7 +49,7 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
                     }
 
                     // Obtain the range of our source mapping.
-                    let [startLine, startColumn, endLine, endColumn] = await slitherResults.getResultElementRange(workspaceResult);
+                    let [startLine, startColumn, endLine, endColumn] = await detectorResultHelper.getResultElementRange(workspaceResult);
                     let resultRange : vscode.Range = new vscode.Range(startLine, startColumn, endLine, endColumn);
 
                     // Determine the diagnostic severity

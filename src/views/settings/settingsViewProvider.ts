@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as state from '../../state';
 import { Configuration } from '../../types/configTypes'
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class SettingsViewProvider implements vscode.WebviewViewProvider {
 
@@ -130,8 +132,13 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         if(this._view?.webview == undefined) {
             return "";
         }
-        // Create our webview view content
-        let content: string = "";
+
+        // Obtain our HTML page
+        const htmlUri = path.resolve(this.context.extensionPath, 'src/views/settings/settings.html');
+        let content = "<b>ERROR:</b> The settings view could not be loaded!";
+        if (fs.existsSync(htmlUri)) {
+            content = fs.readFileSync(htmlUri).toString();
+        }
 
 		// Get our script/stylesheet paths as links that work in the webview.
 		const scriptUri = this._view.webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'src', 'views', 'settings', 'settings.js'));
@@ -141,88 +148,18 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         const styleVSCodeUri = this._view.webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'src', 'views', 'settings', 'vscode.css'));
         
 
-        // Add our base page
-        content +=
-        `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <!--
-            TODO: Use a content security policy to only allow loading images from https or from our extension directory,
-            and only allow scripts that have a specific nonce.
-            -->
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        // Define some templated variables to replace.
+        let templateVars = new Map<string, string>();
+        templateVars.set("SCRIPT_MAIN_URI", scriptUri.toString());
+        templateVars.set("SCRIPT_JQUERY", jQueryScriptUri.toString());
 
-            <link href="${styleVSCodeUri}" rel="stylesheet">
-            <link href="${styleUri}" rel="stylesheet">
+        templateVars.set("STYLE_MAIN_URI", styleUri.toString());
+        templateVars.set("STYLE_VSCODE_URI", styleVSCodeUri.toString());
 
-        </head>
-        <body>
-            <script src="${jQueryScriptUri}"></script>
-            <script src="${scriptUri}"></script>
-            <ul class="menubar">
-                <li><a id="navbar_item_compilations">Compilation</a></li>
-                <li><a id="navbar_item_detector_filters">Detector Filters</a></li>
-                <li><a id="navbar_item_about">About</a></li>
-            </ul>
-            <div id="master_container_panel">
-                <div id="compilation_panel" class="container_panel disable-select">
-                    <h3 id="compilation_header">Compilation</h3>
-                    <select id="dropdown_compilation_group"></select>
-                    <div id="add_remove_compilation_group_panel">
-                        <button type="button" id="btn_add_compilation_group">+</button>
-                        <button type="button" id="btn_remove_compilation_group">-</button>
-                    </div>
-                    <br><br>
-
-                    <div id="compilation_group_panel">
-                        <label>Target Type:</label> 
-                        <label title="Basic compilation includes one target which is a path to either a single Solidity file, a directory of files, or the path to the root of a compilation/unit test project such as Truffle, Hardhat, etc.">
-                            <input type="radio" name="compilation_type" id="radio_compilation_type_basic" value="basic" checked="checked">
-                            Basic
-                        </label>
-                        <label title="Custom compilation involves constructing a standard JSON compilation manifest from a list of targets. Targets can be added using context menu options in the Explorer. They can also be observed/removed below.">
-                            <input type="radio" name="compilation_type" id="radio_compilation_type_solc_standard_json" value="solc_standard_json">
-                            Standard JSON (Loose Files)
-                        </label>
-                        <div id="compilation_panel_basic" class="compilation_panel" style="display:block">
-                            <label>Target(s): <input type="text" id="compilation_target" value="."></label>
-                        </div>
-                        <div id="compilation_panel_custom" class="compilation_panel" style="display:none">
-                            <label>Target(s):</label>
-                            <ul id="compilation_targets"></ul>
-                            <button type="button" id="btn_autogenerate_standard_json">Autogenerate</button>
-                        </div>
-                    </div>
-                    <br>
-                    <hr>
-                </div>
-                
-                <div id="detector_filter_panel" class="container_panel disable-select">
-                    <h3 id="detector_filter_header">Detector Filters</h3>
-                    <ul id="detector_filter_list"></ul>
-                    <button type="button" id="btn_toggle_all_detector_filters">Toggle All</button>
-                    <br>
-                    <hr>
-                </div>
-
-                <div id="about_panel" class="container_panel disable-select">
-                    <h3 id="about_header">About</h3>
-                    <ul>
-                        <li><a href="https://trailofbits.com">Trail of Bits</a></li>
-                        <li><a href="https://github.com/crytic/slither-vscode">slither-vscode GitHub</a></li>
-                    <ul>
-                    <br>
-                    <hr>
-                </div>
-            </div>
-            <br>
-        </body>
-        <footer>
-            <button type="button" id="btn_save_settings">Save Settings</button>
-        </footer>
-        </html>
-        `;
+        // Loop for each template variable and perform the content replacement.
+        for (let [templateKey, templateValue] of templateVars) {
+            content = content.replace(`{{${templateKey}}}`, templateValue);
+        }
 
         // Return our generated content.
         return content;

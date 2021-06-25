@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as config from './oldCode/config';
 import { Logger } from './utils/logger';
+import * as detectorResultHelper from './analysis/detectorResultHelper'
 import * as slither from './oldCode/slither';
 import * as slitherResults from './types/slitherTypes';
 import * as extension from './extension';
@@ -38,7 +39,11 @@ export class CheckResultNode extends ExplorerNode {
     public severityNodeParent : ExplorerNode | undefined;
     public typeNodeParent : CheckTypeNode | undefined;
     constructor(workspaceFolder : string, workspaceResult : slitherResults.SlitherDetectorResult) {
-        super(slitherResults.getSanitizedDescription(workspaceResult), vscode.TreeItemCollapsibleState.None);
+        // Sanitize the finding description, removing all filenames in brackets
+        let sanitizedDescription = workspaceResult.description.replace(new RegExp(/\s{0,1}\(\S*\.sol(?:\#\d+\-\d+|\#\d+){0,1}\)/, 'gi'), "").replace("\r\n","\n");
+        
+        // Initialize our tree item and set underlying fields.
+        super(sanitizedDescription, vscode.TreeItemCollapsibleState.None);
         this.result = workspaceResult;
         this.workspaceFolder = workspaceFolder;
         this.contextValue = "ExplorerCheckResultNode";
@@ -284,14 +289,14 @@ export class SlitherExplorer implements vscode.TreeDataProvider<ExplorerNode> {
         // If this is a check result node, go to it.
         if (node instanceof CheckResultNode) {
             let checkResultNode = node as CheckResultNode;
-            slitherResults.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
+            detectorResultHelper.gotoResultCode(checkResultNode.workspaceFolder, checkResultNode.result);
         }
     }
 
     public async printDetailedDescription(node : CheckResultNode) {
        
         // Obtain the detector for this result
-        let detector = slither.detectorsByCheck.get(node.result.check);
+        let detector = state.detectorsByCheck.get(node.result.check);
         if(!detector) {
             Logger.error(`Could not print result information. Detector "${node.result.check}" could not be resolved.`);
             return;

@@ -8,10 +8,10 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import { Logger } from './utils/logger';
-import { SlitherDetector, SlitherDetectorResult, SlitherVersionData } from './types/slitherTypes';
+import { SlitherDetector, SlitherDetectorResult } from './types/slitherTypes';
 import { CompilationSettings } from './types/configTypes';
 import * as vscode from 'vscode'
-import { CommandLineArgumentGroup, CreateAnalysisResult } from './types/languageServerTypes';
+import { CommandLineArgumentGroup, CreateAnalysisResult, VersionData } from './types/languageServerTypes';
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -73,7 +73,7 @@ export class SlitherLanguageClient {
         }
     }
 
-    public async getVersionData(): Promise<SlitherVersionData> {
+    public async getVersionData(): Promise<VersionData> {
         // Obtain version data.
         return await this.languageClient.sendRequest("$/slither/getVersion", null);
     }

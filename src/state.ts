@@ -1,4 +1,4 @@
-import { SlitherDetector, SlitherVersionData } from './types/slitherTypes';
+import { SlitherDetector } from './types/slitherTypes';
 import { SlitherLanguageClient } from './slitherLanguageClient'
 import { Logger } from './utils/logger';
 import { createDirectory, deepClone, deepMerge } from './utils/common';
@@ -8,7 +8,7 @@ import { Emitter, Event } from 'vscode-languageclient';
 import { SlitherAnalyses } from './analysis/slitherAnalyses';
 import * as path from 'path';
 import * as fs from 'fs';
-import { CommandLineArgumentGroup } from './types/languageServerTypes';
+import { CommandLineArgumentGroup, VersionData } from './types/languageServerTypes';
 
 // Constants
 const DEFAULT_CONFIGURATION: Configuration = {
@@ -26,8 +26,9 @@ export let client: SlitherLanguageClient | null;
 export let configuration: Configuration = deepClone(DEFAULT_CONFIGURATION);
 
 // Slither specific
-export let versionData: SlitherVersionData | null = null;
+export let versionData: VersionData | null = null;
 export let detectors: SlitherDetector[] = [];
+export let detectorsByCheck : Map<string, SlitherDetector> = new Map<string, SlitherDetector>();
 export let compilationArguments: CommandLineArgumentGroup[] = [];
 export let analyses: SlitherAnalyses | null = null;
 
@@ -64,13 +65,19 @@ export async function initialize(extensionContext: vscode.ExtensionContext, lang
 
     // Obtain our detectors list
     detectors = await client.getDetectorList();
+    detectors.sort((a, b) => (a.check > b.check) ? 1 : -1);
+
+    // Create a map of check->detector
+    detectorsByCheck.clear();
+    for (let detector of detectors) {
+        detectorsByCheck.set(detector.check, detector);
+    }
 
     // Obtain our compilation command line arguments
     compilationArguments = await client.getCompileCommandLineArguments();
 
     // Initialize our analyses class.
     analyses = new SlitherAnalyses(client);
-    await analyses.analyzeAll();
 
     // Set our initialized state.
     _initialized = true;
@@ -105,7 +112,8 @@ export function readConfiguration() {
         let workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
         let configPath = path.join(workspaceFolder, './.vscode/', 'slither-config.json');
         if(fs.existsSync(configPath)) {
-            configuration = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            let data = fs.readFileSync(configPath, 'utf8');
+            configuration = JSON.parse(data);
         }
     }
 }
