@@ -1,14 +1,12 @@
-import { SlitherDetector } from './types/slitherTypes';
 import { SlitherLanguageClient } from './slitherLanguageClient'
 import { Logger } from './utils/logger';
 import { createDirectory, deepClone, deepMerge } from './utils/common';
 import { Configuration } from './types/configTypes';
 import * as vscode from 'vscode';
 import { Emitter, Event } from 'vscode-languageclient';
-import { SlitherAnalyses } from './analysis/slitherAnalyses';
 import * as path from 'path';
 import * as fs from 'fs';
-import { CommandLineArgumentGroup, VersionData } from './types/languageServerTypes';
+import { CommandLineArgumentGroup, SlitherDetectorType, VersionData } from './types/languageServerTypes';
 
 // Constants
 const DEFAULT_CONFIGURATION: Configuration = {
@@ -27,10 +25,8 @@ export let configuration: Configuration = deepClone(DEFAULT_CONFIGURATION);
 
 // Slither specific
 export let versionData: VersionData | null = null;
-export let detectors: SlitherDetector[] = [];
-export let detectorsByCheck : Map<string, SlitherDetector> = new Map<string, SlitherDetector>();
+export let detectorTypes: SlitherDetectorType[] = [];
 export let compilationArguments: CommandLineArgumentGroup[] = [];
-export let analyses: SlitherAnalyses | null = null;
 
 // Events
 let  _initializedEmitter: Emitter<void> = new Emitter<void>();
@@ -64,20 +60,11 @@ export async function initialize(extensionContext: vscode.ExtensionContext, lang
     versionData = await client.getVersionData();
 
     // Obtain our detectors list
-    detectors = await client.getDetectorList();
-    detectors.sort((a, b) => (a.check > b.check) ? 1 : -1);
-
-    // Create a map of check->detector
-    detectorsByCheck.clear();
-    for (let detector of detectors) {
-        detectorsByCheck.set(detector.check, detector);
-    }
+    detectorTypes = await client.getDetectorTypeList();
+    detectorTypes.sort((a, b) => (a.check > b.check) ? 1 : -1);
 
     // Obtain our compilation command line arguments
     compilationArguments = await client.getCompileCommandLineArguments();
-
-    // Initialize our analyses class.
-    analyses = new SlitherAnalyses(client);
 
     // Set our initialized state.
     _initialized = true;
@@ -88,9 +75,8 @@ export async function resetState(): Promise<void> {
     // Clear all state variables
     client = null;
     versionData = null;
-    detectors = [];
+    detectorTypes = [];
     compilationArguments = [];
-    analyses = null;
 
     // Perform a deep clone of the default configuration.
     configuration = deepClone(DEFAULT_CONFIGURATION);

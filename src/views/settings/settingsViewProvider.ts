@@ -92,7 +92,7 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         }
 
         // Refresh our detector filter list
-        this.refreshDetectors();
+        this.refreshDetectorTypes();
     }
 
     private initialize() {
@@ -120,10 +120,10 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    public refreshDetectors() {
+    public refreshDetectorTypes() {
         // If we have a view, send it our detectors list JSON.
         if (this._view) {
-            this._view.webview.postMessage({method: 'refreshDetectors', detectors: state.detectors});
+            this._view.webview.postMessage({method: 'refreshDetectorTypes', detectors: state.detectorTypes});
         }
     }
 

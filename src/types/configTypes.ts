@@ -11,7 +11,7 @@ export interface Configuration {
         // TODO: Per-compilation detector filters can be added in the future, if desired.
     };
 
-    compilations: CompilationSettings[];
+    compilations: CompilationTarget[];
 }
 
 enum CompilationTargetType {
@@ -19,15 +19,15 @@ enum CompilationTargetType {
     SolcStandardJson = 'solc_standard_json'
 }
 
-export interface CompilationSettings {
+export interface CompilationTarget {
     // The type of compilation target this is targetting.
-    type: CompilationTargetType;
+    targetType: CompilationTargetType;
 
     // Settings for a basic compilation target.
-    basic: {
+    targetBasic: {
         target: string;
     };
 
     // Settings for solc_standard_json compilation target.
-    solc_standard_json: {};
+    targetStandardJson: {};
 }

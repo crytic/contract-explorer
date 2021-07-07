@@ -96,26 +96,6 @@
                     "light": "resources/analyze-light.svg"
                 },
                 "title": "Slither: Analyze"
-            },
-            {
-                "command": "slither.refreshExplorer",
-                "icon": {
-                    "dark": "resources/refresh-dark.svg",
-                    "light": "resources/refresh-light.svg"
-                },
-                "title": "Slither: Refresh Explorer"
-            },
-            {
-                "command": "slither.toggleTreeMode",
-                "icon": {
-                    "dark": "resources/tree-mode-dark.svg",
-                    "light": "resources/tree-mode-light.svg"
-                },
-                "title": "Slither: Change Tree Mode"
-            },
-            {
-                "command": "slither.printResultNodeDetails",
-                "title": "Print detailed description"
             }
         ],
         "viewsContainers": {
@@ -134,11 +114,6 @@
                     "id": "slither-settings-webview",
                     "name": "Project Settings",
                     "when": "slitherCompatibleWorkspace"
-                },
-                {
-                    "id": "slither-explorer",
-                    "name": "Analysis",
-                    "when": "slitherCompatibleWorkspace"
                 }
             ]
         },
@@ -153,35 +128,6 @@
                     "command": "slither.addToCustomCompilation",
                     "group": "slithercompilationFileOperations@1",
                     "when": "slitherCompatibleWorkspace"
-                }
-            ],
-            "view/title": [
-                {
-                    "command": "slither.analyze",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@0"
-                },
-                {
-                    "command": "slither.refreshExplorer",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "slither.toggleTreeMode",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "slither.clear",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@3"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "slither.printResultNodeDetails",
-                    "when": "viewItem == ExplorerCheckResultNode",
-                    "group": "slither-explorer@0"
                 }
             ]
         },

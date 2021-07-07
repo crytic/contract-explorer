@@ -19,3 +19,15 @@ export interface CommandLineArgument {
 export interface CreateAnalysisResult {
     analysisId: number;
 }
+
+export interface SlitherDetectorType {
+    index : number;
+    check : string;
+    title : string;
+    impact : string;
+    confidence : string;
+    wiki_url : string;
+    description : string;
+    exploit_scenario : string;
+    recommendation : string;
+}

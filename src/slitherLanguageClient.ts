@@ -1,6 +1,7 @@
 import { Socket } from 'net';
 import { print } from 'util';
 import {
+    Emitter,
     integer,
 	LanguageClient,
 	LanguageClientOptions,
@@ -8,10 +9,10 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import { Logger } from './utils/logger';
-import { SlitherDetector, SlitherDetectorResult } from './types/slitherTypes';
-import { CompilationSettings } from './types/configTypes';
+import { CompilationTarget } from './types/configTypes';
 import * as vscode from 'vscode'
-import { CommandLineArgumentGroup, CreateAnalysisResult, VersionData } from './types/languageServerTypes';
+import { CommandLineArgumentGroup, CreateAnalysisResult, SlitherDetectorType, VersionData } from './types/languageServerTypes';
+import { AnalysisProgressParams, SetCompilationTargetsParams } from './types/analysisTypes';
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -20,6 +21,9 @@ export class SlitherLanguageClient {
     
     public languageClient: LanguageClient;
     private socket: Socket | null = null;
+
+    private _analysisProgressEmitter: Emitter<AnalysisProgressParams> = new Emitter<AnalysisProgressParams>();
+    public onAnalysisProgress: vscode.Event<AnalysisProgressParams> = this._analysisProgressEmitter.event;
 
     constructor(port: integer | null) {
         // Define server options.
@@ -58,6 +62,14 @@ export class SlitherLanguageClient {
             clientOptions
         );
 
+        // When our server is ready, register our notification handlers.
+        this.onReady(() => {
+            // Define handlers for some requests/notifications.
+            this.languageClient.onNotification("$/analysis/reportAnalysisProgress", (params: AnalysisProgressParams) => {
+                this._analysisProgressEmitter.fire(params);
+            });
+        })
+
         // Start the client (and inherently, the server)
         this.languageClient.start();
     }
@@ -80,34 +92,17 @@ export class SlitherLanguageClient {
 
     //#region slither Methods
 
-    public async getDetectorList(): Promise<SlitherDetector[]> {
+    public async getDetectorTypeList(): Promise<SlitherDetectorType[]> {
         // Obtain the list of all detectors our installation of slither has.
         return await this.languageClient.sendRequest("$/slither/getDetectorList", null);;
     }
 
-    public async runDetectors(analysisId: number): Promise<SlitherDetectorResult[]> {
+    public async setCompilationTargets(compilationTargets: CompilationTarget[]): Promise<void> {
         // Create our params to send.
-        let params = { 'analysisId': analysisId };
-
-        // Run detectors and obtain the results
-        return await this.languageClient.sendRequest("$/slither/runDetectors", params);
-    }
-
-    public async createAnalysis(compilationSettings: CompilationSettings): Promise<number> {
-        // Create our params to send.
-        let params = { 'compilationSettings': compilationSettings };
+        let params: SetCompilationTargetsParams = { targets: compilationTargets };
 
         // Send the command and return the result.
-        let result: CreateAnalysisResult = await this.languageClient.sendRequest("$/slither/analysis/create", params);
-        return result.analysisId;
-    }
-
-    public async deleteAnalysis(analysisId: number): Promise<void> {
-        // Create our params to send.
-        let params = { 'analysisId': analysisId };
-
-        // Send the command to delete. There is no return value.
-        await this.languageClient.sendRequest("$/slither/analysis/delete", params);
+        await this.languageClient.sendRequest("$/compilation/setCompilationTargets", params);
     }
 
     //#endregion

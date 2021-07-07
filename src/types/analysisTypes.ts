@@ -1,26 +1,20 @@
 import { ResponseError } from "vscode-languageclient";
-import { CompilationSettings } from "./configTypes";
-import { SlitherDetectorResult } from "./slitherTypes";
+import { CompilationTarget } from "./configTypes";
 
-//#region Events
-export interface OnAnalysisSuccessEventArgs {
-    compilationIndex: number;
-    compilationSettings: CompilationSettings;
-    analysis: SlitherAnalysis
-}
-export interface OnAnalysisFailedEventArgs {
-    compilationIndex: number;
-    error: ResponseError<any>;
+/*
+Data structure which represents parameters used to set compilation targets
+*/
+export interface SetCompilationTargetsParams {
+    // Represents the list of compilation targets to compile and analyze. If empty, auto-compilation will be used.
+    targets: CompilationTarget[];
 }
 
-export interface OnAnalyzeAllProgress {
-    totalCompilations: number;
-    successfulCompilations: number;
-    failedCompilations: number;
+export interface AnalysisResultProgress {
+    succeeded: boolean | null;
+    compilationTarget: CompilationTarget
+    error?: string;
 }
-//#endregion
 
-export interface SlitherAnalysis {
-    id: number;
-    detectorResults: SlitherDetectorResult[];
+export interface AnalysisProgressParams {
+    results: AnalysisResultProgress[];
 }
