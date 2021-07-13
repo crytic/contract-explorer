@@ -16,7 +16,7 @@ export interface Configuration {
 
 enum CompilationTargetType {
     Basic = 'basic',
-    SolcStandardJson = 'solc_standard_json'
+    StandardJson = 'standard_json'
 }
 
 export interface CompilationTarget {
@@ -30,4 +30,7 @@ export interface CompilationTarget {
 
     // Settings for solc_standard_json compilation target.
     targetStandardJson: {};
+
+    // The name of a workspace which should be used as the working directory for compilation and analysis.
+    cwdWorkspace: string;
 }

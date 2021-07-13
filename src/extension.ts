@@ -7,6 +7,7 @@ import { ProtocolNotificationType, StaticRegistrationOptions } from 'vscode-lang
 import * as state from './state'
 import { AnalysisProgressParams } from './types/analysisTypes';
 import { Configuration } from './types/configTypes';
+import { isDebuggingExtension } from './utils/common';
 
 // Properties
 export let analysis_key: number | null = null;
@@ -31,14 +32,24 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize our project settings panel
     slitherSettingsProvider = new SettingsViewProvider(context);
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(SettingsViewProvider.view_id, slitherSettingsProvider)
+        vscode.window.registerWebviewViewProvider(
+            SettingsViewProvider.view_id, 
+            slitherSettingsProvider,
+            { 
+                webviewOptions: {
+                    retainContextWhenHidden: true
+                }
+            }
+        )
     );
 
     // Determine if we want to use stdio or attach to an existing process over a network port for our language server.
     let port: number | null = null;
     if (process.env.EXISTING_LANGUAGE_SERVER_PORT !== undefined) {
         port = parseInt(process.env.EXISTING_LANGUAGE_SERVER_PORT);
-        Logger.log("Started in network mode on port: " + port.toString());
+        Logger.debug("Started in network mode on port: " + port.toString());
+    } else {
+        Logger.debug("Started in console mode");
     }
 
     // Initialize the language server
@@ -78,8 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     // If we are in debug mode, log our activation message and focus on the output channel
-	if(await isDebuggingExtension()) {
-        Logger.log("Activated in debug mode");
+	if(isDebuggingExtension()) {
 	    Logger.show();
     }
 
@@ -109,11 +119,6 @@ async function analysisProgressUpdate(params: AnalysisProgressParams) {
         analysisStatusBarItem.text += ` $(clock) ${remainingCompilations}`;
     }
     analysisStatusBarItem.show();
-}
-
-async function isDebuggingExtension() : Promise<boolean> {
-    const debugRegex = /^--inspect(-brk)?=?/;
-    return process.execArgv ? process.execArgv.some(arg => debugRegex.test(arg)) : false;
 }
 
 export function deactivate() {

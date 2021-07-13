@@ -15,3 +15,8 @@ export function createDirectory(dirPath : string) {
     // Create a directory at the given path. This does not throw an error if the directory already exists.
     shell.mkdir("-p", dirPath);
 }
+
+export function isDebuggingExtension() : boolean {
+    const debugRegex = /^--inspect(-brk)?=?/;
+    return process.execArgv ? process.execArgv.some(arg => debugRegex.test(arg)) : false;
+}

@@ -17,7 +17,10 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "skipFiles": ["**/app/out/vs/**.js"],
-            "preLaunchTask": "npm: watch"
+            "preLaunchTask": "npm: watch",
+            "env": {
+                "EXISTING_LANGUAGE_SERVER_PORT": null,
+            }
         },
         {
             "name": "Extension (attach to existing over network)",

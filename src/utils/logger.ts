@@ -1,29 +1,30 @@
 import * as vscode from 'vscode';
 import { ErrorCodes, ResponseError } from 'vscode-languageclient';
+import { isDebuggingExtension } from './common';
 
 export class Logger {
     private static outputChannel : vscode.OutputChannel = vscode.window.createOutputChannel("Slither Extension");
 
-    public static initialize() : void {
+    public static initialize(): void {
         this.show();
     }
 
-    public static show() : void {
+    public static show(): void {
         // Reveal this channel in the UI.
         this.outputChannel.show();
     }
 
-    public static log(msg : string): void {
+    public static log(msg: string): void {
         // Output the base message.
         this.outputChannel.appendLine(msg);
     }
 
-    public static info(msg : string): void {
+    public static info(msg: string): void {
         // Output the info to console
         this.outputChannel.appendLine(msg);
     }
 
-    public static error(msg : string | Error | ResponseError<any>, showErrorDialog: boolean=true): void {
+    public static error(msg: string | Error | ResponseError<any>, showErrorDialog: boolean=true): void {
         // Format the message
         if (msg instanceof ResponseError) {
             let codeStr: string;
@@ -54,6 +55,12 @@ export class Logger {
 
         // Show our output channel
         this.show();
+    }
+
+    public static debug(msg: string): void {
+        if (isDebuggingExtension()) {
+            this.info(msg);
+        }
     }
 }
 

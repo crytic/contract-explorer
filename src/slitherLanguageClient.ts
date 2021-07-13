@@ -68,7 +68,7 @@ export class SlitherLanguageClient {
             this.languageClient.onNotification("$/analysis/reportAnalysisProgress", (params: AnalysisProgressParams) => {
                 this._analysisProgressEmitter.fire(params);
             });
-        })
+        });
 
         // Start the client (and inherently, the server)
         this.languageClient.start();
@@ -116,28 +116,6 @@ export class SlitherLanguageClient {
         // Send the command and return the result.
         let results: CommandLineArgumentGroup[] = await this.languageClient.sendRequest("$/cryticCompile/getCommandLineArguments", params);
         return results;
-    }
-
-    public async generateSolcStandardJson(): Promise<any> {
-        // Obtain the list of all detectors our installation of slither has.
-        let folders: string[] = [];
-        if (vscode.workspace.workspaceFolders) {
-            for (let i = 0; i < (vscode.workspace.workspaceFolders?.length ?? 0); i++) {
-                folders.push(vscode.workspace.workspaceFolders[i].uri.fsPath);
-            }
-        }
-        
-        // Obtain our array of solc standard json objects.
-        let response = await this.languageClient.sendRequest(
-            "$/cryticCompile/solcStandardJson/autogenerate", 
-            { 
-                'folders': folders, 
-                'files': []
-            }
-        );
-        
-        // Return our response
-        return response;
     }
 
     //#endregion
