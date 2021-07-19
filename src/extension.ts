@@ -76,6 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // If we initialize our state, we'll want to add an event to update our status bar on analysis updates
     state.onInitialized(async() => {
         // Set our compilation targets
+        await slitherLanguageClient.setDetectorSettings(state.configuration.detectors);
         await slitherLanguageClient.setCompilationTargets(state.configuration.compilations);
 
         // Once our state is initialized, we'll want to track analysis updates.
@@ -85,6 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // When the configuration is updated, we also reset our compilation targets.
     state.onSavedConfiguration(async(e: Configuration) => {
         // Set our compilation targets
+        await slitherLanguageClient.setDetectorSettings(state.configuration.detectors);
         await slitherLanguageClient.setCompilationTargets(state.configuration.compilations);
     });
 

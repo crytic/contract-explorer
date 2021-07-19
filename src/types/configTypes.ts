@@ -4,13 +4,7 @@ import { Logger } from '../utils/logger';
 
 export interface Configuration {
     // Filters to enable/disable detectors
-    detectors: {
-        // Global detector filters
-        hidden: string[]; // List of detector.check's that are disabled.
-
-        // TODO: Per-compilation detector filters can be added in the future, if desired.
-    };
-
+    detectors: DetectorSettings
     compilations: CompilationTarget[];
 }
 
@@ -33,4 +27,12 @@ export interface CompilationTarget {
 
     // The name of a workspace which should be used as the working directory for compilation and analysis.
     cwdWorkspace: string;
+}
+
+export interface DetectorSettings {
+    // Signifies whether the detector output will be used in diagnostics, etc.
+    enabled: boolean;
+
+    // A set of detector.check identifiers which we will hide.
+    hiddenChecks: string[];
 }

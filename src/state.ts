@@ -11,7 +11,8 @@ import { CommandLineArgumentGroup, SlitherDetectorType, VersionData } from './ty
 // Constants
 const DEFAULT_CONFIGURATION: Configuration = {
     detectors: {
-        hidden: []
+        enabled: true,
+        hiddenChecks: []
     },
     compilations: []
 };

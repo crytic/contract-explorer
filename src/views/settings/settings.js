@@ -11,8 +11,11 @@ detectors = [];  // the list of detectors with check name, title, description, s
 detectorToggle = false; // the state to set all filters into next time toggle is clicked.
 config = {
     detectors: {
+        // Defines whether detectors are enabled in general.
+        enabled: true,
+        
         // We define a global detector filter object for now, leaving room for compilation-specific filters.
-        hidden: [] // detector.check (string)
+        hiddenChecks: [] // detector.check (string)
     },
     compilations: [
         /*
@@ -401,7 +404,7 @@ function refreshDetectorFilterList() {
 
         // Determine the checked state of this detector filter
         input.checked = true;
-        let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hidden'], []);
+        let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hiddenChecks'], []);
         if (hiddenDetectors.includes(detector.check)) {
             input.checked = false;
         }
@@ -415,7 +418,7 @@ function refreshDetectorFilterList() {
 
 function setUnsavedDetectorFilterState(checkId, enabled) {
     // Obtain our hidden detector list
-    let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hidden'], []);
+    let hiddenDetectors = getRuntimeConfigValue(['detectors', 'hiddenChecks'], []);
 
     // Determine if we're adding or removing in the hidden detector list.
     if (!enabled) {
@@ -429,7 +432,7 @@ function setUnsavedDetectorFilterState(checkId, enabled) {
     }
 
     // Set our new hidden detector list
-    setRuntimeConfigValue(['detectors', 'hidden'], hiddenDetectors);
+    setRuntimeConfigValue(['detectors', 'hiddenChecks'], hiddenDetectors);
 }
 
 function toggleAllDetectorFilters() {

@@ -9,7 +9,7 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import { Logger } from './utils/logger';
-import { CompilationTarget } from './types/configTypes';
+import { CompilationTarget, DetectorSettings } from './types/configTypes';
 import * as vscode from 'vscode'
 import { CommandLineArgumentGroup, CreateAnalysisResult, SlitherDetectorType, VersionData } from './types/languageServerTypes';
 import { AnalysisProgressParams, SetCompilationTargetsParams } from './types/analysisTypes';
@@ -103,6 +103,11 @@ export class SlitherLanguageClient {
 
         // Send the command and return the result.
         await this.languageClient.sendRequest("$/compilation/setCompilationTargets", params);
+    }
+
+    public async setDetectorSettings(detectorSettings: DetectorSettings): Promise<void> {
+        // Send the command and return the result.
+        await this.languageClient.sendRequest("$/slither/setDetectorSettings", detectorSettings);
     }
 
     //#endregion
