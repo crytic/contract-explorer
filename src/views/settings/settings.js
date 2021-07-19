@@ -9,27 +9,7 @@ eventHandlersInitialized = false;
 // This actual value set represents the default configuration, with which existing configurations may be merged into.
 detectors = [];  // the list of detectors with check name, title, description, severity, etc.
 detectorToggle = false; // the state to set all filters into next time toggle is clicked.
-config = {
-    detectors: {
-        // Defines whether detectors are enabled in general.
-        enabled: true,
-        
-        // We define a global detector filter object for now, leaving room for compilation-specific filters.
-        hiddenChecks: [] // detector.check (string)
-    },
-    compilations: [
-        /*
-        {
-            targetType: basic | standard_json,
-            targetBasic: {
-                target: "."
-            },
-            targetStandardJson: {  },
-            cwdWorkspace: "workspace_name"
-        }
-        */
-    ]
-};
+config = {};
 workspaceFolders = [];
 
 //#endregion
@@ -45,11 +25,8 @@ workspaceFolders = [];
         const data = event.data; // The json data that the extension sent
         switch (data.method) {
             case 'initialize': {
-                // Merge the provided configuration with the default in case it is a previous version configuration
-                // which was saved prior to the introduction of newly expected keys.
-                if (data.config) {
-                    config = data.config;
-                }
+                // Set the provided config and call our initialize method.
+                config = data.config;
                 initialize();
                 break;
             }
@@ -57,7 +34,7 @@ workspaceFolders = [];
                 // Refresh our detector filter list with our provided detectors.
                 detectors = data.detectors ?? [];
                 detectors.sort((a,b) => (a.check > b.check) ? 1 : ((b.check > a.check) ? -1 : 0)); // sort by check
-                refreshDetectorFilterList();
+                refreshDetectorSettings();
                 break;
             }
             case 'refreshWorkspaceFolders': {
@@ -133,6 +110,11 @@ function setUIEventHandlers() {
     // Event handlers for compilation group fields.
     $('#compilation_target').on('change', (event) => {
         setUnsavedBasicCompilationTarget();
+    });
+
+    // Event handler for the overall detector enabled state checkbox.
+    $('#chk_detectors_enabled').change(() => {
+        setUnsavedDetectorsEnabled($('#chk_detectors_enabled').prop('checked'));
     });
 
     // Event handler for the button toggling all detector filters.
@@ -374,7 +356,11 @@ function setUnsavedCompilationWorkspaceName() {
 
 //#region Detector Filters
 
-function refreshDetectorFilterList() {
+function refreshDetectorSettings() {
+    // Set our enabled checkbox status
+    let detectorsEnabled = getRuntimeConfigValue(['detectors', 'enabled'], false);
+    $('#chk_detectors_enabled').prop('checked', detectorsEnabled);
+
     // Clear our list of detectors.
     var ul = document.getElementById("detector_filter_list");
     ul.innerHTML = "";
@@ -414,6 +400,11 @@ function refreshDetectorFilterList() {
         li.appendChild(label);
         ul.appendChild(li);
     }
+}
+
+function setUnsavedDetectorsEnabled(enabled) {
+    // Save our enabled status.
+    setRuntimeConfigValue(['detectors', 'enabled'], enabled);
 }
 
 function setUnsavedDetectorFilterState(checkId, enabled) {
