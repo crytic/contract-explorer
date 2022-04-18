@@ -20,6 +20,41 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
         // Initialize our file->result map to pair workspace results with diagnostics.
         this.fileDiagnosticMap = new Map<string, vscode.Diagnostic[]>();
         this.fileResultMap = new Map<string, slitherResults.SlitherResult[]>();
+        this.provideCodeActions = (document, range, context, token) => {
+            const ignoreActions: vscode.CodeAction[] = [];
+      
+            for (const diagnostic of context.diagnostics) {
+                const diagnosticCode = diagnostic.code;
+                // Ignore non-slither diagnostics
+                if (
+                    typeof diagnosticCode !== "string" ||
+                    !diagnosticCode.startsWith("slither.")
+                ) {
+                    continue;
+                }
+
+                // Ignore diagnostics for code actions that don't match the provided range
+                if (!diagnostic.range.isEqual(range)) {
+                    continue;
+                }
+
+                const ignoreWarning = new vscode.CodeAction(
+                    `Ignore ${diagnosticCode}`,
+                    vscode.CodeActionKind.QuickFix
+                );
+                const workspaceEdit = new vscode.WorkspaceEdit();
+                // Add slither-specific ignore syntax
+                const ignoreText = `//slither-disable-next-line ${diagnosticCode.substring(
+                    8
+                )} \n${" ".repeat(range.start.character)}`;
+                workspaceEdit.insert(document.uri, range.start, ignoreText);
+                ignoreWarning.edit = workspaceEdit;
+                ignoreActions.push(ignoreWarning);
+                    
+            }
+      
+            return ignoreActions;
+        };
     } 
 
     public async refreshDiagnostics() {
@@ -70,7 +105,8 @@ export class SlitherDiagnosticProvider implements vscode.CodeActionProvider {
 
                     // Create a diagnostic
                     let diagnosticResult : vscode.Diagnostic = new vscode.Diagnostic(resultRange, workspaceResult.description.replace(/^\s+|\s+$/g, ''), diagnosticSeverity);
-
+                    // Label the diagnostic with slither and the detector name
+                    diagnosticResult.code = `slither.${workspaceResult.check}`
                     // Obtain the absolute file path
                     let filename_absolute = path.join(workspaceFolder, workspaceResultElement.source_mapping.filename_relative);
                     let filename_uri = vscode.Uri.file(filename_absolute);
