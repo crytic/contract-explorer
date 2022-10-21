@@ -5,10 +5,11 @@ import * as slitherResults from "./slitherResults";
 
 // Generic tree node implementation.
 export class DetectorFilterNode extends vscode.TreeItem {
-    public readonly detector : slitherResults.SlitherDetector;
-    public checked : boolean = true;
-    constructor(detector : slitherResults.SlitherDetector, checked : boolean) {
-        super(`${detector.check}: ${detector.title}\n${detector.description}\n\nImpact: ${detector.impact}\nConfidence: ${detector.confidence}`, vscode.TreeItemCollapsibleState.None);
+    public readonly detector: slitherResults.SlitherDetector;
+    public checked: boolean = true;
+    constructor(detector: slitherResults.SlitherDetector, checked: boolean) {
+        super(`${detector.check}`, vscode.TreeItemCollapsibleState.None);
+        this.tooltip = `${detector.check}: ${detector.title}\n${detector.description}\n\nImpact: ${detector.impact}\nConfidence: ${detector.confidence}`
         this.detector = detector;
         this.checked = checked;
         this.command = {
@@ -27,10 +28,10 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
     public readonly onDidChangeTreeData: vscode.Event<any> = this.changeTreeEmitter.event;
 
     // Create a callback function for signaling 
-    public changedEnabledFilters : (() => void)[] = [];
+    public changedEnabledFilters: (() => void)[] = [];
 
     // A node which is not rendered itself, but contains all nodes which will be shown.
-    private detectorFilterNodes : DetectorFilterNode[] = [];
+    private detectorFilterNodes: DetectorFilterNode[] = [];
 
     constructor(private context: vscode.ExtensionContext) {
 
@@ -41,12 +42,12 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
         this.detectorFilterNodes = [];
         for (let detector of slither.detectors) {
             // Determine if this detector is visible or not
-            let checked : boolean = true;
+            let checked: boolean = true;
             if (config.userConfiguration.hiddenDetectors) {
                 checked = config.userConfiguration.hiddenDetectors.indexOf(detector.check) < 0;
             }
             // Create the node for this detector and add it to the list.
-            let detectorFilterNode : DetectorFilterNode = new DetectorFilterNode(detector, checked);
+            let detectorFilterNode: DetectorFilterNode = new DetectorFilterNode(detector, checked);
             this.refreshNodeIcon(detectorFilterNode);
             this.detectorFilterNodes.push(detectorFilterNode);
         }
@@ -61,15 +62,15 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
 
         // If we have callback handlers, fire them all.
         if (this.changedEnabledFilters != null) {
-            for(let callback of this.changedEnabledFilters) {
+            for (let callback of this.changedEnabledFilters) {
                 await callback();
             }
         }
     }
 
-    private refreshNodeIcon (node :DetectorFilterNode) {
+    private refreshNodeIcon(node: DetectorFilterNode) {
         if (node.checked) {
-            node.iconPath = { 
+            node.iconPath = {
                 light: this.context.asAbsolutePath("resources/check-light.svg"),
                 dark: this.context.asAbsolutePath("resources/check-dark.svg"),
             };
@@ -81,15 +82,15 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
 
     public async toggleAll() {
         // If we have any items unchecked, we'll check all items. Otherwise we uncheck them all.
-        let newCheckedState : boolean = false;
-        for(let node of this.detectorFilterNodes) {
-            if(!node.checked) {
+        let newCheckedState: boolean = false;
+        for (let node of this.detectorFilterNodes) {
+            if (!node.checked) {
                 newCheckedState = true;
             }
         }
 
         // Set the checked state of all items.
-        for(let node of this.detectorFilterNodes) {
+        for (let node of this.detectorFilterNodes) {
             node.checked = newCheckedState;
             this.refreshNodeIcon(node);
         }
@@ -98,12 +99,12 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
         await this.fireChangedEnabledFilters();
     }
 
-    public async getHiddenDetectors() : Promise<Set<string>> {
+    public async getHiddenDetectors(): Promise<Set<string>> {
         // Create a new set
-        let hiddenDetectors : Set<string> = new Set<string>();
+        let hiddenDetectors: Set<string> = new Set<string>();
 
         // For each hidden detector, add it to the set
-        for(let node of this.detectorFilterNodes) {
+        for (let node of this.detectorFilterNodes) {
             if (!node.checked) {
                 hiddenDetectors.add(node.detector.check);
             }
@@ -113,7 +114,7 @@ export class DetectorFilterTreeProvider implements vscode.TreeDataProvider<Detec
         return hiddenDetectors;
     }
 
-    public async clickedNode(node : DetectorFilterNode) {
+    public async clickedNode(node: DetectorFilterNode) {
         // Toggle the checked state
         node.checked = !node.checked;
         this.refreshNodeIcon(node);
