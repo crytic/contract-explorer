@@ -1,223 +1,223 @@
 {
-    "name": "slither-vscode",
-    "displayName": "Slither",
-    "description": "Slither: Solidity static analysis framework integration for Visual Studio",
-    "version": "0.0.7",
-    "publisher": "trailofbits",
-    "author": "Trail of Bits",
-    "license": "AGPL-3.0",
-    "homepage": "https://www.trailofbits.com/",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/trailofbits/slither-vscode.git"
-    },
-    "bugs": {
-        "url": "https://github.com/trailofbits/slither-vscode/issues"
-    },
-    "categories": [
-        "Other"
+  "name": "slither-vscode",
+  "displayName": "Slither",
+  "description": "Slither: Solidity static analysis framework integration for Visual Studio",
+  "version": "0.0.7",
+  "publisher": "trailofbits",
+  "author": "Trail of Bits",
+  "license": "AGPL-3.0",
+  "homepage": "https://www.trailofbits.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trailofbits/slither-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trailofbits/slither-vscode/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "slither",
+    "solidity",
+    "solc",
+    "analysis",
+    "auditing"
+  ],
+  "activationEvents": [
+    "onCommand:slither.analyze",
+    "onLanguage:slither-output",
+    "onLanguage:solidity",
+    "workspaceContains:*.sol"
+  ],
+  "main": "./out/extension",
+  "icon": "extension-icon.png",
+  "preview": false,
+  "private": true,
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "engines": {
+    "vscode": "^1.30.0"
+  },
+  "dependencies": {
+    "semver": "^6.0.0",
+    "shelljs": "^0.8.3",
+    "spark-md5": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^8.10.25",
+    "@types/semver": "^6.0.0",
+    "@types/shelljs": "^0.8.1",
+    "@types/spark-md5": "^3.0.1",
+    "eslint": "^8.34.0",
+    "typescript": "^3.1.4",
+    "vscode": "^1.1.25"
+  },
+  "contributes": {
+    "configuration": [
+      {
+        "title": "slither",
+        "properties": {
+          "slither.solcPath": {
+            "type": "string",
+            "description": "Path to solc compiler used for analysis ('solc' if blank)",
+            "default": ""
+          },
+          "slither.hiddenDetectors": {
+            "type": "array",
+            "description": "List of detectors which are hidden in the explorer",
+            "default": []
+          }
+        }
+      }
     ],
-    "keywords": [
-        "slither",
-        "solidity",
-        "solc",
-        "analysis",
-        "auditing"
+    "commands": [
+      {
+        "command": "slither.analyze",
+        "icon": {
+          "dark": "resources/analyze-dark.svg",
+          "light": "resources/analyze-light.svg"
+        },
+        "title": "Slither: Analyze"
+      },
+      {
+        "command": "slither.refreshExplorer",
+        "icon": {
+          "dark": "resources/refresh-dark.svg",
+          "light": "resources/refresh-light.svg"
+        },
+        "title": "Slither: Refresh Explorer"
+      },
+      {
+        "command": "slither.toggleTreeMode",
+        "icon": {
+          "dark": "resources/tree-mode-dark.svg",
+          "light": "resources/tree-mode-light.svg"
+        },
+        "title": "Slither: Change Tree Mode"
+      },
+      {
+        "command": "slither.clear",
+        "icon": {
+          "dark": "resources/clear-dark.svg",
+          "light": "resources/clear-light.svg"
+        },
+        "title": "Slither: Clear Results"
+      },
+      {
+        "command": "slither.toggleAllDetectors",
+        "icon": {
+          "dark": "resources/detectors-toggle-dark.svg",
+          "light": "resources/detectors-toggle-light.svg"
+        },
+        "title": "Slither: Toggle All Detectors"
+      },
+      {
+        "command": "slither.printResultNodeDetails",
+        "title": "Print detailed description"
+      }
     ],
-    "activationEvents": [
-        "onCommand:slither.analyze",
-        "onLanguage:slither-output",
-        "onLanguage:solidity",
-        "workspaceContains:*.sol"
-    ],
-    "main": "./out/extension",
-    "icon": "extension-icon.png",
-    "preview": false,
-    "private": true,
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "package": "vsce package",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "slither-container",
+          "title": "Slither",
+          "icon": "resources/viewsContainer-icon.png"
+        }
+      ]
     },
-    "engines": {
-        "vscode": "^1.30.0"
-    },
-    "dependencies": {
-        "spark-md5": "^3.0.0",
-        "shelljs": "^0.8.3",
-        "semver": "^6.0.0"
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.25",
-        "@types/semver": "^6.0.0",
-        "@types/shelljs": "^0.8.1",
-        "@types/spark-md5": "^3.0.1",
-        "tslint": "^5.8.0",
-        "typescript": "^3.1.4",
-        "vscode": "^1.1.25"
-    },
-    "contributes": {
-        "configuration": [
-            {
-                "title": "slither",
-                "properties": {
-                    "slither.solcPath": {
-                        "type": "string",
-                        "description": "Path to solc compiler used for analysis ('solc' if blank)",
-                        "default": ""
-                    },
-                    "slither.hiddenDetectors": {
-                        "type": "array",
-                        "description": "List of detectors which are hidden in the explorer",
-                        "default": []
-                    }
-                }
-            }
-        ],
-        "commands": [
-            {
-                "command": "slither.analyze",
-                "icon": {
-                    "dark": "resources/analyze-dark.svg",
-                    "light": "resources/analyze-light.svg"
-                },
-                "title": "Slither: Analyze"
-            },
-            {
-                "command": "slither.refreshExplorer",
-                "icon": {
-                    "dark": "resources/refresh-dark.svg",
-                    "light": "resources/refresh-light.svg"
-                },
-                "title": "Slither: Refresh Explorer"
-            },
-            {
-                "command": "slither.toggleTreeMode",
-                "icon": {
-                    "dark": "resources/tree-mode-dark.svg",
-                    "light": "resources/tree-mode-light.svg"
-                },
-                "title": "Slither: Change Tree Mode"
-            },
-            {
-                "command": "slither.clear",
-                "icon": {
-                    "dark": "resources/clear-dark.svg",
-                    "light": "resources/clear-light.svg"
-                },
-                "title": "Slither: Clear Results"
-            },
-            {
-                "command": "slither.toggleAllDetectors",
-                "icon": {
-                    "dark": "resources/detectors-toggle-dark.svg",
-                    "light": "resources/detectors-toggle-light.svg"
-                },
-                "title": "Slither: Toggle All Detectors"
-            },
-            {
-                "command": "slither.printResultNodeDetails",
-                "title": "Print detailed description"
-            }
-        ],
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "slither-container",
-                    "title": "Slither",
-                    "icon": "resources/viewsContainer-icon.png"
-                }
-            ]
+    "views": {
+      "slither-container": [
+        {
+          "id": "slither-explorer",
+          "name": "Analysis",
+          "when": "slitherCompatibleWorkspace"
         },
-        "views": {
-            "slither-container": [
-                {
-                    "id": "slither-explorer",
-                    "name": "Analysis",
-                    "when": "slitherCompatibleWorkspace"
-                },
-                {
-                    "id": "slither-detector-filters",
-                    "name": "Detector Filters",
-                    "when": "slitherCompatibleWorkspace"
-                }
-            ]
+        {
+          "id": "slither-detector-filters",
+          "name": "Detector Filters",
+          "when": "slitherCompatibleWorkspace"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "slither.analyze",
+          "when": "view == slither-explorer",
+          "group": "navigation@0"
         },
-        "menus": {
-            "view/title": [
-                {
-                    "command": "slither.analyze",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@0"
-                },
-                {
-                    "command": "slither.refreshExplorer",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "slither.toggleTreeMode",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "slither.clear",
-                    "when": "view == slither-explorer",
-                    "group": "navigation@3"
-                },
-                {
-                    "command": "slither.toggleAllDetectors",
-                    "when": "view == slither-detector-filters",
-                    "group": "navigation@0"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "slither.printResultNodeDetails",
-                    "when": "viewItem == ExplorerCheckResultNode",
-                    "group": "slither-explorer@0"
-                }
-            ]
+        {
+          "command": "slither.refreshExplorer",
+          "when": "view == slither-explorer",
+          "group": "navigation@1"
         },
-        "languages": [
-            {
-                "id": "solidity",
-                "aliases": [
-                    "Solidity",
-                    "solidity",
-                    "sol"
-                ],
-                "extensions": [
-                    ".sol"
-                ]
-            },
-            {
-                "id": "slither-output",
-                "configuration": "./resources/log.configuration.json",
-                "mimetypes": [
-                    "text/x-code-output",
-                    "x-code-output",
-                    "text/log",
-                    "text/x-log",
-                    "log"
-                ]
-            }
+        {
+          "command": "slither.toggleTreeMode",
+          "when": "view == slither-explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "slither.clear",
+          "when": "view == slither-explorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "slither.toggleAllDetectors",
+          "when": "view == slither-detector-filters",
+          "group": "navigation@0"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "slither.printResultNodeDetails",
+          "when": "viewItem == ExplorerCheckResultNode",
+          "group": "slither-explorer@0"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "solidity",
+        "aliases": [
+          "Solidity",
+          "solidity",
+          "sol"
         ],
-        "grammars": [
-            {
-                "language": "solidity",
-                "scopeName": "source.solidity",
-                "path": "./resources/solidity.tmGrammar.json"
-            },
-            {
-                "language": "slither-output",
-                "scopeName": "slither.output",
-                "path": "./resources/slither-output.tmLanguage"
-            }
+        "extensions": [
+          ".sol"
         ]
-    }
+      },
+      {
+        "id": "slither-output",
+        "configuration": "./resources/log.configuration.json",
+        "mimetypes": [
+          "text/x-code-output",
+          "x-code-output",
+          "text/log",
+          "text/x-log",
+          "log"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "solidity",
+        "scopeName": "source.solidity",
+        "path": "./resources/solidity.tmGrammar.json"
+      },
+      {
+        "language": "slither-output",
+        "scopeName": "slither.output",
+        "path": "./resources/slither-output.tmLanguage"
+      }
+    ]
+  }
 }
