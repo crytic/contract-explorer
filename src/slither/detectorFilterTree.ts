@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as config from "./config";
+import * as config from "../config";
 import * as slither from "./slither";
 import * as slitherResults from "./slitherResults";
 
