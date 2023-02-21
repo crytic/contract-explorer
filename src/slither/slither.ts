@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import * as config from "./config";
+import * as config from "../config";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as sparkmd5 from "spark-md5";
 import * as path from "path";
-import { Logger } from "./logger";
+import { Logger } from "../logger";
 import * as semver from "semver";
 import {
   SlitherCommandOutput,

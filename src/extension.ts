@@ -1,12 +1,12 @@
 "use strict";
 import * as vscode from "vscode";
 import * as config from "./config";
-import * as detectorFilters from "./detectorFilterTree";
-import * as explorer from "./explorerTree";
+import * as detectorFilters from "./slither/detectorFilterTree";
+import * as explorer from "./slither/explorerTree";
 import { Logger } from "./logger";
-import * as slither from "./slither";
-import { SlitherResult } from "./slitherResults";
-import { SlitherDiagnosticProvider } from "./slitherDiagnostics";
+import * as slither from "./slither/slither";
+import { SlitherResult } from "./slither/slitherResults";
+import { SlitherDiagnosticProvider } from "./slither/slitherDiagnostics";
 
 // Properties
 export let detectorFilterTree: vscode.TreeView<detectorFilters.DetectorFilterNode>;
