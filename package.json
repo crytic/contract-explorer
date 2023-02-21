@@ -48,20 +48,20 @@
   },
   "dependencies": {
     "semver": "^6.0.0",
-    "shelljs": "^0.8.3",
-    "spark-md5": "^3.0.0"
+    "shelljs": "^0.8.5",
+    "spark-md5": "^3.0.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.42",
     "@types/node": "^8.10.25",
     "@types/semver": "^6.0.0",
-    "@types/shelljs": "^0.8.1",
-    "@types/spark-md5": "^3.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.52.0",
-    "@typescript-eslint/parser": "^5.52.0",
+    "@types/shelljs": "^0.8.11",
+    "@types/spark-md5": "^3.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
     "eslint": "^8.34.0",
     "typescript": "^3.1.4",
-    "vscode": "^1.1.25"
+    "vscode": "^1.1.37"
   },
   "contributes": {
     "configuration": [
