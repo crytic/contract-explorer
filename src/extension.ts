@@ -1,4 +1,3 @@
-"use strict";
 import * as vscode from "vscode";
 import * as config from "./config";
 import * as detectorFilters from "./slither/detectorFilterTree";
