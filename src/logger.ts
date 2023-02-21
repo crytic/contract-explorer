@@ -4,10 +4,6 @@ export class Logger {
   private static outputChannel: vscode.OutputChannel =
     vscode.window.createOutputChannel("Slither Extension");
 
-  public static initialize(): void {
-    this.show();
-  }
-
   public static show(): void {
     // Reveal this channel in the UI.
     this.outputChannel.show();
@@ -39,6 +35,3 @@ export class Logger {
     this.show();
   }
 }
-
-// As soon as this class is included, we initialize it.
-Logger.initialize();
