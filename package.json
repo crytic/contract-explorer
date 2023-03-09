@@ -39,7 +39,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
-    "test": "node ./out/test/runTest.ts",
+    "test": "node ./out/test/runTest.js",
     "lint": "eslint -c .eslintrc.json --ext .ts ./src"
   },
   "engines": {
