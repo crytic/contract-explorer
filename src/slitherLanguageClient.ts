@@ -1,127 +1,159 @@
-import { Socket } from 'net';
-import { print } from 'util';
+import {Socket} from 'net'
 import {
-    Emitter,
-    integer,
-	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
-    StreamInfo
-} from 'vscode-languageclient/node';
-import { Logger } from './utils/logger';
-import { CompilationTarget, DetectorSettings } from './types/configTypes';
+  Emitter,
+  integer,
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  StreamInfo,
+} from 'vscode-languageclient/node'
+import {Logger} from './utils/logger'
+import {CompilationTarget, DetectorSettings} from './types/configTypes'
 import * as vscode from 'vscode'
-import { CommandLineArgumentGroup, CreateAnalysisResult, SlitherDetectorType, VersionData } from './types/languageServerTypes';
-import { AnalysisProgressParams, SetCompilationTargetsParams } from './types/analysisTypes';
+import {
+  CommandLineArgumentGroup,
+  CreateAnalysisResult,
+  SlitherDetectorType,
+  VersionData,
+} from './types/languageServerTypes'
+import {
+  AnalysisProgressParams,
+  SetCompilationTargetsParams,
+} from './types/analysisTypes'
 
 // The name of the language server executable
-const lsp_executable_name = "slither-lsp";
+const lsp_executable_name = 'slither-lsp'
 
 export class SlitherLanguageClient {
-    
-    public languageClient: LanguageClient;
-    private socket: Socket | null = null;
+  public languageClient: LanguageClient
+  private socket: Socket | null = null
 
-    private _analysisProgressEmitter: Emitter<AnalysisProgressParams> = new Emitter<AnalysisProgressParams>();
-    public onAnalysisProgress: vscode.Event<AnalysisProgressParams> = this._analysisProgressEmitter.event;
+  private _analysisProgressEmitter: Emitter<AnalysisProgressParams> =
+    new Emitter<AnalysisProgressParams>()
+  public onAnalysisProgress: vscode.Event<AnalysisProgressParams> =
+    this._analysisProgressEmitter.event
 
-    constructor(port: integer | null) {
-        // Define server options.
-        let serverOptions: ServerOptions;
-        if (port == null) {
-            // If we weren't given a port, we use stdio. We keep the process attached so when we exit, it exits.
-            serverOptions = {
-                run: { command: lsp_executable_name, args: [], options: { detached: false} },
-                debug: { command: lsp_executable_name, args: [], options: { detached: false}  }
-            };
-        } else {
-            // If we were given a port, we establish a TCP socket connection to localhost.
-            let socket = new Socket();
-            this.socket = socket;
-            
-            // Once we connect, our socket should be used for read/write handles in StreamInfo.
-            serverOptions = () => {
-                return new Promise((resolve, reject) => {
-                    socket.connect(port, "127.0.0.1", () => {
-                        resolve(<StreamInfo>{ reader: this.socket, writer: this.socket})
-                    });
-                });
-            };
-        }
+  constructor(port: integer | null) {
+    // Define server options.
+    let serverOptions: ServerOptions
+    if (port == null) {
+      // If we weren't given a port, we use stdio. We keep the process attached so when we exit, it exits.
+      serverOptions = {
+        run: {
+          command: lsp_executable_name,
+          args: [],
+          options: {detached: false},
+        },
+        debug: {
+          command: lsp_executable_name,
+          args: [],
+          options: {detached: false},
+        },
+      }
+    } else {
+      // If we were given a port, we establish a TCP socket connection to localhost.
+      let socket = new Socket()
+      this.socket = socket
 
-        // Define the language to register the server for.
-        let clientOptions: LanguageClientOptions = {
-            documentSelector: [{ scheme: 'file', language: 'solidity' }]
-        };
-
-        // Define the language
-        this.languageClient = new LanguageClient(
-            'slither-lsp',
-            'Slither Language Server',
-            serverOptions,
-            clientOptions
-        );
-
-        // When our server is ready, register our notification handlers.
-        this.onReady(() => {
-            // Define handlers for some requests/notifications.
-            this.languageClient.onNotification("$/analysis/reportAnalysisProgress", (params: AnalysisProgressParams) => {
-                this._analysisProgressEmitter.fire(params);
-            });
-        });
-
-        // Start the client (and inherently, the server)
-        this.languageClient.start();
+      // Once we connect, our socket should be used for read/write handles in StreamInfo.
+      serverOptions = () => {
+        return new Promise((resolve, reject) => {
+          socket.connect(port, '127.0.0.1', () => {
+            resolve(<StreamInfo>{reader: this.socket, writer: this.socket})
+          })
+        })
+      }
     }
 
-    public async onReady(callback: () => void) {
-        // When the language client is ready, execute the callback.
-        this.languageClient.onReady().then(callback);
+    // Define the language to register the server for.
+    let clientOptions: LanguageClientOptions = {
+      documentSelector: [{scheme: 'file', language: 'solidity'}],
     }
 
-    public async stop() {
-        if (this.languageClient) {
-            this.languageClient.stop();
-        }
+    // Define the language
+    this.languageClient = new LanguageClient(
+      'slither-lsp',
+      'Slither Language Server',
+      serverOptions,
+      clientOptions,
+    )
+
+    // Define handlers for some requests/notifications.
+    this.languageClient.onNotification(
+      '$/analysis/reportAnalysisProgress',
+      (params: AnalysisProgressParams) => {
+        this._analysisProgressEmitter.fire(params)
+      },
+    )
+  }
+
+  public async start(callback: () => void) {
+    // When the language client is ready, execute the callback.
+    await this.languageClient.start().then(callback)
+  }
+
+  public async stop() {
+    if (this.languageClient) {
+      this.languageClient.stop()
     }
+  }
 
-    public async getVersionData(): Promise<VersionData> {
-        // Obtain version data.
-        return await this.languageClient.sendRequest("$/slither/getVersion", null);
-    }
+  public async getVersionData(): Promise<VersionData> {
+    // Obtain version data.
+    return await this.languageClient.sendRequest('$/slither/getVersion', null)
+  }
 
-    //#region slither Methods
+  //#region slither Methods
 
-    public async getDetectorTypeList(): Promise<SlitherDetectorType[]> {
-        // Obtain the list of all detectors our installation of slither has.
-        return await this.languageClient.sendRequest("$/slither/getDetectorList", null);;
-    }
+  public async getDetectorTypeList(): Promise<SlitherDetectorType[]> {
+    // Obtain the list of all detectors our installation of slither has.
+    return await this.languageClient.sendRequest(
+      '$/slither/getDetectorList',
+      null,
+    )
+  }
 
-    public async setCompilationTargets(compilationTargets: CompilationTarget[]): Promise<void> {
-        // Create our params to send.
-        let params: SetCompilationTargetsParams = { targets: compilationTargets };
+  public async setCompilationTargets(
+    compilationTargets: CompilationTarget[],
+  ): Promise<void> {
+    // Create our params to send.
+    let params: SetCompilationTargetsParams = {targets: compilationTargets}
 
-        // Send the command and return the result.
-        await this.languageClient.sendRequest("$/compilation/setCompilationTargets", params);
-    }
+    // Send the command and return the result.
+    await this.languageClient.sendRequest(
+      '$/compilation/setCompilationTargets',
+      params,
+    )
+  }
 
-    public async setDetectorSettings(detectorSettings: DetectorSettings): Promise<void> {
-        // Send the command and return the result.
-        await this.languageClient.sendRequest("$/slither/setDetectorSettings", detectorSettings);
-    }
+  public async setDetectorSettings(
+    detectorSettings: DetectorSettings,
+  ): Promise<void> {
+    // Send the command and return the result.
+    await this.languageClient.sendRequest(
+      '$/slither/setDetectorSettings',
+      detectorSettings,
+    )
+  }
 
-    //#endregion
+  //#endregion
 
-    //#region crytic-compile Methods
+  //#region crytic-compile Methods
 
-    public async getCompileCommandLineArguments(): Promise<CommandLineArgumentGroup[]> {
-        // Create our params to send.
-        let params = { };
+  public async getCompileCommandLineArguments(): Promise<
+    CommandLineArgumentGroup[]
+  > {
+    // Create our params to send.
+    let params = {}
 
-        // Send the command and return the result.
-        let results: CommandLineArgumentGroup[] = await this.languageClient.sendRequest("$/cryticCompile/getCommandLineArguments", params);
-        return results;
-    }
+    // Send the command and return the result.
+    let results: CommandLineArgumentGroup[] =
+      await this.languageClient.sendRequest(
+        '$/cryticCompile/getCommandLineArguments',
+        params,
+      )
+    return results
+  }
 
-    //#endregion
+  //#endregion
 }
