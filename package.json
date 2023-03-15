@@ -1,172 +1,175 @@
 {
-    "name": "slither-vscode",
-    "displayName": "Slither",
-    "description": "Slither: Solidity static analysis framework integration for Visual Studio",
-    "version": "0.0.7",
-    "publisher": "trailofbits",
-    "author": "Trail of Bits",
-    "license": "AGPL-3.0",
-    "homepage": "https://www.trailofbits.com/",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/trailofbits/slither-vscode.git"
-    },
-    "bugs": {
-        "url": "https://github.com/trailofbits/slither-vscode/issues"
-    },
-    "categories": [
-        "Other"
+  "name": "slither-vscode",
+  "displayName": "Slither",
+  "description": "Slither: Solidity static analysis framework integration for Visual Studio",
+  "version": "0.0.7",
+  "publisher": "trailofbits",
+  "author": "Trail of Bits",
+  "license": "AGPL-3.0",
+  "homepage": "https://www.trailofbits.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trailofbits/slither-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trailofbits/slither-vscode/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "slither",
+    "solidity",
+    "solc",
+    "analysis",
+    "auditing"
+  ],
+  "activationEvents": [
+    "onCommand:slither.analyze",
+    "onLanguage:slither-output",
+    "onLanguage:solidity",
+    "workspaceContains:*.sol"
+  ],
+  "main": "./out/extension",
+  "icon": "extension-icon.png",
+  "preview": false,
+  "private": true,
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "eslint -c .eslintrc.json --ext .ts ./src",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "engines": {
+    "vscode": "^1.43.0"
+  },
+  "dependencies": {
+    "@types/vscode-webview": "^1.57.1",
+    "semver": "^7.3.8",
+    "shelljs": "^0.8.5",
+    "spark-md5": "^3.0.2",
+    "ts-deepmerge": "^6.0.2",
+    "vscode-languageclient": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.14.0",
+    "@types/semver": "^7.3.13",
+    "@types/shelljs": "^0.8.11",
+    "@types/spark-md5": "^3.0.2",
+    "@types/vscode": "^1.76.0",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "eslint": "^8.34.0",
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5"
+  },
+  "contributes": {
+    "configuration": [
+      {
+        "title": "slither",
+        "properties": {
+          "slither.compilations": {
+            "type": "array",
+            "description": "List of configured compilation settings which indicate how analysis should be performed for each target.",
+            "default": ""
+          },
+          "slither.detectors": {
+            "type": "object",
+            "description": "List of detectors which are hidden in the explorer",
+            "default": []
+          }
+        }
+      }
     ],
-    "keywords": [
-        "slither",
-        "solidity",
-        "solc",
-        "analysis",
-        "auditing"
+    "commands": [
+      {
+        "command": "slither.setBasicCompilationTarget",
+        "title": "Slither: Set Basic Compilation Target"
+      },
+      {
+        "command": "slither.addToCustomCompilation",
+        "title": "Slither: Add To Custom Compilation Manifest"
+      },
+      {
+        "command": "slither.analyze",
+        "icon": {
+          "dark": "resources/analyze-dark.svg",
+          "light": "resources/analyze-light.svg"
+        },
+        "title": "Slither: Analyze"
+      }
     ],
-    "activationEvents": [
-        "onCommand:slither.analyze",
-        "onLanguage:slither-output",
-        "onLanguage:solidity",
-        "workspaceContains:*.sol"
-    ],
-    "main": "./out/extension",
-    "icon": "extension-icon.png",
-    "preview": false,
-    "private": true,
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "package": "vsce package",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "slither-container",
+          "title": "Slither",
+          "icon": "resources/viewsContainer-icon.png"
+        }
+      ]
     },
-    "engines": {
-        "vscode": "^1.43.0"
+    "views": {
+      "slither-container": [
+        {
+          "type": "webview",
+          "id": "slither-settings-webview",
+          "name": "Project Settings",
+          "when": "slitherCompatibleWorkspace"
+        }
+      ]
     },
-    "dependencies": {
-        "@types/vscode-webview": "^1.57.1",
-        "semver": "^7.3.8",
-        "shelljs": "^0.8.5",
-        "spark-md5": "^3.0.2",
-        "ts-deepmerge": "^6.0.2",
-        "vscode-languageclient": "^8.1.0"
-    },
-    "devDependencies": {
-        "@types/mocha": "^10.0.1",
-        "@types/node": "^18.14.0",
-        "@types/semver": "^7.3.13",
-        "@types/shelljs": "^0.8.11",
-        "@types/spark-md5": "^3.0.2",
-        "@types/vscode": "^1.76.0",
-        "eslint": "^7.25.0",
-        "prettier": "^2.8.4",
-        "typescript": "^4.9.5"
-    },
-    "contributes": {
-        "configuration": [
-            {
-                "title": "slither",
-                "properties": {
-                    "slither.compilations": {
-                        "type": "array",
-                        "description": "List of configured compilation settings which indicate how analysis should be performed for each target.",
-                        "default": ""
-                    },
-                    "slither.detectors": {
-                        "type": "object",
-                        "description": "List of detectors which are hidden in the explorer",
-                        "default": []
-                    }
-                }
-            }
-        ],
-        "commands": [
-            {
-                "command": "slither.setBasicCompilationTarget",
-                "title": "Slither: Set Basic Compilation Target"
-            },
-            {
-                "command": "slither.addToCustomCompilation",
-                "title": "Slither: Add To Custom Compilation Manifest"
-            },
-            {
-                "command": "slither.analyze",
-                "icon": {
-                    "dark": "resources/analyze-dark.svg",
-                    "light": "resources/analyze-light.svg"
-                },
-                "title": "Slither: Analyze"
-            }
-        ],
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "slither-container",
-                    "title": "Slither",
-                    "icon": "resources/viewsContainer-icon.png"
-                }
-            ]
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "slither.setBasicCompilationTarget",
+          "group": "slithercompilationFileOperations@1",
+          "when": "slitherCompatibleWorkspace"
         },
-        "views": {
-            "slither-container": [
-                {
-                    "type": "webview",
-                    "id": "slither-settings-webview",
-                    "name": "Project Settings",
-                    "when": "slitherCompatibleWorkspace"
-                }
-            ]
-        },
-        "menus": {
-            "explorer/context": [
-                {
-                    "command": "slither.setBasicCompilationTarget",
-                    "group": "slithercompilationFileOperations@1",
-                    "when": "slitherCompatibleWorkspace"
-                },
-                {
-                    "command": "slither.addToCustomCompilation",
-                    "group": "slithercompilationFileOperations@1",
-                    "when": "slitherCompatibleWorkspace"
-                }
-            ]
-        },
-        "languages": [
-            {
-                "id": "solidity",
-                "aliases": [
-                    "Solidity",
-                    "solidity",
-                    "sol"
-                ],
-                "extensions": [
-                    ".sol"
-                ]
-            },
-            {
-                "id": "slither-output",
-                "configuration": "./resources/log.configuration.json",
-                "mimetypes": [
-                    "text/x-code-output",
-                    "x-code-output",
-                    "text/log",
-                    "text/x-log",
-                    "log"
-                ]
-            }
+        {
+          "command": "slither.addToCustomCompilation",
+          "group": "slithercompilationFileOperations@1",
+          "when": "slitherCompatibleWorkspace"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "solidity",
+        "aliases": [
+          "Solidity",
+          "solidity",
+          "sol"
         ],
-        "grammars": [
-            {
-                "language": "solidity",
-                "scopeName": "source.solidity",
-                "path": "./resources/solidity.tmGrammar.json"
-            },
-            {
-                "language": "slither-output",
-                "scopeName": "slither.output",
-                "path": "./resources/slither-output.tmLanguage"
-            }
+        "extensions": [
+          ".sol"
         ]
-    }
+      },
+      {
+        "id": "slither-output",
+        "configuration": "./resources/log.configuration.json",
+        "mimetypes": [
+          "text/x-code-output",
+          "x-code-output",
+          "text/log",
+          "text/x-log",
+          "log"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "solidity",
+        "scopeName": "source.solidity",
+        "path": "./resources/solidity.tmGrammar.json"
+      },
+      {
+        "language": "slither-output",
+        "scopeName": "slither.output",
+        "path": "./resources/slither-output.tmLanguage"
+      }
+    ]
+  }
 }
