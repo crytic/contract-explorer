@@ -12,7 +12,24 @@
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
       "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "npm: watch"
+      "skipFiles": ["**/app/out/vs/**.js"],
+      "preLaunchTask": "npm: watch",
+      "env": {
+        "EXISTING_LANGUAGE_SERVER_PORT": null
+      }
+    },
+    {
+      "name": "Extension (attach to existing over network)",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "skipFiles": ["**/app/out/vs/**.js"],
+      "preLaunchTask": "npm: watch",
+      "env": {
+        "EXISTING_LANGUAGE_SERVER_PORT": "777"
+      }
     },
     {
       "name": "Extension Tests",
@@ -21,7 +38,7 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/e2e/index"
+        "--extensionTestsPath=${workspaceFolder}/out/test"
       ],
       "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
       "preLaunchTask": "npm: watch"

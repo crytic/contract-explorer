@@ -1,20 +1,23 @@
 import * as vscode from "vscode";
-import * as config from "./config";
-import * as detectorFilters from "./slither/detectorFilterTree";
-import * as explorer from "./slither/explorerTree";
-import { Logger } from "./logger";
-import * as slither from "./slither/slither";
-import { SlitherResult } from "./slither/slitherResults";
-import { SlitherDiagnosticProvider } from "./slither/slitherDiagnostics";
+import { Logger } from "./utils/logger";
+import { SlitherLanguageClient } from "./slitherLanguageClient";
+import { SettingsViewProvider } from "./views/settings/settingsViewProvider";
+import {
+  ProtocolNotificationType,
+  StaticRegistrationOptions,
+} from "vscode-languageserver-protocol";
+import * as state from "./state";
+import { AnalysisProgressParams } from "./types/analysisTypes";
+import { Configuration } from "./types/configTypes";
+import { isDebuggingExtension } from "./utils/common";
 
 // Properties
-export let detectorFilterTree: vscode.TreeView<detectorFilters.DetectorFilterNode>;
-export let detectorFilterTreeProvider: detectorFilters.DetectorFilterTreeProvider;
-export let slitherExplorerTree: vscode.TreeView<explorer.ExplorerNode>;
-export let slitherExplorerTreeProvider: explorer.SlitherExplorer;
-export let diagnosticsProvider: SlitherDiagnosticProvider;
+export let analysis_key: number | null = null;
+export let analysisStatusBarItem: vscode.StatusBarItem;
+
 export let finishedActivation: boolean = false;
-export let analysisRunning: boolean = false;
+
+let slitherSettingsProvider: SettingsViewProvider;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -30,196 +33,116 @@ export async function activate(context: vscode.ExtensionContext) {
     "\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B"
   );
 
-  // Initialize slither
-  await slither.initialize();
+  // Create a compilation status bar
+  analysisStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    1000
+  );
+  context.subscriptions.push(analysisStatusBarItem);
 
-  // Initialize the detector filter tree
-  detectorFilterTreeProvider = new detectorFilters.DetectorFilterTreeProvider(
-    context
-  );
-  detectorFilterTree = vscode.window.createTreeView(
-    "slither-detector-filters",
-    { treeDataProvider: detectorFilterTreeProvider }
-  );
-
-  // Initialize the analysis explorer.
-  slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
-  slitherExplorerTree = vscode.window.createTreeView("slither-explorer", {
-    treeDataProvider: slitherExplorerTreeProvider,
-  });
-
-  // Register our explorer button commands.
+  // Initialize our project settings panel
+  slitherSettingsProvider = new SettingsViewProvider(context);
   context.subscriptions.push(
-    vscode.commands.registerCommand("slither.analyze", async () => {
-      if (!analysisRunning) {
-        analysisRunning = true;
-        let progressOptions: vscode.ProgressOptions = {
-          title: "Slither: Please wait while analysis is performed...",
-          location: vscode.ProgressLocation.Notification,
-          cancellable: false,
-        };
-        vscode.window.withProgress(progressOptions, async (progress, token) => {
-          await slither.analyze();
-          await slitherExplorerTreeProvider.refreshExplorer(false);
-          analysisRunning = false;
-        });
-      }
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("slither.refreshExplorer", async () => {
-      await slitherExplorerTreeProvider.refreshExplorer();
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("slither.toggleTreeMode", async () => {
-      await slitherExplorerTreeProvider.toggleTreeMode();
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("slither.clear", async () => {
-      Logger.log("Clearing results...");
-      await slither.clear();
-      await slitherExplorerTreeProvider.refreshExplorer();
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("slither.toggleAllDetectors", async () => {
-      await detectorFilterTreeProvider.toggleAll();
-    })
-  );
-
-  // Register our tree click commands.
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "slither.clickedDetectorFilterNode",
-      async (node: detectorFilters.DetectorFilterNode) => {
-        await detectorFilterTreeProvider.clickedNode(node);
-      }
-    )
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "slither.clickedExplorerNode",
-      async (node: explorer.ExplorerNode) => {
-        await slitherExplorerTreeProvider.clickedNode(node);
+    vscode.window.registerWebviewViewProvider(
+      SettingsViewProvider.view_id,
+      slitherSettingsProvider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
       }
     )
   );
 
-  // Register our tree goto result commands.
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "slither.gotoExplorerResult",
-      async (result: SlitherResult) => {
-        // Obtain the issue node
-        let resultNode = slitherExplorerTreeProvider.getNodeFromResult(result);
-        if (resultNode) {
-          slitherExplorerTree.reveal(resultNode, {
-            select: true,
-            focus: true,
-            expand: false,
-          });
-        } else {
-          Logger.error("Failed to select node for slither result.");
-        }
-      }
-    )
-  );
+  // Determine if we want to use stdio or attach to an existing process over a network port for our language server.
+  let port: number | null = null;
+  if (process.env.EXISTING_LANGUAGE_SERVER_PORT !== undefined) {
+    port = parseInt(process.env.EXISTING_LANGUAGE_SERVER_PORT);
+    Logger.debug("Started in network mode on port: " + port.toString());
+  } else {
+    Logger.debug("Started in console mode");
+  }
 
-  // Register context menu actions for the explorer
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "slither.printResultNodeDetails",
-      async (node: explorer.CheckResultNode) => {
-        await slitherExplorerTreeProvider.printDetailedDescription(node);
-      }
-    )
-  );
+  // Initialize the language server
+  let slitherLanguageClient = new SlitherLanguageClient(port);
 
-  // Register the diagnostics/code action provider
-  let solidityDocumentSelector: vscode.DocumentSelector = {
-    scheme: "file",
-    language: "solidity",
-  };
-  diagnosticsProvider = new SlitherDiagnosticProvider(
-    context,
-    vscode.languages.createDiagnosticCollection("Slither")
-  );
-  context.subscriptions.push(
-    vscode.languages.registerCodeActionsProvider(
-      solidityDocumentSelector,
-      diagnosticsProvider
-    )
-  );
+  // When the language server is ready, we'll want to start fetching some state variables.
+  slitherLanguageClient.start(async () => {
+    try {
+      // Initialize our state, grabbing detectors
+      await state.initialize(context, slitherLanguageClient);
 
-  // Add our workspace change event handler
-  vscode.workspace.onDidChangeWorkspaceFolders(async (e) => {
-    await refreshWorkspace();
-  });
-
-  // Add our document event handlers
-  vscode.workspace.onDidChangeTextDocument(
-    async (e: vscode.TextDocumentChangeEvent) => {
-      // Hide all diagnostics in all dirty files.
-      if (e.document.isDirty) {
-        diagnosticsProvider.hiddenFiles.add(e.document.fileName);
-      } else {
-        diagnosticsProvider.hiddenFiles.delete(e.document.fileName);
-      }
-
-      // Refresh diagnostics
-      await diagnosticsProvider.refreshDiagnostics();
+      // Refresh our detectors in our settings pane.
+      slitherSettingsProvider.refreshDetectorTypes();
+    } catch (err: any) {
+      // Clear our state and log our error.
+      await state.resetState();
+      Logger.error(err, true);
     }
-  );
-  vscode.workspace.onDidSaveTextDocument(async (e: vscode.TextDocument) => {
-    // Any saved document should no longer be hidden in diagnostics
-    diagnosticsProvider.hiddenFiles.delete(e.fileName);
-
-    // Update source mapping status, and refresh trees + diagnostics
-    await slither.updateSourceMappingSyncStatus(false, e.fileName);
-    await slitherExplorerTreeProvider.refreshIconsForCheckResults();
-    await slitherExplorerTreeProvider.changeTreeEmitter.fire("");
-    await diagnosticsProvider.refreshDiagnostics();
   });
 
-  // Add our configuration changed handler.
-  vscode.workspace.onDidChangeConfiguration(async (e) => {
-    // Changing detector filters will change configuration,
-    // causing a double-reload. So we only reload if solcPath
-    // was changed, and do not change UI components.
-    if (e.affectsConfiguration("slither.solcPath")) {
-      config.readConfiguration();
-    }
+  // If we initialize our state, we'll want to add an event to update our status bar on analysis updates
+  state.onInitialized(async () => {
+    // Set our compilation targets
+    await slitherLanguageClient.setDetectorSettings(
+      state.configuration.detectors
+    );
+    await slitherLanguageClient.setCompilationTargets(
+      state.configuration.compilations
+    );
+
+    // Once our state is initialized, we'll want to track analysis updates.
+    state.client?.onAnalysisProgress(analysisProgressUpdate);
+  });
+
+  // When the configuration is updated, we also reset our compilation targets.
+  state.onSavedConfiguration(async (e: Configuration) => {
+    // Set our compilation targets
+    await slitherLanguageClient.setDetectorSettings(
+      state.configuration.detectors
+    );
+    await slitherLanguageClient.setCompilationTargets(
+      state.configuration.compilations
+    );
   });
 
   // If we are in debug mode, log our activation message and focus on the output channel
-  if (await isDebuggingExtension()) {
-    Logger.log("Activated in debug mode");
+  if (isDebuggingExtension()) {
     Logger.show();
   }
-
-  // Refresh the workspace.
-  await refreshWorkspace();
 
   // Mark our activation as completed
   finishedActivation = true;
 }
 
-async function refreshWorkspace() {
-  // Read any new configuration.
-  config.readConfiguration();
+async function analysisProgressUpdate(params: AnalysisProgressParams) {
+  // Loop through compilations and count successful/failed compilations
+  let successfulCompilations: number = 0;
+  let failedCompilations: number = 0;
+  for (let result of params.results) {
+    if (result.succeeded === true) {
+      successfulCompilations++;
+    } else if (result.succeeded === false) {
+      failedCompilations++;
+      if (result.error) {
+        Logger.error(result.error, false);
+      }
+    }
+  }
 
-  // Refresh the detector filters and slither analysis explorer tree (loads last results).
-  await detectorFilterTreeProvider.populateTree();
-  await slitherExplorerTreeProvider.refreshExplorer();
+  // Update our compilation status bar and show it.
+  analysisStatusBarItem.text = `Slither: $(check) ${successfulCompilations} $(x) ${failedCompilations}`;
+  let remainingCompilations =
+    params.results.length - (successfulCompilations + failedCompilations);
+  if (remainingCompilations > 0) {
+    analysisStatusBarItem.text += ` $(clock) ${remainingCompilations}`;
+  }
+  analysisStatusBarItem.show();
 }
 
-async function isDebuggingExtension(): Promise<boolean> {
-  const debugRegex = /^--inspect(-brk)?=?/;
-  return process.execArgv
-    ? process.execArgv.some((arg) => debugRegex.test(arg))
-    : false;
+export function deactivate() {
+  // Stop the language client.
+  if (state.client != null) {
+    state.client.stop();
+  }
 }
-
-export function deactivate() {}

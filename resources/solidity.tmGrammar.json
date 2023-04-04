@@ -92,7 +92,7 @@
         },
         {
           "name": "support.function.other",
-          "match": "\\b(type)\\b"
+          "match": "\\b(gasleft|type)\\b"
         }
       ]
     },
@@ -100,7 +100,7 @@
       "patterns": [
         {
           "name": "support.variable.members.block",
-          "match": "\\b(block\\.(?:coinbase|difficulty|gaslimit|number|timestamp))\\b"
+          "match": "\\b(block\\.(?:chainid|coinbase|difficulty|gaslimit|number|timestamp))\\b"
         },
         {
           "name": "support.variable.members.msg",
@@ -289,7 +289,7 @@
         },
         {
           "name": "storage.modifier.additional",
-          "match": "\\b(constant|pure|view)\\b"
+          "match": "\\b(abstract|constant|immutable|pure|view|virtual|anonymous|override)\\b"
         },
         {
           "name": "storage.modifier.returns",
