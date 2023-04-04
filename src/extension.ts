@@ -1,4 +1,3 @@
-"use strict";
 import * as vscode from "vscode";
 import { Logger } from "./utils/logger";
 import { SlitherLanguageClient } from "./slitherLanguageClient";
