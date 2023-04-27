@@ -10,14 +10,16 @@ import * as state from "./state";
 import { AnalysisProgressParams } from "./types/analysisTypes";
 import { Configuration } from "./types/configTypes";
 import { isDebuggingExtension } from "./utils/common";
+import * as explorer from "./sidebar/explorerTree";
 
 // Properties
 export let analysis_key: number | null = null;
 export let analysisStatusBarItem: vscode.StatusBarItem;
-
 export let finishedActivation: boolean = false;
-
 let slitherSettingsProvider: SettingsViewProvider;
+// Sidebar Views
+export let slitherExplorerTree: vscode.TreeView<explorer.ExplorerNode>;
+export let slitherExplorerTreeProvider: explorer.SlitherExplorer;
 
 // Functions
 export async function activate(context: vscode.ExtensionContext) {
@@ -65,6 +67,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Initialize the language server
   let slitherLanguageClient = new SlitherLanguageClient(port);
+
+  // Initialize the analysis explorer
+  slitherExplorerTreeProvider = new explorer.SlitherExplorer(context);
+  slitherExplorerTree = vscode.window.createTreeView("slither-explorer", {
+    treeDataProvider: slitherExplorerTreeProvider,
+  });
 
   // When the language server is ready, we'll want to start fetching some state variables.
   slitherLanguageClient.start(async () => {

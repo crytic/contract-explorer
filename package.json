@@ -115,6 +115,11 @@
     "views": {
       "slither-container": [
         {
+          "id": "slither-explorer",
+          "name": "Analysis",
+          "when": "slitherCompatibleWorkspace"
+        },
+        {
           "type": "webview",
           "id": "slither-settings-webview",
           "name": "Project Settings",
