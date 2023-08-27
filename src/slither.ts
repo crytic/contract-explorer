@@ -380,7 +380,20 @@ async function exec_slither(args : string[] | string, logError : boolean = true,
     let error : any;
     let stderr;
     let cmd = util.promisify(child_process.exec);
-    let { stdout } = await cmd(`${config.slitherPath} ${args}`, { cwd : workingDirectory, maxBuffer: maxBufferSize}).catch((e: any) => error = e);
+    const pathPrepend = config.userConfiguration.pathPrepend?.concat(":") ?? "";
+    const pythonPathPrepend = config.userConfiguration.pythonPathPrepend?.concat(":") ?? "";
+    let { stdout } = await cmd(
+      `${config.slitherPath} ${args}`,
+      {
+        cwd: workingDirectory,
+        maxBuffer: maxBufferSize,
+        env: {
+          ...process.env,
+          PATH: pathPrepend.concat(process.env["PATH"] ?? ""),
+          PYTHONPATH: pythonPathPrepend.concat(process.env["PYTHONPATH"] ?? ""),
+        },
+      },
+    ).catch((e: any) => error = e);
     
     // If we caught an error, copy our data from it.
     if(error) {
