@@ -26,6 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
     Logger.log("\u2E3B Slither: Solidity static analysis framework by Trail of Bits \u2E3B");
     
     // Initialize slither
+    config.readConfiguration();
     await slither.initialize();
 
     // Initialize the detector filter tree

@@ -70,6 +70,16 @@
                         "description": "Path to solc compiler used for analysis ('solc' if blank)",
                         "default": ""
                     },
+                    "slither.pathPrepend": {
+                        "type": "string",
+                        "description": "Value to prepend to $PATH environment variable for shell",
+                        "default": ""
+                    },
+                    "slither.pythonPathPrepend": {
+                        "type": "string",
+                        "description": "Value to prepend to $PYTHONPATH environment variable",
+                        "default": ""
+                    },
                     "slither.hiddenDetectors": {
                         "type": "array",
                         "description": "List of detectors which are hidden in the explorer",
