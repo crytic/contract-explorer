@@ -84,6 +84,14 @@
       }
     ],
     "commands": [
+      {
+        "command": "slither.analyze_single",
+        "title": "Slither: Analyze a workspace folder"
+      },
+      {
+        "command": "slither.analyze_all",
+        "title": "Slither: Analyze all workspace folders"
+      }
     ],
     "viewsContainers": {
       "activitybar": [

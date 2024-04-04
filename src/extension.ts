@@ -92,6 +92,25 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   });
 
+  context.subscriptions.push(vscode.commands.registerCommand("slither.analyze_all", async () => {
+    await slitherLanguageClient.analyze({});
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand("slither.analyze_single", async () => {
+    if (!vscode.workspace.workspaceFolders) {
+      return;
+    }
+    const workspace_folders = vscode.workspace.workspaceFolders.map(folder => ({
+      label: folder.name,
+      uri: folder.uri,
+    }));
+    const qp = await vscode.window.showQuickPick(workspace_folders);
+    if (!qp) {
+      return;
+    }
+    await slitherLanguageClient.analyze({ uris: [qp.uri.toString()] });
+  }));
+
   // If we are in debug mode, log our activation message and focus on the output channel
   if (isDebuggingExtension()) {
     Logger.show();

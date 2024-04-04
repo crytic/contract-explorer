@@ -12,6 +12,7 @@ import {
   SlitherDetectorType,
   VersionData,
 } from "./types/languageServerTypes";
+import { AnalysisRequestParams } from "./types/analysisTypes";
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -122,4 +123,8 @@ export class SlitherLanguageClient {
   }
 
   //#endregion
+
+  public analyze(params: AnalysisRequestParams): Promise<void> {
+    return this.languageClient.sendRequest("$/slither/analyze", params);
+  }
 }
