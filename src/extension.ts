@@ -2,12 +2,7 @@ import * as vscode from "vscode";
 import { Logger } from "./utils/logger";
 import { SlitherLanguageClient } from "./slitherLanguageClient";
 import { SettingsViewProvider } from "./views/settings/settingsViewProvider";
-import {
-  ProtocolNotificationType,
-  StaticRegistrationOptions,
-} from "vscode-languageserver-protocol";
 import * as state from "./state";
-import { AnalysisProgressParams } from "./types/analysisTypes";
 import { Configuration } from "./types/configTypes";
 import { isDebuggingExtension } from "./utils/common";
 
@@ -87,12 +82,6 @@ export async function activate(context: vscode.ExtensionContext) {
     await slitherLanguageClient.setDetectorSettings(
       state.configuration.detectors
     );
-    await slitherLanguageClient.setCompilationTargets(
-      state.configuration.compilations
-    );
-
-    // Once our state is initialized, we'll want to track analysis updates.
-    state.client?.onAnalysisProgress(analysisProgressUpdate);
   });
 
   // When the configuration is updated, we also reset our compilation targets.
@@ -100,9 +89,6 @@ export async function activate(context: vscode.ExtensionContext) {
     // Set our compilation targets
     await slitherLanguageClient.setDetectorSettings(
       state.configuration.detectors
-    );
-    await slitherLanguageClient.setCompilationTargets(
-      state.configuration.compilations
     );
   });
 
@@ -113,31 +99,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Mark our activation as completed
   finishedActivation = true;
-}
-
-async function analysisProgressUpdate(params: AnalysisProgressParams) {
-  // Loop through compilations and count successful/failed compilations
-  let successfulCompilations: number = 0;
-  let failedCompilations: number = 0;
-  for (let result of params.results) {
-    if (result.succeeded === true) {
-      successfulCompilations++;
-    } else if (result.succeeded === false) {
-      failedCompilations++;
-      if (result.error) {
-        Logger.error(result.error, false);
-      }
-    }
-  }
-
-  // Update our compilation status bar and show it.
-  analysisStatusBarItem.text = `Slither: $(check) ${successfulCompilations} $(x) ${failedCompilations}`;
-  let remainingCompilations =
-    params.results.length - (successfulCompilations + failedCompilations);
-  if (remainingCompilations > 0) {
-    analysisStatusBarItem.text += ` $(clock) ${remainingCompilations}`;
-  }
-  analysisStatusBarItem.show();
 }
 
 export function deactivate() {

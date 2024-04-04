@@ -57,12 +57,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
       // Initialize the view with our configuration.
       this.initialize();
     });
-
-    vscode.workspace.onDidChangeWorkspaceFolders(
-      (e: vscode.WorkspaceFoldersChangeEvent) => {
-        this.refreshWorkspaceFolders();
-      }
-    );
   }
 
   private initialize() {
@@ -74,9 +68,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
 
     // Refresh our detector types for detector settings.
     this.refreshDetectorTypes();
-
-    // Refresh our selection of workspace folders for compilation settings.
-    this.refreshWorkspaceFolders();
   }
 
   public refreshDetectorTypes() {
@@ -84,14 +75,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
     this._view?.webview?.postMessage({
       method: "refreshDetectorTypes",
       detectors: state.detectorTypes,
-    });
-  }
-
-  public refreshWorkspaceFolders() {
-    // If we have a view, send it our workspace folders.
-    this._view?.webview?.postMessage({
-      method: "refreshWorkspaceFolders",
-      folders: vscode.workspace.workspaceFolders,
     });
   }
 

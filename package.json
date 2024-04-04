@@ -25,8 +25,6 @@
     "auditing"
   ],
   "activationEvents": [
-    "onCommand:slither.analyze",
-    "onLanguage:slither-output",
     "onLanguage:solidity",
     "workspaceContains:*.sol"
   ],
@@ -86,22 +84,6 @@
       }
     ],
     "commands": [
-      {
-        "command": "slither.setBasicCompilationTarget",
-        "title": "Slither: Set Basic Compilation Target"
-      },
-      {
-        "command": "slither.addToCustomCompilation",
-        "title": "Slither: Add To Custom Compilation Manifest"
-      },
-      {
-        "command": "slither.analyze",
-        "icon": {
-          "dark": "resources/analyze-dark.svg",
-          "light": "resources/analyze-light.svg"
-        },
-        "title": "Slither: Analyze"
-      }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -124,16 +106,6 @@
     },
     "menus": {
       "explorer/context": [
-        {
-          "command": "slither.setBasicCompilationTarget",
-          "group": "slithercompilationFileOperations@1",
-          "when": "slitherCompatibleWorkspace"
-        },
-        {
-          "command": "slither.addToCustomCompilation",
-          "group": "slithercompilationFileOperations@1",
-          "when": "slitherCompatibleWorkspace"
-        }
       ]
     },
     "languages": [

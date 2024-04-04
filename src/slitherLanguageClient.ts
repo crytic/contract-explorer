@@ -1,25 +1,17 @@
 import { Socket } from "net";
 import {
-  Emitter,
   integer,
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
   StreamInfo,
 } from "vscode-languageclient/node";
-import { Logger } from "./utils/logger";
-import { CompilationTarget, DetectorSettings } from "./types/configTypes";
-import * as vscode from "vscode";
+import { DetectorSettings } from "./types/configTypes";
 import {
   CommandLineArgumentGroup,
-  CreateAnalysisResult,
   SlitherDetectorType,
   VersionData,
 } from "./types/languageServerTypes";
-import {
-  AnalysisProgressParams,
-  SetCompilationTargetsParams,
-} from "./types/analysisTypes";
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -27,11 +19,6 @@ const lsp_executable_name = "slither-lsp";
 export class SlitherLanguageClient {
   public languageClient: LanguageClient;
   private socket: Socket | null = null;
-
-  private _analysisProgressEmitter: Emitter<AnalysisProgressParams> =
-    new Emitter<AnalysisProgressParams>();
-  public onAnalysisProgress: vscode.Event<AnalysisProgressParams> =
-    this._analysisProgressEmitter.event;
 
   constructor(port: integer | null) {
     // Define server options.
@@ -77,14 +64,6 @@ export class SlitherLanguageClient {
       serverOptions,
       clientOptions
     );
-
-    // Define handlers for some requests/notifications.
-    this.languageClient.onNotification(
-      "$/analysis/reportAnalysisProgress",
-      (params: AnalysisProgressParams) => {
-        this._analysisProgressEmitter.fire(params);
-      }
-    );
   }
 
   public async start(callback: () => void) {
@@ -110,19 +89,6 @@ export class SlitherLanguageClient {
     return await this.languageClient.sendRequest(
       "$/slither/getDetectorList",
       null
-    );
-  }
-
-  public async setCompilationTargets(
-    compilationTargets: CompilationTarget[]
-  ): Promise<void> {
-    // Create our params to send.
-    let params: SetCompilationTargetsParams = { targets: compilationTargets };
-
-    // Send the command and return the result.
-    await this.languageClient.sendRequest(
-      "$/compilation/setCompilationTargets",
-      params
     );
   }
 

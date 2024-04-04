@@ -1,6 +1,5 @@
 import { SlitherLanguageClient } from "./slitherLanguageClient";
-import { Logger } from "./utils/logger";
-import { createDirectory, deepClone, deepMerge } from "./utils/common";
+import { createDirectory, deepClone } from "./utils/common";
 import { Configuration } from "./types/configTypes";
 import * as vscode from "vscode";
 import { Emitter, Event } from "vscode-languageclient";
@@ -18,7 +17,6 @@ const DEFAULT_CONFIGURATION: Configuration = {
     enabled: true,
     hiddenChecks: [],
   },
-  compilations: [],
 };
 
 // General
