@@ -19,11 +19,12 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 
 ## Requirements
 
-- [Slither](https://github.com/crytic/slither) ( >= 0.6.4 )
+- [slither-lsp](https://github.com/crytic/slither-lsp)
 - [Visual Studio Code](https://code.visualstudio.com/download)
 - Optional: Any desired build/test frameworks supported by Slither, such as Truffle.
 
-\*\* Slither must be accessible via the `slither` command in order for this extension to invoke it.
+> [!NOTE]
+> slither-lsp must be accessible via the `slither-lsp` command in order for this extension to invoke it. Use `pip install slither-lsp` to install it.
 
 ## Installation
 
@@ -33,7 +34,7 @@ Install `Slither` from the Visual Studio Marketplace within the Extensions tab o
 
 ### From source
 
-```
+```sh
 git clone https://github.com/crytic/slither-vscode
 cd slither-vscode
 npm i
@@ -47,11 +48,9 @@ Install the VSIX file in Visual Studio through `Extensions`, under the `...` men
 
 ## Getting Started
 
-After installing the extension, simply open a workspace containing any Solidity (\*.sol) files. The extension will activate, revealing the Slither logo on the action bar. Click it to reveal a new container with a results explorer and detector filter tree. Hovering over the explorer tree will reveal buttons on the top title bar which can be used to run slither, refresh, change viewing mode, and delete results.
+After installing the extension, simply open a workspace containing any Solidity (\*.sol) files. The extension will activate, revealing the Slither logo on the action bar. Click it to reveal a settings pane, from which you will be able to select which detector results will be shown after a workspace folder has finished analysing.
 
-Clicking a detector filter will toggle its visibility. Hovering over the detector filter tree will reveal a button with a flag icon, which is used as a toggle all button.
-
-Left clicking a result in the result explorer will navigate to the result's code. Right clicking it will reveal additional options such as displaying additional information. If source is changed since the previous slither run, and a source mapping mismatch occurs, the problem and its annotations will disappear and an "out-of-sync" icon will appear to the left of the result in the explorer tree, indicating slither analysis should be re-run.
+Once analysis of a folder is done, you will be able to explore the codebase by using the familiar VSCode tools "Go to implementations", "Go to definitions", "Find all references", and showing call and type hierarchies.
 
 ## License
 
