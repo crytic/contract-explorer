@@ -41,7 +41,7 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "engines": {
-    "vscode": "^1.43.0"
+    "vscode": "^1.77.0"
   },
   "dependencies": {
     "@types/vscode-webview": "^1.57.1",
