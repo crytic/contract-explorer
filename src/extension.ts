@@ -111,6 +111,20 @@ export async function activate(context: vscode.ExtensionContext) {
     await slitherLanguageClient.analyze({ uris: [qp.uri.toString()] });
   }));
 
+  const slithirProvider = new (class implements vscode.TextDocumentContentProvider {
+    provideTextDocumentContent(uri: vscode.Uri): string {
+      return uri.path;
+    }
+  })();
+
+  vscode.workspace.registerTextDocumentContentProvider("slithir", slithirProvider);
+
+  context.subscriptions.push(vscode.commands.registerCommand("slither.show_slithir", async (name, text) => {
+    let uri = vscode.Uri.from({ scheme: "slithir", path: text, query: name });
+    let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
+    await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
+  }));
+
   // If we are in debug mode, log our activation message and focus on the output channel
   if (isDebuggingExtension()) {
     Logger.show();
