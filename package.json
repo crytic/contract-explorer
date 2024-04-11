@@ -2,7 +2,7 @@
   "name": "contract-explorer",
   "displayName": "Contract Explorer",
   "description": "Contract Explorer: Smart contract static analysis framework -- powered by Slither",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "trailofbits",
   "author": "Trail of Bits",
   "license": "AGPL-3.0",
