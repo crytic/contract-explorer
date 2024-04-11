@@ -9,10 +9,10 @@
   "homepage": "https://www.trailofbits.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trailofbits/contract-explorer.git"
+    "url": "https://github.com/crytic/contract-explorer.git"
   },
   "bugs": {
-    "url": "https://github.com/trailofbits/contract-explorer/issues"
+    "url": "https://github.com/crytic/contract-explorer/issues"
   },
   "categories": [
     "Other"
