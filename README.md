@@ -1,4 +1,4 @@
-# Slither (Visual Studio Code Extension)
+# Contract Explorer (Visual Studio Code Extension)
 
 Visual Studio Code integration for [Slither](https://github.com/crytic/slither), a Solidity static analysis framework.
 
@@ -30,19 +30,19 @@ This extension offers Visual Studio Code integration for Slither, a Solidity sta
 
 ### From the Visual Studio Marketplace
 
-Install `Slither` from the Visual Studio Marketplace within the Extensions tab of Visual Studio Code.
+Install `Contract Explorer` from the Visual Studio Marketplace within the Extensions tab of Visual Studio Code.
 
 ### From source
 
 ```sh
-git clone https://github.com/crytic/slither-vscode
-cd slither-vscode
+git clone https://github.com/crytic/contract-explorer
+cd contract-explorer
 npm i
 npm install -g vsce
 vsce package
 ```
 
-`slither-vscode-X.X.X.vsix` will be created.
+`contract-explorer-X.X.X.vsix` will be created.
 
 Install the VSIX file in Visual Studio through `Extensions`, under the `...` menu.
 
