@@ -1,18 +1,18 @@
 {
-  "name": "slither-vscode",
-  "displayName": "Slither",
-  "description": "Slither: Solidity static analysis framework integration for Visual Studio",
-  "version": "0.0.7",
+  "name": "contract-explorer",
+  "displayName": "Contract Explorer",
+  "description": "Contract Explorer: Smart contract static analysis framework -- powered by Slither",
+  "version": "0.0.1",
   "publisher": "trailofbits",
   "author": "Trail of Bits",
   "license": "AGPL-3.0",
   "homepage": "https://www.trailofbits.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trailofbits/slither-vscode.git"
+    "url": "https://github.com/trailofbits/contract-explorer.git"
   },
   "bugs": {
-    "url": "https://github.com/trailofbits/slither-vscode/issues"
+    "url": "https://github.com/trailofbits/contract-explorer/issues"
   },
   "categories": [
     "Other"
