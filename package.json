@@ -79,6 +79,11 @@
             "type": "object",
             "description": "List of detectors which are hidden in the explorer",
             "default": []
+          },
+          "slither.slitherLspPath": {
+            "type":"string",
+            "markdownDescription": "Path to the `slither-lsp` executable",
+            "default": "slither-lsp"
           }
         }
       }

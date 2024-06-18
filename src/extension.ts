@@ -58,8 +58,26 @@ export async function activate(context: vscode.ExtensionContext) {
     Logger.debug("Started in console mode");
   }
 
+  const slitherLspPath = vscode.workspace.getConfiguration("slither").get("slitherLspPath", "slither-lsp");
+
+  vscode.workspace.onDidChangeConfiguration(async event => {
+    let affected = event.affectsConfiguration("slither.slitherLspPath");
+    if (!affected) {
+      return;
+    }
+
+    const action = await vscode.window
+      .showInformationMessage(
+        `Reload window in order for changes in the configuration of Contract Explorer to take effect.`,
+        "Reload"
+      );
+    if (action === "Reload") {
+      vscode.commands.executeCommand('workbench.action.reloadWindow');
+    }
+  });
+
   // Initialize the language server
-  let slitherLanguageClient = new SlitherLanguageClient(port);
+  let slitherLanguageClient = new SlitherLanguageClient(slitherLspPath, port);
 
   // When the language server is ready, we'll want to start fetching some state variables.
   slitherLanguageClient.start(async () => {
