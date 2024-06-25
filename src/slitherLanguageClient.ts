@@ -14,26 +14,23 @@ import {
 } from "./types/languageServerTypes";
 import { AnalysisRequestParams } from "./types/analysisTypes";
 
-// The name of the language server executable
-const lsp_executable_name = "slither-lsp";
-
 export class SlitherLanguageClient {
   public languageClient: LanguageClient;
   private socket: Socket | null = null;
 
-  constructor(port: integer | null) {
+  constructor(slitherLspPath: string, port: integer | null) {
     // Define server options.
     let serverOptions: ServerOptions;
     if (port == null) {
       // If we weren't given a port, we use stdio. We keep the process attached so when we exit, it exits.
       serverOptions = {
         run: {
-          command: lsp_executable_name,
+          command: slitherLspPath,
           args: [],
           options: { detached: false },
         },
         debug: {
-          command: lsp_executable_name,
+          command: slitherLspPath,
           args: [],
           options: { detached: false },
         },
