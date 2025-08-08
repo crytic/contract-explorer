@@ -5,6 +5,7 @@ import { SettingsViewProvider } from "./views/settings/settingsViewProvider";
 import * as state from "./state";
 import { Configuration } from "./types/configTypes";
 import { isDebuggingExtension } from "./utils/common";
+import { IntervalAnalysisResult, VariableResult, NodeResult } from "./types/analysisTypes";
 
 // Properties
 export let analysis_key: number | null = null;
@@ -75,10 +76,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
       // Refresh our detectors in our settings pane.
       slitherSettingsProvider.refreshDetectorTypes();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Clear our state and log our error.
       await state.resetState();
-      Logger.error(err, true);
+      if (err instanceof Error) {
+        Logger.error(err, true);
+      } else {
+        Logger.error(String(err), true);
+      }
     }
   });
 
@@ -115,6 +120,172 @@ export async function activate(context: vscode.ExtensionContext) {
       return;
     }
     await slitherLanguageClient.analyze({ uris: [qp.uri.toString()] });
+  }));
+
+  // Store interval analysis results for hover functionality
+  let intervalAnalysisResults: IntervalAnalysisResult | null = null;
+
+  // Hover provider for interval analysis results
+  const intervalHoverProvider = vscode.languages.registerHoverProvider('solidity', {
+    provideHover(document, position, token) {
+      if (!intervalAnalysisResults) {
+        return null;
+      }
+      
+      // Normalize paths for comparison
+      const resultPath = intervalAnalysisResults.file_path;
+      const documentPath = document.uri.fsPath;
+      
+      // Try different path comparisons
+      const pathsMatch = resultPath === documentPath || 
+                        resultPath === documentPath.replace(/\\/g, '/') ||
+                        resultPath.replace(/\\/g, '/') === documentPath;
+      
+      if (!pathsMatch) {
+        return null;
+      }
+
+      const wordRange = document.getWordRangeAtPosition(position);
+      if (!wordRange) {
+        return null;
+      }
+
+      const variableName = document.getText(wordRange);
+      const currentLine = position.line + 1; // Convert to 1-based line number
+      
+      // Search for the variable in our analysis results
+      let bestMatch: VariableResult | null = null;
+      let bestNode: NodeResult | null = null;
+      
+      for (const func of intervalAnalysisResults.functions) {
+        for (const node of func.nodes) {
+          for (const variable of node.variables) {
+            // Try multiple ways to match the variable
+            const matches = variable.name === variableName ||
+                           variable.canonical_name === variableName ||
+                           variable.display_name === variableName ||
+                           variable.name.includes(variableName) ||
+                           variable.canonical_name.includes(variableName);
+            
+            if (matches) {
+              // Check if this node is at the current line or close to it
+              if (node.location && node.location.line === currentLine) {
+                // Exact line match - this is the best match
+                bestMatch = variable;
+                bestNode = node;
+                break;
+              } else if (!bestMatch) {
+                // Fallback to first match if no exact line match
+                bestMatch = variable;
+                bestNode = node;
+              }
+            }
+          }
+          if (bestMatch && bestNode && bestNode.location && bestNode.location.line === currentLine) {
+            break;
+          }
+        }
+        if (bestMatch && bestNode && bestNode.location && bestNode.location.line === currentLine) {
+          break;
+        }
+      }
+      
+      if (bestMatch) {
+        // Create hover content
+        const ranges = bestMatch.interval_ranges.map((range, index: number) => 
+          `Range ${index + 1}: [${range.lower_bound}, ${range.upper_bound}]`
+        ).join('\n');
+
+        const validValues = bestMatch.valid_values.values.length > 0 
+          ? `Valid values: {${bestMatch.valid_values.values.join(', ')}}`
+          : '';
+
+        const invalidValues = bestMatch.invalid_values.values.length > 0 
+          ? `Invalid values: {${bestMatch.invalid_values.values.join(', ')}}`
+          : '';
+
+        const overflowWarning = bestMatch.has_overflow ? '⚠️ **OVERFLOW DETECTED**' : '';
+        const underflowWarning = bestMatch.has_underflow ? '⚠️ **UNDERFLOW DETECTED**' : '';
+
+        const typeInfo = bestMatch.var_type ? `Type: ${bestMatch.var_type}` : '';
+        const nodeInfo = bestNode ? `**Node:** ${bestNode.expression} (${bestNode.node_type})` : '';
+
+        const content = new vscode.MarkdownString();
+        content.appendMarkdown(`### Variable: \`${variableName}\`\n\n`);
+        
+        if (nodeInfo) {
+          content.appendMarkdown(`${nodeInfo}\n\n`);
+        }
+        
+        if (typeInfo) {
+          content.appendMarkdown(`${typeInfo}\n\n`);
+        }
+        
+        if (ranges) {
+          content.appendMarkdown(`**Ranges:**\n${ranges}\n\n`);
+        }
+        
+        if (validValues) {
+          content.appendMarkdown(`**${validValues}**\n\n`);
+        }
+        
+        if (invalidValues) {
+          content.appendMarkdown(`**${invalidValues}**\n\n`);
+        }
+        
+        if (overflowWarning) {
+          content.appendMarkdown(`${overflowWarning}\n\n`);
+        }
+        
+        if (underflowWarning) {
+          content.appendMarkdown(`${underflowWarning}\n\n`);
+        }
+
+        return new vscode.Hover(content);
+      }
+
+      return null;
+    }
+  });
+
+  context.subscriptions.push(intervalHoverProvider);
+
+  context.subscriptions.push(vscode.commands.registerCommand("slither.interval_analysis", async () => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      vscode.window.showErrorMessage("No active editor found. Please open a Solidity file.");
+      return;
+    }
+
+    const document = activeEditor.document;
+    if (document.languageId !== 'solidity') {
+      vscode.window.showErrorMessage("Current file is not a Solidity file.");
+      return;
+    }
+    
+    try {
+      vscode.window.showInformationMessage("Running interval analysis for integer overflow...");
+      const result = await slitherLanguageClient.intervalAnalysis({ uri: document.uri.toString() });
+      
+      // Store results for hover functionality
+      intervalAnalysisResults = result;
+      
+      // Display results in a new document
+      const doc = await vscode.workspace.openTextDocument({
+        content: JSON.stringify(result, null, 2),
+        language: 'json'
+      });
+      await vscode.window.showTextDocument(doc, { preview: false });
+      
+      vscode.window.showInformationMessage("Interval analysis completed! Hover over variables to see ranges.");
+    } catch (error) {
+      vscode.window.showErrorMessage(`Interval analysis failed: ${error}`);
+    }
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand("slither.clear_interval_analysis", async () => {
+    intervalAnalysisResults = null;
+    vscode.window.showInformationMessage("Interval analysis results cleared.");
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand("slither.forward_slice", async () => {

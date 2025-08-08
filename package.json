@@ -93,6 +93,18 @@
         "title": "Slither: Analyze all workspace folders"
       },
       {
+        "command": "slither.interval_analysis",
+        "title": "Slither: Analyze Current File for Integer Overflow"
+      },
+      {
+        "command": "slither.clear_interval_analysis",
+        "title": "Slither: Clear Interval Analysis Results"
+      },
+      {
+        "command": "slither.highlight_overflow_issues",
+        "title": "Slither: Highlight Overflow/Underflow Issues"
+      },
+      {
         "command": "slither.forward_slice",
         "title": "Slither: Forward slice"
       },

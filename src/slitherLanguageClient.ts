@@ -13,7 +13,7 @@ import {
   SlitherDetectorType,
   VersionData,
 } from "./types/languageServerTypes";
-import { AnalysisRequestParams, SliceParams } from "./types/analysisTypes";
+import { AnalysisRequestParams, SliceParams, IntervalAnalysisParams, IntervalAnalysisResult } from "./types/analysisTypes";
 
 // The name of the language server executable
 const lsp_executable_name = "slither-lsp";
@@ -135,6 +135,61 @@ export class SlitherLanguageClient {
 
   public async backward_slice(params: SliceParams): Promise<vscode.Location[]> {
     return this.languageClient.sendRequest("$/slither/backwardSlice", params);
+  }
+
+  public async intervalAnalysis(params: IntervalAnalysisParams): Promise<IntervalAnalysisResult> {
+    // Call the Python script directly since the language server doesn't support this yet
+    const { spawn } = require('child_process');
+    const path = require('path');
+    
+    return new Promise((resolve, reject) => {
+      // Convert file:// URI to file path
+      let filePath = params.uri;
+      if (filePath.startsWith('file://')) {
+        filePath = filePath.substring(7);
+      }
+      
+      // Path to the interval analysis script in the slither repo
+      const scriptPath = '/Volumes/CaseSensitive/slither/slither/analyses/data_flow/interval_enhanced/tests/testing_extension.py';
+      
+      // Use the slither virtual environment
+      const pythonProcess = spawn('/Volumes/CaseSensitive/slither/env/bin/python', [scriptPath, filePath]);
+      
+      let output = '';
+      let error = '';
+      
+      pythonProcess.stdout.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+      
+      pythonProcess.stderr.on('data', (data: Buffer) => {
+        error += data.toString();
+      });
+      
+                 pythonProcess.on('close', (code: number) => {
+             if (code === 0) {
+               try {
+                 // Extract JSON from the output (handle mixed log + JSON output)
+                 const jsonMatch = output.match(/\{[\s\S]*\}/);
+                 if (jsonMatch) {
+                   const jsonOutput = jsonMatch[0];
+                   const result: IntervalAnalysisResult = JSON.parse(jsonOutput);
+                   resolve(result);
+                 } else {
+                   reject(new Error('No JSON found in output'));
+                 }
+               } catch (e) {
+                 reject(new Error(`Failed to parse result: ${e}`));
+               }
+             } else {
+               reject(new Error(`Python script failed with code ${code}: ${error}`));
+             }
+           });
+      
+      pythonProcess.on('error', (err: Error) => {
+        reject(new Error(`Failed to start Python process: ${err.message}`));
+      });
+    });
   }
 
 }
